@@ -1,0 +1,24 @@
+{
+  "name": "collegechoice",
+  "version": "0.1.0",
+  "private": true,
+  "description": "College Choice — India's college discovery, comparison & application platform",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"npm run dev -w @collegechoice/api\" \"npm run dev -w @collegechoice/web\"",
+    "build": "npm run build -w @collegechoice/api && npm run build -w @collegechoice/web",
+    "dev:api": "npm run dev -w @collegechoice/api",
+    "dev:web": "npm run dev -w @collegechoice/web",
+    "db:migrate": "npm run db:migrate -w @collegechoice/api",
+    "db:seed": "npm run db:seed -w @collegechoice/api",
+    "db:studio": "npm run db:studio -w @collegechoice/api"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

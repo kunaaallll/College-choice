@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Builds
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+apps/*/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Prisma
+apps/api/prisma/*.db
+
+# Raw ingestion dumps (large; re-downloadable from source)
+apps/api/data/raw/
+
+# Local design reference (decoded from the original bundle)
+_decoded_template.html
+
+# Test / coverage
+coverage/

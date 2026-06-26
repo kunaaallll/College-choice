@@ -1,0 +1,311 @@
+// College Choice — database schema
+// Engine: PostgreSQL. ORM: Prisma.
+// Run `prisma migrate dev` to create/update tables, then `prisma db seed`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Taxonomy
+// ─────────────────────────────────────────────────────────────
+
+model Stream {
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  slug          String    @unique
+  initial       String // 2-letter badge, e.g. "En"
+  colorGradient String // CSS gradient used by the UI badge
+  description   String?
+  avgFees       String? // display label, e.g. "₹2–8 L"
+  degrees       String[] // e.g. ["B.Tech","M.Tech","B.E."]
+  examName      String? // headline exam label, e.g. "JEE Main"
+  collegeCount  Int       @default(0)
+  colleges      College[]
+
+  @@index([slug])
+}
+
+model City {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  slug         String    @unique
+  state        String?
+  imageUrl     String?
+  collegeCount Int       @default(0)
+  colleges     College[]
+
+  @@index([slug])
+  @@index([state])
+}
+
+model Exam {
+  id       Int           @id @default(autoincrement())
+  name     String        @unique // "JEE Main"
+  slug     String        @unique
+  fullName String // "Joint Entrance Examination"
+  level    String // National | University | State
+  date     String // display date, e.g. "Jan 24, 2026"
+  examOn   DateTime? // machine-readable date for sorting
+  mode     String // Online | Offline
+  stream   String // headline stream label
+  colleges CollegeExam[]
+
+  @@index([slug])
+}
+
+// ─────────────────────────────────────────────────────────────
+// College & its owned detail records
+// ─────────────────────────────────────────────────────────────
+
+enum CollegeType {
+  Public
+  Private
+  Government
+  Deemed
+  Autonomous
+}
+
+enum CollegeMode {
+  Campus // traditional on-campus college (default)
+  Online // 100% online degree (UGC-DEB approved online mode)
+  Distance // distance / correspondence mode
+  Hybrid // blended
+}
+
+model College {
+  id           Int          @id @default(autoincrement())
+  name         String
+  slug         String       @unique
+  location     String // "Mumbai, Maharashtra"
+  state        String? // "Maharashtra" — denormalised for landing pages & filters
+  type         CollegeType?
+  mode         CollegeMode  @default(Campus) // Campus | Online | Distance | Hybrid
+  approvals    String[] // accreditations/approvals, e.g. ["UGC-DEB","NAAC A+","AICTE","WES"]
+  // Curated/ranking fields — nullable because bulk-imported colleges may lack them
+  rank         Int? // editorial/stream rank used for "top ranked" ordering
+  nirfRank     Int? // official NIRF overall rank, if listed
+  rating       Float?
+  reviewsLabel String? // "2.4k" (display); reviewsCount for math
+  reviewsCount Int          @default(0)
+  feesNum      Int? // numeric total fees in ₹ (for filtering/sorting)
+  feesLabel    String? // "₹2.30 L" (display)
+  packageLabel String? // "₹21.8 LPA"
+  examName     String? // headline exam label shown on cards, e.g. "JEE Adv"
+  estd         Int?
+  imgUrl       String?
+  logoUrl      String?
+  about        String? // short summary (cards / meta fallback)
+
+  // ── SEO / detailed content ──────────────────────────────
+  descriptionLong String? @db.Text // full, indexable description shown on the detail page
+  metaTitle       String? // <title> override
+  metaDescription String? // meta description override
+  website         String?
+  affiliation     String? // affiliating university/board
+  approvedBy      String? // UGC / AICTE / MCI etc.
+  latitude        Float?
+  longitude       Float?
+
+  // ── Provenance (open-data ingestion) ────────────────────
+  source       String? // "NIRF" | "AICTE" | "UGC" | "csv:filename" | "manual"
+  sourceUrl    String?
+  lastSyncedAt DateTime?
+  published    Boolean   @default(true)
+
+  streamId Int
+  stream   Stream @relation(fields: [streamId], references: [id])
+  cityId   Int
+  city     City   @relation(fields: [cityId], references: [id])
+
+  courses      Course[]
+  highlights   Highlight[]
+  reviews      Review[]
+  ratingBars   RatingBar[]
+  gallery      GalleryImage[]
+  placement    Placement?
+  recruiters   CollegeRecruiter[]
+  exams        CollegeExam[]
+  faqs         Faq[]
+  applications Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([streamId])
+  @@index([cityId])
+  @@index([state])
+  @@index([rank])
+  @@index([feesNum])
+  @@index([published])
+  @@index([mode])
+  // Composite index powering programmatic landing pages (stream-in-state/city)
+  @@index([streamId, state])
+}
+
+// FAQs power the FAQPage JSON-LD on each college page (rich results in Google).
+model Faq {
+  id        Int     @id @default(autoincrement())
+  collegeId Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String  @db.Text
+  sort      Int     @default(0)
+
+  @@index([collegeId])
+}
+
+model Course {
+  id        Int     @id @default(autoincrement())
+  collegeId Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  name      String
+  duration  String
+  seats     String
+  feesLabel String
+
+  @@index([collegeId])
+}
+
+model Highlight {
+  id        Int     @id @default(autoincrement())
+  collegeId Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  text      String
+
+  @@index([collegeId])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  collegeId Int
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  authorName String
+  initial   String
+  color     String
+  meta      String // "B.Tech CSE · 2025"
+  stars     Float
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([collegeId])
+}
+
+model RatingBar {
+  id        Int     @id @default(autoincrement())
+  collegeId Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  label     String // Academics | Faculty | ...
+  pct       Int // 0-100
+
+  @@index([collegeId])
+}
+
+model Placement {
+  id             Int     @id @default(autoincrement())
+  collegeId      Int     @unique
+  college        College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  avgPackage     String
+  highestPackage String
+  placedPct      String
+}
+
+model GalleryImage {
+  id        Int     @id @default(autoincrement())
+  collegeId Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  url       String
+  sort      Int     @default(0)
+
+  @@index([collegeId])
+}
+
+model Recruiter {
+  id       Int                @id @default(autoincrement())
+  name     String             @unique
+  colleges CollegeRecruiter[]
+}
+
+model CollegeRecruiter {
+  collegeId   Int
+  recruiterId Int
+  college     College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  recruiter   Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@id([collegeId, recruiterId])
+}
+
+model CollegeExam {
+  collegeId Int
+  examId    Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  exam      Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@id([collegeId, examId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Content
+// ─────────────────────────────────────────────────────────────
+
+model NewsArticle {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  category  String // Admissions | Results | Counselling | ...
+  title     String
+  excerpt   String
+  body      String?
+  date      String // display date
+  publishedAt DateTime @default(now())
+  readTime  String // "4 min read"
+  imgUrl    String?
+
+  @@index([slug])
+  @@index([category])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Users & leads
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String?
+  email        String?       @unique
+  phone        String?       @unique
+  passwordHash String?
+  googleId     String?       @unique
+  createdAt    DateTime      @default(now())
+  applications Application[]
+}
+
+enum ApplicationStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+model Application {
+  id              Int               @id @default(autoincrement())
+  fullName        String
+  mobile          String
+  email           String
+  courseInterested String?
+  collegeName     String? // free-text snapshot at submit time
+  collegeId       Int?
+  college         College?          @relation(fields: [collegeId], references: [id])
+  userId          Int?
+  user            User?             @relation(fields: [userId], references: [id])
+  status          ApplicationStatus @default(NEW)
+  createdAt       DateTime          @default(now())
+
+  @@index([collegeId])
+  @@index([status])
+}

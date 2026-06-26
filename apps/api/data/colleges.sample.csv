@@ -1,0 +1,11 @@
+name,city,state,stream,type,nirf_rank,rating,total_fees,fees_label,avg_package,exam,established,affiliation,approved_by,website
+Anna University,Chennai,Tamil Nadu,Engineering,Public,13,4.4,50000,"₹50,000",₹8.5 LPA,TNEA,State University,UGC,https://www.annauniv.edu
+Savitribai Phule Pune University,Pune,Maharashtra,Science,Public,19,4.3,30000,"₹30,000",₹7.0 LPA,CUET,State University,UGC,
+Banaras Hindu University,Varanasi,Uttar Pradesh,Arts,Public,5,4.5,40000,"₹40,000",₹8.0 LPA,CUET,Central University,UGC,https://www.bhu.ac.in
+Jamia Millia Islamia,Delhi,Delhi,Engineering,Public,24,4.4,120000,₹1.20 L,₹9.0 LPA,JEE Main,Central University,UGC,
+Symbiosis International University,Pune,Maharashtra,Management,Deemed,33,4.3,1900000,₹19.0 L,₹11.0 LPA,SNAP,Deemed University,UGC,https://www.siu.edu.in
+Lovely Professional University,Jalandhar,Punjab,Engineering,Private,,4.1,960000,₹9.60 L,₹7.5 LPA,LPUNEST,Private University,UGC,https://www.lpu.in
+Amity University,Noida,Uttar Pradesh,Management,Private,,4.0,1700000,₹17.0 L,₹6.5 LPA,Amity JEE,Private University,UGC,
+Aligarh Muslim University,Aligarh,Uttar Pradesh,Medical,Public,8,4.5,75000,"₹75,000",₹9.5 LPA,NEET,Central University,UGC,https://www.amu.ac.in
+University of Hyderabad,Hyderabad,Telangana,Science,Public,10,4.5,35000,"₹35,000",₹8.0 LPA,CUET,Central University,UGC,
+Osmania University,Hyderabad,Telangana,Commerce,Public,46,4.2,25000,"₹25,000",₹6.0 LPA,TS-CET,State University,UGC,

@@ -1,0 +1,52 @@
+# Production-ish compose for a Hostinger VPS (or any Docker host).
+# Brings up Postgres, the Express API, and the Next.js web app.
+# Put Nginx (see ./nginx) in front for TLS + routing in production.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-collegechoice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-collegechoice}
+      POSTGRES_DB: ${POSTGRES_DB:-collegechoice}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-collegechoice}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-collegechoice}:${POSTGRES_PASSWORD:-collegechoice}@db:5432/${POSTGRES_DB:-collegechoice}
+      API_PORT: 4000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:-change_me}
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
