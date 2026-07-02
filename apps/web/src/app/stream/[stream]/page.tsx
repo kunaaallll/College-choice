@@ -1,12 +1,28 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { buildMetadata, itemListJsonLd } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
 import { JsonLd } from "@/components/JsonLd";
+import { PredictorCTA } from "@/components/PredictorCTA";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
+
+// Major states used for the "filter by state" sidebar (deep-links into /colleges).
+const STATES = [
+  "Andhra Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+  "Madhya Pradesh", "Maharashtra", "Odisha", "Punjab", "Rajasthan",
+  "Tamil Nadu", "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+];
+
+const TYPES = [
+  ["Public", "Government"],
+  ["Private", "Private"],
+  ["Deemed", "Deemed"],
+] as const;
 
 const prettify = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 
@@ -46,6 +62,39 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
     { name: `${name} Colleges`, path: `/stream/${stream}` },
   ];
 
+  const faqs = [
+    {
+      q: `How many ${name} colleges are there in India?`,
+      a: `India has hundreds of ${name.toLowerCase()} colleges — from government institutes to private and deemed universities. Use the state, type and fees filters to narrow the list to what fits you.`,
+    },
+    {
+      q: `What is the average fee for ${name} colleges?`,
+      a: meta?.avgFees
+        ? `Typical ${name.toLowerCase()} programmes cost around ${meta.avgFees}, though fees vary by college, ownership and city.`
+        : `Fees vary widely by college, ownership and city. Check each college page for exact figures.`,
+    },
+    {
+      q: `Which entrance exam is required for ${name} admission?`,
+      a: meta?.examName
+        ? `Most ${name.toLowerCase()} colleges admit through ${meta.examName}, though some accept state or institute-level exams.`
+        : `Admission is through national, state or institute-level entrance exams depending on the college.`,
+    },
+    {
+      q: `How do I shortlist the right ${name} college for me?`,
+      a: `Use the College Predictor above for a personalised shortlist based on your rank, budget and preferred state — or add colleges to compare them side by side.`,
+    },
+  ];
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <div className="container-site py-8">
       <JsonLd
@@ -54,13 +103,13 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
           items.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })),
         )}
       />
+      <JsonLd data={faqJsonLd} />
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Best {name} Colleges in India</h1>
+        <h1 className="text-3xl font-extrabold sm:text-4xl">Best {name} Colleges in India 2026</h1>
         <p className="mt-3 text-ink-500">
-          {meta?.description ||
-            `Explore top ${name.toLowerCase()} colleges in India.`}{" "}
+          {meta?.description || `Explore top ${name.toLowerCase()} colleges in India.`}{" "}
           Compare {items.length}+ institutions on fees, placements, cutoffs and reviews
           {meta?.examName ? `, with admissions via ${meta.examName}` : ""}. Apply free with expert counselling.
         </p>
@@ -74,15 +123,106 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
         )}
       </header>
 
-      {items.length === 0 ? (
-        <p className="mt-10 text-ink-500">No {name} colleges listed yet.</p>
-      ) : (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((c) => (
-            <CollegeCard key={c.id} college={c} />
-          ))}
+      {/* College predictor */}
+      <div className="mt-6">
+        <PredictorCTA course={name} />
+      </div>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[264px_1fr]">
+        {/* Filter sidebar */}
+        <aside className="h-fit space-y-5 lg:sticky lg:top-20">
+          <div className="card p-5">
+            <h2 className="text-base font-bold">Filter {name} colleges</h2>
+
+            <p className="mt-4 text-[13px] font-bold text-ink-700">By state</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {STATES.map((s) => (
+                <Link
+                  key={s}
+                  href={`/colleges?stream=${stream}&state=${encodeURIComponent(s)}`}
+                  className="rounded-full border border-line px-2.5 py-1 text-[12.5px] font-semibold text-ink-500 hover:border-brand-400 hover:text-brand-700"
+                >
+                  {s}
+                </Link>
+              ))}
+            </div>
+
+            <p className="mt-5 text-[13px] font-bold text-ink-700">By type</p>
+            <div className="mt-2 grid gap-1.5">
+              {TYPES.map(([val, label]) => (
+                <Link
+                  key={val}
+                  href={`/colleges?stream=${stream}&type=${val}`}
+                  className="rounded-lg border border-line px-3 py-2 text-[13px] font-semibold text-ink-500 hover:border-brand-400 hover:text-brand-700"
+                >
+                  {label} colleges
+                </Link>
+              ))}
+            </div>
+
+            <Link
+              href={`/colleges?stream=${stream}`}
+              className="btn-primary mt-5 block w-full py-2 text-center text-sm"
+            >
+              All filters & fees →
+            </Link>
+          </div>
+        </aside>
+
+        {/* Colleges + content */}
+        <div>
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="text-xl font-extrabold sm:text-2xl">Top {name} colleges</h2>
+            <Link href={`/colleges?stream=${stream}`} className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
+              View all →
+            </Link>
+          </div>
+
+          {items.length === 0 ? (
+            <p className="mt-6 text-ink-500">No {name} colleges listed yet.</p>
+          ) : (
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {items.map((c) => (
+                <CollegeCard key={c.id} college={c} />
+              ))}
+            </div>
+          )}
+
+          {/* Why choose */}
+          <section className="mt-12 max-w-3xl">
+            <h2 className="text-2xl font-extrabold">Why choose {name} colleges in India?</h2>
+            <p className="mt-3 text-ink-500">
+              {name} remains one of the most sought-after fields in India, with strong placement records,
+              research opportunities and a clear career path. Picking the right college means weighing fees
+              against outcomes — placement averages, faculty, infrastructure and location all matter.
+            </p>
+            <ul className="mt-4 space-y-2 text-ink-600">
+              <li className="flex gap-2"><span className="text-brand-600">✓</span> Verified fees, cutoffs and placement figures for every listed college.</li>
+              <li className="flex gap-2"><span className="text-brand-600">✓</span> Filter by state, ownership type and budget to match your profile.</li>
+              <li className="flex gap-2"><span className="text-brand-600">✓</span> Compare up to four colleges side by side before you decide.</li>
+              <li className="flex gap-2"><span className="text-brand-600">✓</span> Free counselling to guide you through admission and documentation.</li>
+            </ul>
+          </section>
+
+          {/* FAQ */}
+          <section className="mt-10 max-w-3xl">
+            <h2 className="text-2xl font-extrabold">Frequently asked questions</h2>
+            <div className="mt-4 divide-y divide-line rounded-2xl border border-line">
+              {faqs.map((f) => (
+                <details key={f.q} className="group p-4">
+                  <summary className="cursor-pointer list-none font-semibold text-ink-900 marker:hidden">
+                    <span className="flex items-center justify-between gap-3">
+                      {f.q}
+                      <span className="text-brand-600 transition group-open:rotate-45">＋</span>
+                    </span>
+                  </summary>
+                  <p className="mt-2 text-sm text-ink-500">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
         </div>
-      )}
+      </div>
     </div>
   );
 }

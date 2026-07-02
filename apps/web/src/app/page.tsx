@@ -22,6 +22,7 @@ const VALUES = [
 ];
 
 // Prominently featured courses on the homepage (KollegeApply-style).
+// `href` overrides the default /stream/[slug] link when a course isn't its own stream.
 const FEATURED_COURSES = [
   {
     slug: "engineering",
@@ -40,12 +41,21 @@ const FEATURED_COURSES = [
     degrees: ["MBA", "PGDM", "BBA"],
   },
   {
+    slug: "bds",
+    name: "Dental (BDS)",
+    icon: "🦷",
+    gradient: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+    blurb: "BDS & MDS at India's top dental colleges — fees, cutoffs & seats.",
+    degrees: ["BDS", "MDS"],
+    href: "/colleges?search=dental",
+  },
+  {
     slug: "medical",
     name: "Medical",
     icon: "⚕️",
     gradient: "linear-gradient(135deg,#10b981,#059669)",
-    blurb: "MBBS, BDS & allied health at government and deemed colleges.",
-    degrees: ["MBBS", "BDS", "BAMS"],
+    blurb: "MBBS & allied health at government and deemed colleges.",
+    degrees: ["MBBS", "BAMS", "BPT"],
   },
 ];
 
@@ -102,7 +112,7 @@ export default async function HomePage() {
       {/* ── Featured courses ── */}
       <section className="container-site py-14">
         <SectionHead title="Explore top courses" subtitle="Popular courses" href="/courses" cta="View all courses →" />
-        <div className="mt-6 grid gap-5 lg:grid-cols-3">
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURED_COURSES.map((course, i) => {
             const stream = streams.find((s) => s.slug === course.slug);
             const cols = courseColleges[i] ?? [];
@@ -142,7 +152,10 @@ export default async function HomePage() {
                     ))}
                   </ul>
                 )}
-                <Link href={`/stream/${course.slug}`} className="btn-primary mt-5 w-full py-2 text-center text-sm">
+                <Link
+                  href={"href" in course && course.href ? course.href : `/stream/${course.slug}`}
+                  className="btn-primary mt-5 w-full py-2 text-center text-sm"
+                >
                   Explore {course.name} colleges →
                 </Link>
               </div>
