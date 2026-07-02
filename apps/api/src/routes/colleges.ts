@@ -24,6 +24,7 @@ const cardSelect = {
   estd: true,
   imgUrl: true,
   mode: true,
+  featured: true,
   approvals: true,
   stream: { select: { name: true, slug: true } },
   city: { select: { name: true, slug: true } },
@@ -57,6 +58,7 @@ collegesRouter.get(
     if (q.state) where.state = { equals: q.state, mode: "insensitive" };
     if (q.type) where.type = q.type;
     if (q.mode) where.mode = q.mode;
+    if (q.featured) where.featured = true;
     if (q.program) where.courses = { some: { name: { contains: q.program, mode: "insensitive" } } };
     if (q.maxFees) where.feesNum = { lte: q.maxFees };
 

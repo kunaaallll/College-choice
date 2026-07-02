@@ -48,6 +48,7 @@ export interface CollegeQuery {
   program?: string;
   city?: string;
   state?: string;
+  featured?: boolean;
   maxFees?: number;
   sort?: string;
   page?: number;

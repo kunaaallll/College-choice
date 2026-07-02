@@ -117,6 +117,7 @@ model College {
   sourceUrl    String?
   lastSyncedAt DateTime?
   published    Boolean   @default(true)
+  featured     Boolean   @default(false) // hand-picked colleges surfaced on landing pages
 
   streamId Int
   stream   Stream @relation(fields: [streamId], references: [id])
@@ -145,6 +146,7 @@ model College {
   @@index([feesNum])
   @@index([published])
   @@index([mode])
+  @@index([featured])
   // Composite index powering programmatic landing pages (stream-in-state/city)
   @@index([streamId, state])
 }

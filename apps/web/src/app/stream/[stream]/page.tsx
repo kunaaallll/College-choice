@@ -47,14 +47,18 @@ export async function generateMetadata({ params }: { params: Promise<{ stream: s
 
 export default async function StreamLandingPage({ params }: { params: Promise<{ stream: string }> }) {
   const { stream } = await params;
-  const [collegesRes, streamsRes] = await Promise.allSettled([
+  const [collegesRes, streamsRes, featuredRes] = await Promise.allSettled([
     api.colleges({ stream, pageSize: 24, sort: "rank" }),
     api.streams(),
+    api.colleges({ stream, featured: true, pageSize: 6, sort: "rank" }),
   ]);
 
-  const items = collegesRes.status === "fulfilled" ? collegesRes.value.items : [];
+  const allItems = collegesRes.status === "fulfilled" ? collegesRes.value.items : [];
+  const featured = featuredRes.status === "fulfilled" ? featuredRes.value.items : [];
+  const featuredSlugs = new Set(featured.map((c) => c.slug));
+  const items = allItems.filter((c) => !featuredSlugs.has(c.slug)); // avoid showing twice
   const meta = streamsRes.status === "fulfilled" ? streamsRes.value.items.find((s) => s.slug === stream) : undefined;
-  const name = meta?.name || items[0]?.stream.name || prettify(stream);
+  const name = meta?.name || allItems[0]?.stream.name || prettify(stream);
 
   const crumbs = [
     { name: "Home", path: "/" },
@@ -171,21 +175,40 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
 
         {/* Colleges + content */}
         <div>
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="text-xl font-extrabold sm:text-2xl">Top {name} colleges</h2>
-            <Link href={`/colleges?stream=${stream}`} className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
-              View all →
-            </Link>
-          </div>
+          {featured.length > 0 && (
+            <section className="mb-10">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-extrabold sm:text-2xl">Featured {name} colleges</h2>
+                <span className="rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-bold text-warn">★</span>
+              </div>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {featured.map((c) => (
+                  <CollegeCard key={c.id} college={c} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          {items.length === 0 ? (
-            <p className="mt-6 text-ink-500">No {name} colleges listed yet.</p>
-          ) : (
-            <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {items.map((c) => (
-                <CollegeCard key={c.id} college={c} />
-              ))}
-            </div>
+          {items.length > 0 && (
+            <>
+              <div className="flex items-end justify-between gap-4">
+                <h2 className="text-xl font-extrabold sm:text-2xl">
+                  {featured.length > 0 ? "More" : "Top"} {name} colleges
+                </h2>
+                <Link href={`/colleges?stream=${stream}`} className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                  View all →
+                </Link>
+              </div>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {items.map((c) => (
+                  <CollegeCard key={c.id} college={c} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {allItems.length === 0 && featured.length === 0 && (
+            <p className="text-ink-500">No {name} colleges listed yet.</p>
           )}
 
           {/* Why choose */}

@@ -16,6 +16,7 @@
     "prisma:generate": "prisma generate",
     "ingest": "tsx src/ingest/run.ts",
     "db:load:aicte": "tsx src/ingest/aicte.ts",
+    "seed:featured": "tsx src/ingest/featured.ts",
     "enrich": "tsx src/ingest/enrich.ts"
   },
   "prisma": {

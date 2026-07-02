@@ -26,7 +26,9 @@ export function CollegeCard({ college }: { college: TCollege }) {
             className="object-cover transition group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-ink-400">No image</div>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-500 to-brand-700 p-3 text-center">
+            <span className="line-clamp-3 text-sm font-bold text-white/95">{college.name}</span>
+          </div>
         )}
         {isOnline ? (
           <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-2.5 py-1 text-xs font-bold text-white">
@@ -47,7 +49,14 @@ export function CollegeCard({ college }: { college: TCollege }) {
       </Link>
 
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-[12.5px] text-ink-400">⚲ {college.location}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[12.5px] text-ink-400">⚲ {college.location}</p>
+          {college.featured && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-bold text-warn">
+              ★ Featured
+            </span>
+          )}
+        </div>
         <h3 className="mt-1 text-[16px] font-bold leading-snug">
           <Link href={`/colleges/${college.slug}`} className="hover:text-brand-600">
             {college.name}

@@ -41,13 +41,12 @@ const FEATURED_COURSES = [
     degrees: ["MBA", "PGDM", "BBA"],
   },
   {
-    slug: "bds",
+    slug: "dental",
     name: "Dental (BDS)",
     icon: "🦷",
-    gradient: "linear-gradient(135deg,#0ea5e9,#0369a1)",
+    gradient: "linear-gradient(135deg,#06b6d4,#0e7490)",
     blurb: "BDS & MDS at India's top dental colleges — fees, cutoffs & seats.",
     degrees: ["BDS", "MDS"],
-    href: "/colleges?search=dental",
   },
   {
     slug: "medical",

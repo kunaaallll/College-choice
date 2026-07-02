@@ -30,6 +30,7 @@ export interface CollegeCard {
   examName: string | null;
   estd: number | null;
   imgUrl: string | null;
+  featured?: boolean;
   stream: StreamRef;
   city: CityRef;
 }

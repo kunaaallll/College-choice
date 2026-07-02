@@ -16,6 +16,7 @@ const STREAM_GRADIENTS: Record<string, string> = {
   Arts: "linear-gradient(135deg,#ec4899,#be185d)",
   Science: "linear-gradient(135deg,#8b5cf6,#6d28d9)",
   Design: "linear-gradient(135deg,#14b8a6,#0f766e)",
+  Dental: "linear-gradient(135deg,#06b6d4,#0e7490)",
 };
 const DEFAULT_GRADIENT = "linear-gradient(135deg,#6366f1,#4338ca)";
 

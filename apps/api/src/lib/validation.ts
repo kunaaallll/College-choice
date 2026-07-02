@@ -8,6 +8,7 @@ export const listQuerySchema = z.object({
   program: z.string().trim().max(60).optional(), // matches a course/program name, e.g. "MBA"
   city: z.string().trim().optional(), // name or slug
   state: z.string().trim().optional(),
+  featured: z.enum(["true", "1"]).optional(), // only ever passed to request featured colleges
   maxFees: z.coerce.number().int().positive().optional(),
   sort: z.enum(["rank", "rating", "feesLow", "feesHigh"]).default("rank"),
   page: z.coerce.number().int().min(1).default(1),
