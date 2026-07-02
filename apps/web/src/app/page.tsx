@@ -4,7 +4,9 @@ import { api } from "@/lib/api";
 import { HeroSearch } from "@/components/HeroSearch";
 import { CollegeCard } from "@/components/CollegeCard";
 
-export const revalidate = 3600;
+// Render per-request so fresh DB data shows immediately. The API call goes over
+// the internal Docker network (see lib/api.ts), so this stays fast.
+export const dynamic = "force-dynamic";
 
 const STATS = [
   { value: "4,200+", label: "Colleges" },
@@ -19,15 +21,50 @@ const VALUES = [
   { icon: "★", title: "Free counselling", body: "Talk to mentors who've been there. Personalised guidance at zero cost." },
 ];
 
+// Prominently featured courses on the homepage (KollegeApply-style).
+const FEATURED_COURSES = [
+  {
+    slug: "engineering",
+    name: "Engineering",
+    icon: "⚙️",
+    gradient: "linear-gradient(135deg,#6366f1,#4338ca)",
+    blurb: "B.Tech, M.Tech & B.E. across CSE, ECE, Mechanical and more.",
+    degrees: ["B.Tech", "M.Tech", "B.E."],
+  },
+  {
+    slug: "management",
+    name: "Management",
+    icon: "📊",
+    gradient: "linear-gradient(135deg,#f59e0b,#d97706)",
+    blurb: "MBA, PGDM & BBA from India's top-ranked business schools.",
+    degrees: ["MBA", "PGDM", "BBA"],
+  },
+  {
+    slug: "medical",
+    name: "Medical",
+    icon: "⚕️",
+    gradient: "linear-gradient(135deg,#10b981,#059669)",
+    blurb: "MBBS, BDS & allied health at government and deemed colleges.",
+    degrees: ["MBBS", "BDS", "BAMS"],
+  },
+];
+
 export default async function HomePage() {
   // Fetch in parallel; tolerate API being down so the shell still renders.
-  const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await Promise.allSettled([
+  // Kick off both batches before awaiting so they run concurrently.
+  const coreP = Promise.allSettled([
     api.streams(),
     api.colleges({ sort: "rank", pageSize: 6 }),
     api.cities(),
     api.exams(),
     api.news(),
   ]);
+  const coursesP = Promise.allSettled(
+    FEATURED_COURSES.map((c) => api.colleges({ stream: c.slug, sort: "rank", pageSize: 4 })),
+  );
+
+  const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await coreP;
+  const courseColleges = (await coursesP).map((r) => (r.status === "fulfilled" ? r.value.items : []));
 
   const streams = streamsRes.status === "fulfilled" ? streamsRes.value.items : [];
   const topColleges = topRes.status === "fulfilled" ? topRes.value.items : [];
@@ -59,6 +96,58 @@ export default async function HomePage() {
               </div>
             ))}
           </dl>
+        </div>
+      </section>
+
+      {/* ── Featured courses ── */}
+      <section className="container-site py-14">
+        <SectionHead title="Explore top courses" subtitle="Popular courses" href="/courses" cta="View all courses →" />
+        <div className="mt-6 grid gap-5 lg:grid-cols-3">
+          {FEATURED_COURSES.map((course, i) => {
+            const stream = streams.find((s) => s.slug === course.slug);
+            const cols = courseColleges[i] ?? [];
+            return (
+              <div key={course.slug} className="card flex flex-col p-5">
+                <div className="flex items-center gap-3">
+                  <span className="badge-grad h-12 w-12 text-xl" style={{ background: course.gradient }}>
+                    {course.icon}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-ink-900">{course.name}</h3>
+                    <p className="text-xs text-ink-400">
+                      {stream ? `${stream.collegeCount.toLocaleString("en-IN")} colleges` : "Explore colleges"}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-ink-500">{course.blurb}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {course.degrees.map((d) => (
+                    <span key={d} className="chip">{d}</span>
+                  ))}
+                </div>
+                {cols.length > 0 && (
+                  <ul className="mt-4 space-y-2 border-t border-line pt-4">
+                    {cols.slice(0, 4).map((c, idx) => (
+                      <li key={c.id}>
+                        <Link
+                          href={`/colleges/${c.slug}`}
+                          className="flex items-center gap-2 text-sm text-ink-700 hover:text-brand-600"
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-xs font-bold text-brand-600">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate font-semibold">{c.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Link href={`/stream/${course.slug}`} className="btn-primary mt-5 w-full py-2 text-center text-sm">
+                  Explore {course.name} colleges →
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </section>
 
