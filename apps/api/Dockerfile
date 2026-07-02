@@ -1,6 +1,7 @@
 # ── Build stage ─────────────────────────────────────────────
 FROM node:22-alpine AS build
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm install
 COPY prisma ./prisma
@@ -12,6 +13,7 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
@@ -19,4 +21,4 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 EXPOSE 4000
 # Apply migrations, then start. (Seed/ingest are run manually or via a job.)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/index.js"]

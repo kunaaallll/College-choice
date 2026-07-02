@@ -8,7 +8,13 @@ import type {
   Stream,
 } from "./types";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+// Server-side rendering talks to the API over the internal Docker network
+// (INTERNAL_API_URL=http://api:4000) so it never round-trips through the public
+// domain/DNS/Cloudflare. The browser still uses the public NEXT_PUBLIC_API_URL.
+const API =
+  (typeof window === "undefined" ? process.env.INTERNAL_API_URL : "") ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:4000";
 
 // Revalidate cached fetches hourly (ISR) — fast pages, fresh-ish data.
 const REVALIDATE = 3600;
