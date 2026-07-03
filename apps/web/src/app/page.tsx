@@ -85,6 +85,15 @@ export default async function HomePage() {
     <>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
+        <Image
+          src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2000&q=80"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink-900/80 via-ink-900/85 to-ink-900" />
         <div className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(99,102,241,0.35),transparent)]" />
         <div className="container-site relative py-16 text-center sm:py-24">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
