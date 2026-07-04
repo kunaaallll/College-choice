@@ -13,8 +13,12 @@ export const metadata: Metadata = buildMetadata({
   path: "/courses",
 });
 
+// Streams hidden from the courses listing.
+const HIDDEN_STREAMS = new Set(["design"]);
+
 export default async function CoursesPage() {
-  const { items: streams } = await api.streams().catch(() => ({ items: [] }));
+  const { items } = await api.streams().catch(() => ({ items: [] }));
+  const streams = items.filter((s) => !HIDDEN_STREAMS.has(s.slug));
 
   return (
     <div className="container-site py-8">

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { HeroSearch } from "@/components/HeroSearch";
+import { HeroCarousel } from "@/components/HeroCarousel";
 import { CollegeCard } from "@/components/CollegeCard";
 
 // Render per-request so fresh DB data shows immediately. The API call goes over
@@ -9,10 +10,19 @@ import { CollegeCard } from "@/components/CollegeCard";
 export const dynamic = "force-dynamic";
 
 const STATS = [
-  { value: "4,200+", label: "Colleges" },
+  { value: "13,000+", label: "Colleges" },
   { value: "1,500+", label: "Courses" },
   { value: "120+", label: "Exams" },
   { value: "2M+", label: "Students helped" },
+];
+
+// Hero background carousel (rotates every 5s). Placeholder campus shots — will be
+// swapped for real partner-college photos (Bennett, IILM, Alliance, Amity).
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2000&q=80",
+  "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2000&q=80",
+  "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=2000&q=80",
+  "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=2000&q=80",
 ];
 
 const VALUES = [
@@ -75,7 +85,9 @@ export default async function HomePage() {
   const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await coreP;
   const courseColleges = (await coursesP).map((r) => (r.status === "fulfilled" ? r.value.items : []));
 
-  const streams = streamsRes.status === "fulfilled" ? streamsRes.value.items : [];
+  const streams = (streamsRes.status === "fulfilled" ? streamsRes.value.items : []).filter(
+    (s) => s.slug !== "design",
+  );
   const topColleges = topRes.status === "fulfilled" ? topRes.value.items : [];
   const cities = citiesRes.status === "fulfilled" ? citiesRes.value.items : [];
   const exams = examsRes.status === "fulfilled" ? examsRes.value.items.slice(0, 4) : [];
@@ -85,16 +97,7 @@ export default async function HomePage() {
     <>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
-        <Image
-          src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2000&q=80"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover opacity-25"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink-900/80 via-ink-900/85 to-ink-900" />
-        <div className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(99,102,241,0.35),transparent)]" />
+        <HeroCarousel images={HERO_IMAGES} />
         <div className="container-site relative py-16 text-center sm:py-24">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
             ★ India&apos;s most trusted college discovery platform

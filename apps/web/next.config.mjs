@@ -7,6 +7,7 @@ const nextConfig = {
     // Remote images (Unsplash placeholders now; swap for your CDN later).
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "upload.wikimedia.org" }, // auto-fetched college photos
       { protocol: "https", hostname: "**.collegechoice.example" },
     ],
   },

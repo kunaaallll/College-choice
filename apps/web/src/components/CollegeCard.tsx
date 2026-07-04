@@ -30,16 +30,10 @@ export function CollegeCard({ college }: { college: TCollege }) {
             <span className="line-clamp-3 text-sm font-bold text-white/95">{college.name}</span>
           </div>
         )}
-        {isOnline ? (
-          <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-2.5 py-1 text-xs font-bold text-white">
-            🌐 {college.mode}
+        {college.rank != null && (
+          <span className="absolute left-3 top-3 rounded-full bg-ink-900/85 px-2.5 py-1 text-xs font-bold text-white">
+            #{college.rank} {college.stream.name}
           </span>
-        ) : (
-          college.rank != null && (
-            <span className="absolute left-3 top-3 rounded-full bg-ink-900/85 px-2.5 py-1 text-xs font-bold text-white">
-              #{college.rank} {college.stream.name}
-            </span>
-          )
         )}
         {college.rating != null && (
           <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-warn">

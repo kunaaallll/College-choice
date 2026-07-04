@@ -25,8 +25,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur">
       {/* Announcement bar */}
       <div className="bg-ink-900 text-center text-[12.5px] text-white/90 py-1.5 px-4">
-        Admissions open 2026 — 4,200+ verified colleges across India ·{" "}
-        <span className="font-semibold text-brand-400">Help Counselling +91 1800-CAMPUS</span>
+        Admissions open 2026 — explore 13,000+ verified colleges across India
       </div>
 
       <nav className="container-site flex h-16 items-center justify-between gap-4">

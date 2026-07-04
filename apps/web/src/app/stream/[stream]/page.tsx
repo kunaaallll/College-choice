@@ -4,8 +4,10 @@ import { api } from "@/lib/api";
 import { buildMetadata, itemListJsonLd } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
+import type { CollegeCard as TCollege } from "@/lib/types";
 import { JsonLd } from "@/components/JsonLd";
 import { PredictorCTA } from "@/components/PredictorCTA";
+import { StateSelect } from "@/components/StateSelect";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -25,6 +27,26 @@ const TYPES = [
 ] as const;
 
 const prettify = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+
+// Sprinkle featured colleges into the list at random 3–4 gaps, in random order,
+// so featured colleges are treated equally and none is always on top.
+function interleaveFeatured(base: TCollege[], featured: TCollege[]): TCollege[] {
+  const shuffled = [...featured].sort(() => Math.random() - 0.5);
+  const out: TCollege[] = [];
+  let fi = 0;
+  let since = 0;
+  let gap = 3 + Math.floor(Math.random() * 2); // 3 or 4
+  for (const c of base) {
+    out.push(c);
+    if (++since >= gap && fi < shuffled.length) {
+      out.push(shuffled[fi++]);
+      since = 0;
+      gap = 3 + Math.floor(Math.random() * 2);
+    }
+  }
+  while (fi < shuffled.length) out.push(shuffled[fi++]);
+  return out;
+}
 
 export async function generateStaticParams() {
   try {
@@ -56,7 +78,8 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
   const allItems = collegesRes.status === "fulfilled" ? collegesRes.value.items : [];
   const featured = featuredRes.status === "fulfilled" ? featuredRes.value.items : [];
   const featuredSlugs = new Set(featured.map((c) => c.slug));
-  const items = allItems.filter((c) => !featuredSlugs.has(c.slug)); // avoid showing twice
+  const base = allItems.filter((c) => !featuredSlugs.has(c.slug)); // featured handled below
+  const listed = interleaveFeatured(base, featured); // featured sprinkled in randomly
   const meta = streamsRes.status === "fulfilled" ? streamsRes.value.items.find((s) => s.slug === stream) : undefined;
   const name = meta?.name || allItems[0]?.stream.name || prettify(stream);
 
@@ -104,7 +127,7 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
       <JsonLd
         data={itemListJsonLd(
           `${name} colleges in India`,
-          items.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })),
+          listed.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })),
         )}
       />
       <JsonLd data={faqJsonLd} />
@@ -114,7 +137,7 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
         <h1 className="text-3xl font-extrabold sm:text-4xl">Best {name} Colleges in India 2026</h1>
         <p className="mt-3 text-ink-500">
           {meta?.description || `Explore top ${name.toLowerCase()} colleges in India.`}{" "}
-          Compare {items.length}+ institutions on fees, placements, cutoffs and reviews
+          Compare {listed.length}+ institutions on fees, placements, cutoffs and reviews
           {meta?.examName ? `, with admissions via ${meta.examName}` : ""}. Apply free with expert counselling.
         </p>
         {meta && meta.degrees.length > 0 && (
@@ -138,18 +161,10 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
           <div className="card p-5">
             <h2 className="text-base font-bold">Filter {name} colleges</h2>
 
-            <p className="mt-4 text-[13px] font-bold text-ink-700">By state</p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {STATES.map((s) => (
-                <Link
-                  key={s}
-                  href={`/colleges?stream=${stream}&state=${encodeURIComponent(s)}`}
-                  className="rounded-full border border-line px-2.5 py-1 text-[12.5px] font-semibold text-ink-500 hover:border-brand-400 hover:text-brand-700"
-                >
-                  {s}
-                </Link>
-              ))}
-            </div>
+            <label className="mt-4 block">
+              <span className="text-[13px] font-bold text-ink-700">By state</span>
+              <StateSelect stream={stream} states={STATES} />
+            </label>
 
             <p className="mt-5 text-[13px] font-bold text-ink-700">By type</p>
             <div className="mt-2 grid gap-1.5">
@@ -175,39 +190,21 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
 
         {/* Colleges + content */}
         <div>
-          {featured.length > 0 && (
-            <section className="mb-10">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-extrabold sm:text-2xl">Featured {name} colleges</h2>
-                <span className="rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-bold text-warn">★</span>
-              </div>
-              <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {featured.map((c) => (
-                  <CollegeCard key={c.id} college={c} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {items.length > 0 && (
+          {listed.length > 0 ? (
             <>
               <div className="flex items-end justify-between gap-4">
-                <h2 className="text-xl font-extrabold sm:text-2xl">
-                  {featured.length > 0 ? "More" : "Top"} {name} colleges
-                </h2>
+                <h2 className="text-xl font-extrabold sm:text-2xl">Top {name} colleges</h2>
                 <Link href={`/colleges?stream=${stream}`} className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
                   View all →
                 </Link>
               </div>
               <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {items.map((c) => (
+                {listed.map((c) => (
                   <CollegeCard key={c.id} college={c} />
                 ))}
               </div>
             </>
-          )}
-
-          {allItems.length === 0 && featured.length === 0 && (
+          ) : (
             <p className="text-ink-500">No {name} colleges listed yet.</p>
           )}
 
