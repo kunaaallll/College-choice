@@ -8,6 +8,7 @@ import type { CollegeCard as TCollege } from "@/lib/types";
 import { JsonLd } from "@/components/JsonLd";
 import { PredictorCTA } from "@/components/PredictorCTA";
 import { StateSelect } from "@/components/StateSelect";
+import { streamContent } from "@/lib/streamContent";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -82,6 +83,7 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
   const listed = interleaveFeatured(base, featured); // featured sprinkled in randomly
   const meta = streamsRes.status === "fulfilled" ? streamsRes.value.items.find((s) => s.slug === stream) : undefined;
   const name = meta?.name || allItems[0]?.stream.name || prettify(stream);
+  const content = streamContent(stream);
 
   const crumbs = [
     { name: "Home", path: "/" },
@@ -208,21 +210,69 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
             <p className="text-ink-500">No {name} colleges listed yet.</p>
           )}
 
-          {/* Why choose */}
-          <section className="mt-12 max-w-3xl">
-            <h2 className="text-2xl font-extrabold">Why choose {name} colleges in India?</h2>
-            <p className="mt-3 text-ink-500">
-              {name} remains one of the most sought-after fields in India, with strong placement records,
-              research opportunities and a clear career path. Picking the right college means weighing fees
-              against outcomes — placement averages, faculty, infrastructure and location all matter.
-            </p>
-            <ul className="mt-4 space-y-2 text-ink-600">
-              <li className="flex gap-2"><span className="text-brand-600">✓</span> Verified fees, cutoffs and placement figures for every listed college.</li>
-              <li className="flex gap-2"><span className="text-brand-600">✓</span> Filter by state, ownership type and budget to match your profile.</li>
-              <li className="flex gap-2"><span className="text-brand-600">✓</span> Compare up to four colleges side by side before you decide.</li>
-              <li className="flex gap-2"><span className="text-brand-600">✓</span> Free counselling to guide you through admission and documentation.</li>
-            </ul>
-          </section>
+          {/* Detailed course content */}
+          {content ? (
+            <div className="mt-12 max-w-3xl space-y-10">
+              <section>
+                <h2 className="text-2xl font-extrabold">About {name} courses in India</h2>
+                {content.overview.map((p, i) => (
+                  <p key={i} className="mt-3 text-ink-500">{p}</p>
+                ))}
+              </section>
+
+              <section>
+                <h2 className="text-xl font-extrabold">Popular {name} specialisations</h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {content.specializations.map((s) => (
+                    <span key={s} className="chip">{s}</span>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-extrabold">Eligibility &amp; admission</h2>
+                <p className="mt-3 text-ink-500">{content.eligibility}</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-extrabold">Career scope &amp; top recruiters</h2>
+                <p className="mt-3 text-ink-500">{content.scope}</p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="card p-4">
+                    <p className="text-[13px] font-bold text-ink-700">Career paths</p>
+                    <ul className="mt-2 space-y-1.5 text-sm text-ink-600">
+                      {content.careers.map((c) => (
+                        <li key={c} className="flex gap-2"><span className="text-brand-600">›</span> {c}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="card p-4">
+                    <p className="text-[13px] font-bold text-ink-700">Top recruiters</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {content.recruiters.map((r) => (
+                        <span key={r} className="rounded-lg bg-brand-50 px-2 py-1 text-[12.5px] font-semibold text-brand-700">{r}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          ) : (
+            <section className="mt-12 max-w-3xl">
+              <h2 className="text-2xl font-extrabold">Why choose {name} colleges in India?</h2>
+              <p className="mt-3 text-ink-500">
+                {name} remains one of the most sought-after fields in India, with strong placement records,
+                research opportunities and a clear career path. Picking the right college means weighing fees
+                against outcomes — placement averages, faculty, infrastructure and location all matter.
+              </p>
+              <ul className="mt-4 space-y-2 text-ink-600">
+                <li className="flex gap-2"><span className="text-brand-600">✓</span> Verified fees, cutoffs and placement figures for every listed college.</li>
+                <li className="flex gap-2"><span className="text-brand-600">✓</span> Filter by state, ownership type and budget to match your profile.</li>
+                <li className="flex gap-2"><span className="text-brand-600">✓</span> Compare up to four colleges side by side before you decide.</li>
+                <li className="flex gap-2"><span className="text-brand-600">✓</span> Free counselling to guide you through admission and documentation.</li>
+              </ul>
+            </section>
+          )}
 
           {/* FAQ */}
           <section className="mt-10 max-w-3xl">
