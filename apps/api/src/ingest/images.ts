@@ -52,7 +52,30 @@ async function assignStock() {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Top page image from Wikipedia for a search term, or null. */
+// Generic words dropped when checking whether a Wikipedia page is really the college.
+const STOP = new Set([
+  "the", "of", "and", "for", "amp", "dental", "medical", "college", "hospital",
+  "university", "institute", "school", "research", "centre", "center", "sciences",
+  "science", "memorial", "group", "institutions", "technology", "management",
+  "online", "national", "indian", "studies",
+]);
+
+const keyTokens = (name: string): string[] =>
+  name.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length >= 4 && !STOP.has(w));
+
+/** True only if the matched page title shares a distinctive word with the college. */
+const titleMatches = (name: string, title: string): boolean => {
+  const t = title.toLowerCase();
+  const toks = keyTokens(name);
+  return toks.length > 0 && toks.some((w) => t.includes(w));
+};
+
+const stockFor = (slug: string, id: number): string => {
+  const pool = POOLS[slug] ?? CAMPUS;
+  return pool[id % pool.length];
+};
+
+/** Validated top page image from Wikipedia — returns null unless the page is clearly the college. */
 async function wikiImage(name: string): Promise<string | null> {
   const url =
     "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*" +
@@ -66,33 +89,42 @@ async function wikiImage(name: string): Promise<string | null> {
     if (!pages) return null;
     const page: any = Object.values(pages)[0];
     const src: string | undefined = page?.thumbnail?.source;
-    // Only accept Wikimedia-hosted images (allow-listed in next.config).
-    return src && src.startsWith("https://upload.wikimedia.org") ? src : null;
+    if (!src || !src.startsWith("https://upload.wikimedia.org")) return null;
+    // Reject wrong matches (search often returns an unrelated institution).
+    if (!titleMatches(name, String(page.title || ""))) return null;
+    // Skip bare logos/signatures — we want campus photos.
+    if (/logo|signature|seal|emblem/i.test(src)) return null;
+    return src;
   } catch {
     return null;
   }
 }
 
-/** Fetch real photos for featured + ranked colleges (the notable ones). */
+/** Fetch real photos for featured + ranked colleges; fall back to stock when unsure. */
 async function enrichReal() {
   const cols = await prisma.college.findMany({
-    where: { OR: [{ featured: true }, { rank: { not: null } }], source: { not: "manual:wiki" } },
-    select: { id: true, name: true },
+    where: { OR: [{ featured: true }, { rank: { not: null } }] },
+    select: { id: true, name: true, stream: { select: { slug: true } } },
     orderBy: [{ featured: "desc" }, { rank: "asc" }],
     take: 400,
   });
-  console.log(`Fetching Wikipedia photos for ${cols.length} notable colleges…`);
-  let ok = 0;
+  console.log(`Resolving photos for ${cols.length} notable colleges…`);
+  let real = 0;
   for (const c of cols) {
     const img = await wikiImage(c.name);
+    // Use the validated Wikipedia photo, otherwise a clean stock image (never a wrong photo).
+    const imgUrl = img ?? stockFor(c.stream.slug, c.id);
+    await prisma.college.update({
+      where: { id: c.id },
+      data: { imgUrl, source: img ? "manual:wiki" : "manual:stock" },
+    });
     if (img) {
-      await prisma.college.update({ where: { id: c.id }, data: { imgUrl: img, source: "manual:wiki" } });
-      ok++;
+      real++;
       console.log(`  ✓ ${c.name}`);
     }
     await sleep(250); // be gentle with the Wikipedia API
   }
-  console.log(`Real photos set for ${ok}/${cols.length}.`);
+  console.log(`Real photos set for ${real}/${cols.length}; the rest use clean stock.`);
 }
 
 async function run() {
