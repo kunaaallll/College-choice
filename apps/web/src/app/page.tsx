@@ -16,8 +16,9 @@ const STATS = [
   { value: "2M+", label: "Students helped" },
 ];
 
-// Hero background carousel (rotates every 5s). Placeholder campus shots — will be
-// swapped for real partner-college photos (Bennett, IILM, Alliance, Amity).
+// Hero carousel: prefer real partner-college photos where we have them, then
+// fill with high-res campus stock. Real partner shots get added as we source them.
+const PARTNER_SLUGS = ["bennett-university", "alliance-university", "amity-university-online", "iilm-university"];
 const HERO_IMAGES = [
   "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2000&q=80",
   "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2000&q=80",
@@ -81,9 +82,16 @@ export default async function HomePage() {
   const coursesP = Promise.allSettled(
     FEATURED_COURSES.map((c) => api.colleges({ stream: c.slug, sort: "rank", pageSize: 4 })),
   );
+  const partnersP = api.compare(PARTNER_SLUGS).catch(() => ({ items: [] }));
 
   const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await coreP;
   const courseColleges = (await coursesP).map((r) => (r.status === "fulfilled" ? r.value.items : []));
+
+  // Real partner photos first (Wikimedia), then high-res campus stock.
+  const partnerImgs = (await partnersP).items
+    .map((p) => p.imgUrl)
+    .filter((x): x is string => !!x && x.includes("wikimedia"));
+  const heroImages = [...partnerImgs, ...HERO_IMAGES].slice(0, 5);
 
   const streams = (streamsRes.status === "fulfilled" ? streamsRes.value.items : []).filter(
     (s) => s.slug !== "design",
@@ -97,7 +105,7 @@ export default async function HomePage() {
     <>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
-        <HeroCarousel images={HERO_IMAGES} />
+        <HeroCarousel images={heroImages} />
         <div className="container-site relative py-16 text-center sm:py-24">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
             ★ India&apos;s most trusted college discovery platform
