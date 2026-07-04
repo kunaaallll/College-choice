@@ -8,6 +8,7 @@ import { buildMetadata, breadcrumbJsonLd, collegeJsonLd, faqJsonLd } from "@/lib
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
 import { DetailActions } from "@/components/DetailActions";
+import { ReadMore } from "@/components/ReadMore";
 
 export const revalidate = 3600;
 export const dynamicParams = true; // render unknown slugs on-demand (ISR), then cache
@@ -190,11 +191,7 @@ export default async function CollegeDetailPage({ params }: { params: Promise<{ 
           {/* Overview */}
           <section id="overview" className="scroll-mt-32">
             <h2 className="text-2xl">About {c.name}</h2>
-            <div className="prose mt-3 max-w-none text-ink-500">
-              {(c.descriptionLong || c.about || "").split("\n\n").map((p, i) => (
-                <p key={i} className="mt-3 leading-relaxed">{p}</p>
-              ))}
-            </div>
+            <ReadMore text={c.descriptionLong || c.about || ""} />
             {c.highlights.length > 0 && (
               <>
                 <h3 className="mt-6 text-lg">Highlights</h3>
