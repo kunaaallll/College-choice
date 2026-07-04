@@ -26,7 +26,7 @@ const FAQS = [
 ];
 
 export default async function OnlinePage() {
-  const { items } = await api.colleges({ mode: "Online", sort: "rating", pageSize: 24 }).catch(() => ({ items: [] }));
+  const { items } = await api.colleges({ mode: "Online", sort: "rating", pageSize: 60 }).catch(() => ({ items: [] }));
 
   return (
     <>
