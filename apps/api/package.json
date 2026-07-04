@@ -17,6 +17,7 @@
     "ingest": "tsx src/ingest/run.ts",
     "db:load:aicte": "tsx src/ingest/aicte.ts",
     "seed:featured": "tsx src/ingest/featured.ts",
+    "seed:nirf": "tsx src/ingest/nirf.ts",
     "images": "tsx src/ingest/images.ts",
     "enrich": "tsx src/ingest/enrich.ts"
   },

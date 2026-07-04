@@ -115,7 +115,8 @@ async function run() {
       type: toCollegeType(e.type),
       mode: e.mode === "Online" ? CollegeMode.Online : CollegeMode.Campus,
       approvals: e.approvals ?? [],
-      rank: e.rank ?? null,
+      // Sit below the NIRF top band (1–20); surfaced via random interleave, not rank.
+      rank: e.rank != null ? e.rank + 100 : null,
       rating: e.rating ?? null,
       feesNum: e.feesNum ?? null,
       feesLabel: e.feesLabel ?? null,
@@ -137,7 +138,7 @@ async function run() {
 
     const res = await prisma.college.upsert({
       where: { slug },
-      update: data,
+      update: { ...data, imgUrl: undefined }, // keep any real photo fetched by images.ts
       create: { ...data, slug },
       select: { createdAt: true, updatedAt: true },
     });
