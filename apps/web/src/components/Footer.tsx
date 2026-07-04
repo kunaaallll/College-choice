@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const COLS = [
@@ -54,12 +55,9 @@ export function Footer() {
     <footer className="mt-20 border-t border-line bg-ink-900 text-white/80">
       <div className="container-site grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-6">
         <div className="lg:col-span-1">
-          <div className="flex items-center gap-2">
-            <span className="badge-grad h-9 w-9 bg-gradient-to-br from-brand-500 to-brand-700 text-lg">C</span>
-            <span className="text-lg font-extrabold text-white">
-              College <span className="text-brand-400">Choice</span>
-            </span>
-          </div>
+          <Link href="/" className="inline-flex rounded-lg bg-white p-2" aria-label="College Choice home">
+            <Image src="/logo.png" alt="College Choice" width={180} height={60} className="h-8 w-auto" />
+          </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">
             India&apos;s most trusted platform to find, compare and apply to colleges. 100% free for
             students.

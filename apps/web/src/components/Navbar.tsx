@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -29,17 +30,8 @@ export function Navbar() {
       </div>
 
       <nav className="container-site flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="College Choice home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M22 10 12 5 2 10l10 5 10-5Z" />
-              <path d="M6 12v4.5c0 1.2 2.7 2.5 6 2.5s6-1.3 6-2.5V12" />
-              <path d="M22 10v5" />
-            </svg>
-          </span>
-          <span className="text-lg font-extrabold tracking-tight text-ink-900">
-            College<span className="text-brand-600">Choice</span>
-          </span>
+        <Link href="/" className="flex items-center" aria-label="College Choice home">
+          <Image src="/logo.png" alt="College Choice" width={180} height={60} priority className="h-9 w-auto sm:h-10" />
         </Link>
 
         {/* Desktop nav */}
