@@ -21,6 +21,7 @@
     "seed:online": "tsx src/ingest/onlineUniversities.ts",
     "images": "tsx src/ingest/images.ts",
     "images:cities": "tsx src/ingest/cityImages.ts",
+    "images:local": "tsx src/ingest/localPhotos.ts",
     "enrich": "tsx src/ingest/enrich.ts"
   },
   "prisma": {

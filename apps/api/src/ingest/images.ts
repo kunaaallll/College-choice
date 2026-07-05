@@ -201,10 +201,8 @@ async function wikidataImage(name: string): Promise<string | null> {
     limit: "3",
   });
   const hits: any[] = s?.search || [];
-  // Pick the first entity whose label clearly matches and looks like an institution.
-  const hit = hits.find(
-    (h) => titleMatches(name, String(h.label || "")) && /universit|college|institut|school/i.test(String(h.description || "")),
-  );
+  // Pick the first entity whose label clearly matches the college name.
+  const hit = hits.find((h) => titleMatches(name, String(h.label || "")));
   if (!hit) return null;
   const c = await wdApi("www.wikidata.org", { action: "wbgetclaims", entity: hit.id, property: "P18" });
   const file: string | undefined = c?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
@@ -212,14 +210,13 @@ async function wikidataImage(name: string): Promise<string | null> {
   return commonsUrl(file);
 }
 
-/** A validated, real photo for a college — Wikipedia article, then Wikidata; else null. */
+/** A validated, real photo for a college. Wikidata first (its host isn't
+ * rate-limited like en.wikipedia.org during bulk runs), then Wikipedia article. */
 async function wikiImage(name: string): Promise<string | null> {
   const title = OVERRIDE_TITLE[name] ?? (await pageTitleFor(name));
-  if (title) {
-    const p = await campusPhoto(title);
-    if (p) return p;
-  }
-  return wikidataImage(name);
+  const viaWd = await wikidataImage(title ?? name);
+  if (viaWd) return viaWd;
+  return title ? campusPhoto(title) : null;
 }
 
 /** Fetch real photos for featured + ranked colleges; fall back to stock when unsure. */
