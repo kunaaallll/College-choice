@@ -4,9 +4,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# API URL must be available at build time for client bundles.
+# Public URLs must be available at build time (client bundles, robots, sitemap,
+# canonical/OG tags). Without SITE_URL these default to http://localhost:3000.
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN npm run build
 
 # ── Runtime stage (Next standalone output) ──────────────────

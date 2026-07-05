@@ -20,6 +20,7 @@ services:
       context: ./apps/web
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://collegechoice.in}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://collegechoice.in}
       # Build-time SSG fetches the public URL; resolve it to this VPS (where
       # nginx+API are live) instead of stale public DNS / old hosting.
       extra_hosts:
@@ -30,6 +31,7 @@ services:
       - api
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://collegechoice.in}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://collegechoice.in}
       # SSR fetches the API directly over the Docker network — avoids public DNS.
       INTERNAL_API_URL: http://api:4000
       NODE_ENV: production
