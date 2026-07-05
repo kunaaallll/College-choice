@@ -3,6 +3,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { CityGrid } from "@/components/CityGrid";
 import { CollegeCard } from "@/components/CollegeCard";
 
 // Render per-request so fresh DB data shows immediately. The API call goes over
@@ -220,24 +221,7 @@ export default async function HomePage() {
       {/* ── Browse by city ── */}
       <section className="container-site py-14">
         <SectionHead title="Find colleges near you" subtitle="By location" href="/colleges" cta="Explore all cities →" />
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {cities.map((city) => (
-            <Link
-              key={city.slug}
-              href={`/colleges-in/${city.slug}`}
-              className="relative aspect-[4/3] overflow-hidden rounded-2xl"
-            >
-              {city.imageUrl && (
-                <Image src={city.imageUrl} alt={city.name} fill sizes="25vw" className="object-cover" />
-              )}
-              <span className="absolute inset-0 bg-gradient-to-t from-ink-900/80 to-transparent" />
-              <span className="absolute bottom-3 left-3 text-white">
-                <span className="block font-bold">{city.name}</span>
-                <span className="block text-xs text-white/70">{city.collegeCount} colleges</span>
-              </span>
-            </Link>
-          ))}
-        </div>
+        <CityGrid cities={cities} initial={8} />
       </section>
 
       {/* ── Upcoming exams ── */}

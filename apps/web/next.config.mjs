@@ -5,11 +5,9 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     // Remote images (Unsplash placeholders now; swap for your CDN later).
-    remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "upload.wikimedia.org" }, // auto-fetched college photos
-      { protocol: "https", hostname: "**.collegechoice.example" },
-    ],
+    // Allow any https image host — college photos come from Wikimedia and the
+    // colleges' own official websites (many different domains).
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
   async headers() {
     return [

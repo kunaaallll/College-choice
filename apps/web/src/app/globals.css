@@ -8,10 +8,13 @@
   }
   html {
     scroll-behavior: smooth;
+    overflow-x: clip; /* no accidental horizontal scroll; clip keeps sticky working */
   }
   body {
     @apply bg-white text-ink-700 antialiased;
     font-family: var(--font-jakarta);
+    overflow-x: clip;
+    max-width: 100%;
   }
   h1, h2, h3, h4 {
     @apply text-ink-900 font-extrabold tracking-tight;

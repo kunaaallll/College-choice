@@ -210,13 +210,49 @@ async function wikidataImage(name: string): Promise<string | null> {
   return commonsUrl(file);
 }
 
-/** A validated, real photo for a college. Wikidata first (its host isn't
- * rate-limited like en.wikipedia.org during bulk runs), then Wikipedia article. */
+/** Official website (Wikidata P856) for a college. */
+async function wikidataWebsite(name: string): Promise<string | null> {
+  const s = await wdApi("www.wikidata.org", { action: "wbsearchentities", search: name, language: "en", type: "item", limit: "3" });
+  const hit = (s?.search || []).find((h: any) => titleMatches(name, String(h.label || "")));
+  if (!hit) return null;
+  const c = await wdApi("www.wikidata.org", { action: "wbgetclaims", entity: hit.id, property: "P856" });
+  const url = c?.claims?.P856?.[0]?.mainsnak?.datavalue?.value;
+  return typeof url === "string" ? url : null;
+}
+
+/** og:image from a college's official website (last resort — many private colleges). */
+async function websiteImage(name: string): Promise<string | null> {
+  const site = await wikidataWebsite(name);
+  if (!site) return null;
+  try {
+    const res = await fetch(site, { headers: { "User-Agent": "Mozilla/5.0 (compatible; CollegeChoice/1.0)" }, signal: AbortSignal.timeout(9000) });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    let img = m?.[1];
+    if (!img) return null;
+    if (img.startsWith("//")) img = "https:" + img;
+    else if (img.startsWith("/")) img = new URL(site).origin + img;
+    if (!/^https?:\/\//i.test(img)) return null;
+    if (/logo|favicon|icon|placeholder|default/i.test(img)) return null; // skip logos
+    return img.replace(/^http:/, "https:");
+  } catch {
+    return null;
+  }
+}
+
+/** A validated, real photo for a college. Wikidata → Wikipedia → official site. */
 async function wikiImage(name: string): Promise<string | null> {
   const title = OVERRIDE_TITLE[name] ?? (await pageTitleFor(name));
   const viaWd = await wikidataImage(title ?? name);
   if (viaWd) return viaWd;
-  return title ? campusPhoto(title) : null;
+  if (title) {
+    const p = await campusPhoto(title);
+    if (p) return p;
+  }
+  return websiteImage(name);
 }
 
 /** Fetch real photos for featured + ranked colleges; fall back to stock when unsure. */
