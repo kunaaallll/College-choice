@@ -87,11 +87,13 @@ export default async function HomePage() {
   const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await coreP;
   const courseColleges = (await coursesP).map((r) => (r.status === "fulfilled" ? r.value.items : []));
 
-  // Real partner photos first (Wikimedia), then high-res campus stock.
-  const partnerImgs = (await partnersP).items
-    .map((p) => p.imgUrl)
-    .filter((x): x is string => !!x && x.includes("wikimedia"));
-  const heroImages = [...partnerImgs, ...HERO_IMAGES].slice(0, 5);
+  // Hero shows ONLY the partner colleges (Bennett, IILM, Alliance, Amity),
+  // ordered to match PARTNER_SLUGS. Stock is a last-resort fallback only.
+  const partnerItems = (await partnersP).items;
+  const partnerImgs = PARTNER_SLUGS.map((s) => partnerItems.find((p) => p.slug === s)?.imgUrl).filter(
+    (x): x is string => !!x,
+  );
+  const heroImages = partnerImgs.length > 0 ? partnerImgs : HERO_IMAGES;
 
   const streams = (streamsRes.status === "fulfilled" ? streamsRes.value.items : []).filter(
     (s) => s.slug !== "design",
@@ -114,7 +116,7 @@ export default async function HomePage() {
             Find the right college, <span className="text-brand-400">make the right call.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/70 sm:text-lg">
-            Compare 4,200+ colleges on fees, placements, cutoffs and reviews — all in one place, free.
+            Compare 13,000+ colleges on fees, placements, cutoffs and reviews — all in one place, free.
           </p>
           <HeroSearch />
           <dl className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-6 sm:grid-cols-4">

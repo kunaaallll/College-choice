@@ -20,6 +20,7 @@
     "seed:nirf": "tsx src/ingest/nirf.ts",
     "seed:online": "tsx src/ingest/onlineUniversities.ts",
     "images": "tsx src/ingest/images.ts",
+    "images:cities": "tsx src/ingest/cityImages.ts",
     "enrich": "tsx src/ingest/enrich.ts"
   },
   "prisma": {

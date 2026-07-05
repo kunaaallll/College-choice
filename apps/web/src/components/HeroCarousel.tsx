@@ -29,10 +29,9 @@ export function HeroCarousel({ images }: { images: string[] }) {
           }`}
         />
       ))}
-      {/* Contrast overlays — dark enough to read text, light enough to see the campus. */}
-      <div className="absolute inset-0 bg-ink-900/55" />
-      <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/30 to-ink-900/70" />
-      <div className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(99,102,241,0.30),transparent)]" />
+      {/* Neutral dark overlay — readable text, no colour tint, campus stays visible. */}
+      <div className="absolute inset-0 bg-black/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/60" />
     </div>
   );
 }

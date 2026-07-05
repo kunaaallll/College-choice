@@ -75,35 +75,100 @@ const stockFor = (slug: string, id: number): string => {
   return pool[id % pool.length];
 };
 
-/** Validated top page image from Wikipedia — returns null unless the page is clearly the college. */
-async function wikiImage(name: string): Promise<string | null> {
-  const url =
-    "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*" +
-    "&generator=search&gsrlimit=1&prop=pageimages&pithumbsize=1200" +
-    `&gsrsearch=${encodeURIComponent(name)}`;
+async function wikiApi(params: Record<string, string>): Promise<any> {
+  const url = "https://en.wikipedia.org/w/api.php?format=json&origin=*&" + new URLSearchParams(params).toString();
   try {
     const res = await fetch(url, { headers: { "User-Agent": "CollegeChoice/1.0 (contact@collegechoice.in)" } });
-    if (!res.ok) return null;
-    const data: any = await res.json();
-    const pages = data?.query?.pages;
-    if (!pages) return null;
-    const page: any = Object.values(pages)[0];
-    const src: string | undefined = page?.thumbnail?.source;
-    if (!src || !src.startsWith("https://upload.wikimedia.org")) return null;
-    // Reject wrong matches (search often returns an unrelated institution).
-    if (!titleMatches(name, String(page.title || ""))) return null;
-    // Skip bare logos/signatures — we want campus photos.
-    if (/logo|signature|seal|emblem/i.test(src)) return null;
-    return src;
+    return res.ok ? await res.json() : null;
   } catch {
     return null;
   }
 }
 
+/** Resolve the correct Wikipedia article title for a college, or null. */
+async function pageTitleFor(name: string): Promise<string | null> {
+  const data = await wikiApi({ action: "query", generator: "search", gsrlimit: "1", gsrsearch: name, prop: "info" });
+  const pages = data?.query?.pages;
+  if (!pages) return null;
+  const page: any = Object.values(pages)[0];
+  const title = String(page?.title || "");
+  return title && titleMatches(name, title) ? title : null;
+}
+
+// Filenames that are clearly not a campus photo.
+const BAD_IMG = /logo|seal|emblem|coat|crest|map|icon|flag|signature|wordmark|symbol|banner|qr[_-]|\.svg$/i;
+// Filenames that strongly suggest a campus/building photo (ranked first).
+const GOOD_HINT = /campus|building|gate|entrance|aerial|main|block|hall|academ|library|hostel|admin|view|tower|quad/i;
+
+/** Pick a real campus photo from a Wikipedia article's images — one API call. */
+async function campusPhoto(title: string): Promise<string | null> {
+  const data = await wikiApi({
+    action: "query",
+    titles: title,
+    generator: "images",
+    gimlimit: "80",
+    prop: "imageinfo",
+    iiprop: "url",
+    iiurlwidth: "1200",
+  });
+  const pages = data?.query?.pages;
+  if (!pages) return null;
+  const candidates = (Object.values(pages) as any[])
+    .map((p) => ({ t: String(p.title || ""), url: (p.imageinfo?.[0]?.thumburl || p.imageinfo?.[0]?.url) as string | undefined }))
+    .filter((c) => /\.jpe?g$/i.test(c.t) && !BAD_IMG.test(c.t) && !!c.url && c.url.startsWith("https://upload.wikimedia.org"));
+  if (candidates.length === 0) return null;
+  // Prefer campus/building filenames, then the first available photo.
+  candidates.sort((a, b) => (GOOD_HINT.test(b.t) ? 1 : 0) - (GOOD_HINT.test(a.t) ? 1 : 0));
+  return candidates[0].url!;
+}
+
+// Exact Wikipedia article titles for colleges whose short name doesn't match
+// (search + validation would otherwise miss them).
+const OVERRIDE_TITLE: Record<string, string> = {
+  "IIT Guwahati": "Indian Institute of Technology Guwahati",
+  "NIT Trichy": "National Institute of Technology, Tiruchirappalli",
+  "VIT Vellore": "Vellore Institute of Technology",
+  "SRM Institute of Science and Technology": "SRM Institute of Science and Technology",
+  "Delhi Technological University": "Delhi Technological University",
+  "National Law School of India University": "National Law School of India University",
+  "IIM Lucknow": "Indian Institute of Management Lucknow",
+  "IIM Indore": "Indian Institute of Management Indore",
+  "IIT Bombay — Shailesh J. Mehta School of Management": "Indian Institute of Technology Bombay",
+  "Management Development Institute": "Management Development Institute",
+  "IIM Rohtak": "Indian Institute of Management Rohtak",
+  "PGIMER Chandigarh": "Postgraduate Institute of Medical Education and Research, Chandigarh",
+  "CMC Vellore": "Christian Medical College, Vellore",
+  "NIMHANS Bengaluru": "National Institute of Mental Health and Neurosciences",
+  "JIPMER Puducherry": "Jawaharlal Institute of Postgraduate Medical Education and Research",
+  "SGPGIMS Lucknow": "Sanjay Gandhi Postgraduate Institute of Medical Sciences",
+  "Institute of Medical Sciences, BHU": "Institute of Medical Sciences, Banaras Hindu University",
+  "Kasturba Medical College, Manipal": "Kasturba Medical College, Manipal",
+  "Sri Ramachandra Institute of Higher Education": "Sri Ramachandra Institute of Higher Education and Research",
+  "St. John's Medical College": "St. John's Medical College, Bangalore",
+  "IISc Bangalore": "Indian Institute of Science",
+  "Saveetha Institute of Medical and Technical Sciences": "Saveetha Institute of Medical and Technical Sciences",
+  "Maulana Azad Institute of Dental Sciences": "Maulana Azad Institute of Dental Sciences",
+  "Dr. D.Y. Patil Vidyapeeth (Dental)": "Dr. D. Y. Patil Vidyapeeth",
+  "SRM Dental College": "SRM Dental College",
+  "JSS Dental College and Hospital": "JSS Dental College and Hospital",
+  "Faculty of Dental Sciences, KGMU": "King George's Medical University",
+  "Nair Hospital Dental College": "Nair Hospital Dental College",
+  "SDM College of Dental Sciences and Hospital": "SDM College of Dental Sciences and Hospital",
+  "Government Dental College and Hospital, Mumbai": "Government Dental College and Hospital, Mumbai",
+};
+
+/** A validated, real campus photo for a college — or null to fall back to stock. */
+async function wikiImage(name: string): Promise<string | null> {
+  const title = OVERRIDE_TITLE[name] ?? (await pageTitleFor(name));
+  if (!title) return null;
+  return campusPhoto(title);
+}
+
 /** Fetch real photos for featured + ranked colleges; fall back to stock when unsure. */
-async function enrichReal() {
+async function enrichReal(onlyMissing: boolean) {
+  const notable = { OR: [{ featured: true }, { rank: { not: null } }] };
   const cols = await prisma.college.findMany({
-    where: { OR: [{ featured: true }, { rank: { not: null } }] },
+    where: onlyMissing ? { AND: [notable, { NOT: { imgUrl: { contains: "wikimedia" } } }] } : notable,
     select: { id: true, name: true, stream: { select: { slug: true } } },
     orderBy: [{ featured: "desc" }, { rank: "asc" }],
     take: 400,
@@ -122,14 +187,15 @@ async function enrichReal() {
       real++;
       console.log(`  ✓ ${c.name}`);
     }
-    await sleep(250); // be gentle with the Wikipedia API
+    await sleep(1200); // be gentle with the Wikipedia API (avoid soft-blocks)
   }
   console.log(`Real photos set for ${real}/${cols.length}; the rest use clean stock.`);
 }
 
 async function run() {
+  const onlyMissing = process.argv.includes("--missing");
   await assignStock();
-  await enrichReal();
+  await enrichReal(onlyMissing);
   console.log("\nDone.");
 }
 
