@@ -88,14 +88,6 @@ export default async function HomePage() {
   const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await coreP;
   const courseColleges = (await coursesP).map((r) => (r.status === "fulfilled" ? r.value.items : []));
 
-  // Hero shows ONLY partner colleges with a REAL photo (no stock fillers).
-  // As Amity/IILM get real photos they'll appear automatically.
-  const partnerItems = (await partnersP).items;
-  const partnerImgs = PARTNER_SLUGS.map((s) => partnerItems.find((p) => p.slug === s)?.imgUrl).filter(
-    (x): x is string => !!x && x.includes("wikimedia"),
-  );
-  const heroImages = partnerImgs.length > 0 ? partnerImgs : HERO_IMAGES;
-
   const streams = (streamsRes.status === "fulfilled" ? streamsRes.value.items : []).filter(
     (s) => s.slug !== "design",
   );
@@ -104,11 +96,21 @@ export default async function HomePage() {
   const exams = examsRes.status === "fulfilled" ? examsRes.value.items.slice(0, 4) : [];
   const news = newsRes.status === "fulfilled" ? newsRes.value.items.slice(0, 3) : [];
 
+  // Hero shows 4 real college campus photos: partner colleges first (Bennett,
+  // Alliance, + Amity/IILM once supplied), then top NIRF colleges to fill to 4.
+  const isRealImg = (u?: string | null) =>
+    !!u && (u.includes("wikimedia") || u.startsWith("/colleges/") || (u.startsWith("http") && !u.includes("unsplash")));
+  const partnerItems = (await partnersP).items;
+  const partnerImgs = PARTNER_SLUGS.map((s) => partnerItems.find((p) => p.slug === s)?.imgUrl).filter(isRealImg) as string[];
+  const topReal = topColleges.map((c) => c.imgUrl).filter(isRealImg) as string[];
+  const heroImages = Array.from(new Set([...partnerImgs, ...topReal])).slice(0, 4);
+  const heroList = heroImages.length >= 2 ? heroImages : HERO_IMAGES;
+
   return (
     <>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
-        <HeroCarousel images={heroImages} />
+        <HeroCarousel images={heroList} />
         <div className="container-site relative py-16 text-center sm:py-24">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
             ★ India&apos;s most trusted college discovery platform
