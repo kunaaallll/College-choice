@@ -75,14 +75,18 @@ const stockFor = (slug: string, id: number): string => {
   return pool[id % pool.length];
 };
 
-async function wikiApi(params: Record<string, string>): Promise<any> {
+async function wikiApi(params: Record<string, string>, tries = 3): Promise<any> {
   const url = "https://en.wikipedia.org/w/api.php?format=json&origin=*&" + new URLSearchParams(params).toString();
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": "CollegeChoice/1.0 (contact@collegechoice.in)" } });
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": "CollegeChoice/1.0 (contact@collegechoice.in)" } });
+      if (res.ok) return await res.json();
+    } catch {
+      /* retry */
+    }
+    await sleep(2000); // back off on failure/soft-block
   }
+  return null;
 }
 
 /** Resolve the correct Wikipedia article title for a college, or null. */
@@ -157,11 +161,65 @@ const OVERRIDE_TITLE: Record<string, string> = {
   "Government Dental College and Hospital, Mumbai": "Government Dental College and Hospital, Mumbai",
 };
 
-/** A validated, real campus photo for a college — or null to fall back to stock. */
+async function wdApi(host: string, params: Record<string, string>): Promise<any> {
+  const url = `https://${host}/w/api.php?format=json&origin=*&` + new URLSearchParams(params).toString();
+  for (let i = 0; i < 3; i++) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": "CollegeChoice/1.0 (contact@collegechoice.in)" } });
+      if (res.ok) return await res.json();
+    } catch {
+      /* retry */
+    }
+    await sleep(1500);
+  }
+  return null;
+}
+
+/** Resolve a Commons File: name to an image URL. */
+async function commonsUrl(file: string): Promise<string | null> {
+  const d = await wdApi("commons.wikimedia.org", {
+    action: "query",
+    titles: `File:${file}`,
+    prop: "imageinfo",
+    iiprop: "url",
+    iiurlwidth: "1200",
+  });
+  const pages = d?.query?.pages;
+  if (!pages) return null;
+  const pg: any = Object.values(pages)[0];
+  const src: string | undefined = pg?.imageinfo?.[0]?.thumburl || pg?.imageinfo?.[0]?.url;
+  return src && src.startsWith("https://upload.wikimedia.org") ? src : null;
+}
+
+/** Wikidata "image" (P18) for a college — validated so we don't grab the wrong entity. */
+async function wikidataImage(name: string): Promise<string | null> {
+  const s = await wdApi("www.wikidata.org", {
+    action: "wbsearchentities",
+    search: name,
+    language: "en",
+    type: "item",
+    limit: "3",
+  });
+  const hits: any[] = s?.search || [];
+  // Pick the first entity whose label clearly matches and looks like an institution.
+  const hit = hits.find(
+    (h) => titleMatches(name, String(h.label || "")) && /universit|college|institut|school/i.test(String(h.description || "")),
+  );
+  if (!hit) return null;
+  const c = await wdApi("www.wikidata.org", { action: "wbgetclaims", entity: hit.id, property: "P18" });
+  const file: string | undefined = c?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+  if (!file || BAD_IMG.test(file)) return null;
+  return commonsUrl(file);
+}
+
+/** A validated, real photo for a college — Wikipedia article, then Wikidata; else null. */
 async function wikiImage(name: string): Promise<string | null> {
   const title = OVERRIDE_TITLE[name] ?? (await pageTitleFor(name));
-  if (!title) return null;
-  return campusPhoto(title);
+  if (title) {
+    const p = await campusPhoto(title);
+    if (p) return p;
+  }
+  return wikidataImage(name);
 }
 
 /** Fetch real photos for featured + ranked colleges; fall back to stock when unsure. */
