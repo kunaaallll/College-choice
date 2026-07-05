@@ -87,11 +87,11 @@ export default async function HomePage() {
   const [streamsRes, topRes, citiesRes, examsRes, newsRes] = await coreP;
   const courseColleges = (await coursesP).map((r) => (r.status === "fulfilled" ? r.value.items : []));
 
-  // Hero shows ONLY the partner colleges (Bennett, IILM, Alliance, Amity),
-  // ordered to match PARTNER_SLUGS. Stock is a last-resort fallback only.
+  // Hero shows ONLY partner colleges with a REAL photo (no stock fillers).
+  // As Amity/IILM get real photos they'll appear automatically.
   const partnerItems = (await partnersP).items;
   const partnerImgs = PARTNER_SLUGS.map((s) => partnerItems.find((p) => p.slug === s)?.imgUrl).filter(
-    (x): x is string => !!x,
+    (x): x is string => !!x && x.includes("wikimedia"),
   );
   const heroImages = partnerImgs.length > 0 ? partnerImgs : HERO_IMAGES;
 
