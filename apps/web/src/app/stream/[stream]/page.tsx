@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stream: s
 export default async function StreamLandingPage({ params }: { params: Promise<{ stream: string }> }) {
   const { stream } = await params;
   const [collegesRes, streamsRes, featuredRes] = await Promise.allSettled([
-    api.colleges({ stream, pageSize: 24, sort: "rank" }),
+    api.colleges({ stream, pageSize: 60, sort: "rank" }),
     api.streams(),
     api.colleges({ stream, featured: true, pageSize: 6, sort: "rank" }),
   ]);
