@@ -5,7 +5,7 @@ export const SITE = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   tagline: "Find, compare & apply to colleges in India",
   description:
-    "College Choice helps students discover, compare and apply to 4,200+ colleges in India — fees, placements, cutoffs, reviews and exams, all in one place. 100% free.",
+    "College Choice helps students discover, compare and apply to 13,000+ colleges in India — fees, placements, cutoffs, reviews and exams, all in one place. 100% free.",
   twitter: "@collegechoice",
 };
 

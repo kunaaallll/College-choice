@@ -4,9 +4,10 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   images: {
-    // Remote images (Unsplash placeholders now; swap for your CDN later).
-    // Allow any https image host — college photos come from Wikimedia and the
-    // colleges' own official websites (many different domains).
+    // Serve images directly (no server-side optimizer). The optimizer proxies
+    // every image through the VPS, and Wikimedia 429-rate-limits bursts when a
+    // page has 50+ photos, blanking them. Browsers load the CDN images fine.
+    unoptimized: true,
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
   async headers() {
