@@ -130,6 +130,7 @@ collegesRouter.get(
         gallery: { orderBy: { sort: "asc" } },
         placement: true,
         faqs: { orderBy: { sort: "asc" } },
+        sections: { orderBy: { sort: "asc" } },
         recruiters: { include: { recruiter: true } },
         exams: { include: { exam: true } },
       },

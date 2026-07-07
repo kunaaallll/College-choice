@@ -76,6 +76,13 @@ export interface ExamRef {
   slug: string;
   fullName: string;
 }
+export interface ContentSection {
+  id: number;
+  tab: string; // info | courses-fees | admissions | placements | cutoffs | scholarships | rankings | hostel
+  heading: string;
+  body: string; // markdown
+  sort: number;
+}
 
 export interface CollegeDetail extends CollegeCard {
   about: string | null;
@@ -97,6 +104,8 @@ export interface CollegeDetail extends CollegeCard {
   faqs: Faq[];
   recruiters: string[];
   exams: ExamRef[];
+  sections?: ContentSection[]; // tabbed editorial content (older API builds omit it)
+  updatedAt?: string;
 }
 
 export interface Stream {

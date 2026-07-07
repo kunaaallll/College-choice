@@ -133,6 +133,7 @@ model College {
   recruiters   CollegeRecruiter[]
   exams        CollegeExam[]
   faqs         Faq[]
+  sections     ContentSection[]
   applications Application[]
 
   createdAt DateTime @default(now())
@@ -149,6 +150,21 @@ model College {
   @@index([featured])
   // Composite index powering programmatic landing pages (stream-in-state/city)
   @@index([streamId, state])
+}
+
+// Rich editorial content for the tabbed college detail pages (KollegeApply-style).
+// One row = one titled section of markdown under a tab. Tabs: info | courses-fees |
+// admissions | placements | cutoffs | scholarships | rankings | hostel
+model ContentSection {
+  id        Int     @id @default(autoincrement())
+  collegeId Int
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  tab       String
+  heading   String
+  body      String  @db.Text // markdown: paragraphs, **bold**, - lists, | tables |
+  sort      Int     @default(0)
+
+  @@index([collegeId, tab])
 }
 
 // FAQs power the FAQPage JSON-LD on each college page (rich results in Google).
