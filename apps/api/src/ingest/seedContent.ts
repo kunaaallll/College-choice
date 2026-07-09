@@ -13,12 +13,9 @@ dotenv.config({ path: path.join(process.cwd(), "../../.env") });
 
 import { PrismaClient } from "@prisma/client";
 import type { CollegeContentPack } from "./content/types";
-import { iitMadras } from "./content/iit-madras";
+import { ALL_PACKS as PACKS } from "./content";
 
 const prisma = new PrismaClient();
-
-// Register new packs here as they are authored.
-const PACKS: CollegeContentPack[] = [iitMadras];
 
 async function seedPack(pack: CollegeContentPack) {
   const college = await prisma.college.findUnique({ where: { slug: pack.slug }, select: { id: true, name: true } });

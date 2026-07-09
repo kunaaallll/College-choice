@@ -1,0 +1,261 @@
+import type { CollegeContentPack } from "./types";
+
+// Hand-authored packs for NIRF engineering #26 onward. Figures are grounded on
+// the institute's own data + public reports; ranges are labelled indicative.
+
+export const engBatch2: CollegeContentPack[] = [
+  // ─────────────────────────── #26 SOA ───────────────────────────
+  {
+    slug: "siksha-o-anusandhan",
+    college: {
+      estd: 2007,
+      website: "https://www.soa.ac.in",
+      packageLabel: "₹7.5 LPA",
+      about:
+        "Siksha 'O' Anusandhan (SOA), Bhubaneswar is a NAAC A++ deemed-to-be university ranked #26 in NIRF Engineering 2024. Its engineering faculty, ITER, offers B.Tech across CSE, AI, ECE and more.",
+      metaTitle: "Siksha O Anusandhan (SOA) Bhubaneswar: Admission 2026, Fees, Placements & Cutoff",
+    },
+    placement: { avgPackage: "₹7.5 LPA", highestPackage: "₹50 LPA", placedPct: "85%+ (indicative)" },
+    recruiters: ["TCS", "Infosys", "Wipro", "Cognizant", "Accenture", "Capgemini", "Amazon", "Deloitte", "Byju's", "Mindtree", "Tech Mahindra", "IBM"],
+    highlights: [
+      "NIRF Engineering rank #26 (2024); NAAC A++ accredited",
+      "ITER is the flagship engineering institute of SOA",
+      "Deemed-to-be university with a large green campus in Bhubaneswar",
+      "Strong core CSE/IT recruitment from TCS, Infosys, Wipro and Cognizant",
+      "Admission via JEE Main and SOA's own SAAT entrance test",
+    ],
+    faqs: [
+      { question: "What is the NIRF rank of Siksha O Anusandhan?", answer: "SOA (through its engineering institute ITER) is ranked #26 in the NIRF 2024 Engineering rankings and is accredited NAAC A++, placing it among India's top private/deemed engineering universities." },
+      { question: "How can I get admission to SOA for B.Tech?", answer: "B.Tech admission at SOA is through a valid JEE Main score or the university's own entrance test, SAAT (Siksha 'O' Anusandhan Admission Test), followed by counselling." },
+      { question: "What is the average package at SOA?", answer: "The average package at SOA/ITER is around ₹7.5 LPA (indicative), with mass IT recruiters like TCS, Infosys, Wipro and Cognizant hiring in large numbers and higher offers for top CSE students." },
+      { question: "What is the fee for B.Tech at SOA?", answer: "The approximate total B.Tech fee is around ₹14 lakh for the 4-year programme (roughly ₹3.5 lakh per year, indicative). Scholarships are available for high JEE/SAAT scorers." },
+    ],
+    courses: [
+      { name: "B.Tech Computer Science & Engineering", duration: "4 years", seats: "Multiple sections", feesLabel: "₹14.0 L" },
+      { name: "B.Tech CSE (AI & ML)", duration: "4 years", seats: "—", feesLabel: "₹14.0 L" },
+      { name: "B.Tech Electronics & Communication", duration: "4 years", seats: "—", feesLabel: "₹13.5 L" },
+      { name: "B.Tech Mechanical Engineering", duration: "4 years", seats: "—", feesLabel: "₹13.0 L" },
+      { name: "M.Tech (various)", duration: "2 years", seats: "—", feesLabel: "₹2.5 L" },
+    ],
+    sections: [
+      { tab: "info", heading: "About Siksha 'O' Anusandhan (SOA)", body: `**Siksha 'O' Anusandhan (SOA)** is a NAAC **A++** accredited deemed-to-be university in Bhubaneswar, Odisha, ranked **#26 in NIRF Engineering 2024**. Engineering is delivered through its flagship faculty, the **Institute of Technical Education and Research (ITER)**, established in 1996, with the deemed-university status conferred in 2007.\n\nThe university spans a large, modern campus and is known for strong industry connections in the IT sector, well-equipped labs and a research-active faculty. Alongside engineering, SOA runs reputed medical (IMS & SUM Hospital), dental, law, management and pharmacy institutes, making it a full multi-disciplinary university.` },
+      { tab: "info", heading: "SOA Highlights 2026", body: `| Attribute | Details |\n|---|---|\n| NIRF 2024 (Engineering) | #26 |\n| Accreditation | NAAC A++ |\n| Type | Deemed-to-be University |\n| Engineering institute | ITER (est. 1996) |\n| Location | Bhubaneswar, Odisha |\n| Admission | JEE Main / SAAT |\n| Average package | ₹7.5 LPA (indicative) |\n| Website | [www.soa.ac.in](https://www.soa.ac.in) |` },
+      { tab: "info", heading: "Why Choose SOA?", body: `- Consistently among India's **top 30 engineering institutes** in NIRF with NAAC A++ grade.\n- Very strong **mass IT recruitment** — TCS, Infosys, Wipro, Cognizant and Accenture hire in bulk each year.\n- Modern, fully residential campus with strong lab and research infrastructure.\n- Multidisciplinary ecosystem (medical, dental, law, management) enabling cross-domain exposure.` },
+      { tab: "courses-fees", heading: "SOA Courses & Fee Structure", body: `SOA/ITER offers B.Tech, M.Tech and PhD across computing, electronics, mechanical, civil and chemical branches.\n\n| Programme | Duration | Approx. total fees |\n|---|---|---|\n| B.Tech (all branches) | 4 years | ₹13–14 L |\n| B.Tech CSE (AI & ML / Data Science) | 4 years | ₹14 L |\n| M.Tech | 2 years | ₹2–3 L |\n| PhD | 3–5 years | Nominal + assistantship |\n\nFees are indicative totals; verify against the current fee card. Merit scholarships reduce fees for high JEE/SAAT scorers.` },
+      { tab: "courses-fees", heading: "Popular B.Tech Specialisations", body: `- Computer Science & Engineering (highest demand)\n- CSE with AI & Machine Learning / Data Science\n- Electronics & Communication Engineering\n- Electrical Engineering\n- Mechanical Engineering\n- Civil Engineering\n- Chemical Engineering` },
+      { tab: "admissions", heading: "SOA Admission Process 2026", body: `- **Step 1:** Appear for **JEE Main** or SOA's own **SAAT** entrance test.\n- **Step 2:** Register for counselling on the SOA admissions portal.\n- **Step 3:** Attend counselling / choice-filling and get your branch allotment based on rank.\n- **Step 4:** Complete document verification and pay the admission fee to confirm the seat.\n\nSAAT is conducted in multiple slots, making it a flexible alternative to JEE Main for admission to ITER.` },
+      { tab: "admissions", heading: "Eligibility & Documents", body: `**Eligibility:** 10+2 with Physics, Chemistry/Mathematics and a valid JEE Main or SAAT score.\n\n**Documents required:**\n- JEE Main / SAAT scorecard\n- Class 10 and 12 marksheets and certificates\n- Transfer & migration certificates\n- Category certificate (if applicable) and passport photos` },
+      { tab: "placements", heading: "SOA Placements: Highlights", body: `SOA/ITER records strong placement volumes led by IT services and product companies.\n\n| Metric | Value (indicative) |\n|---|---|\n| Average package | ₹7.5 LPA |\n| Highest package | ₹50 LPA |\n| Students placed | 85%+ |\n| Top sector | IT services & software |\n\nMass recruiters hire large batches from CSE/IT, while top students secure high-value software and product-company roles. Figures are indicative from recent seasons.` },
+      { tab: "placements", heading: "Top Recruiters", body: `Regular recruiters include **TCS, Infosys, Wipro, Cognizant, Accenture, Capgemini, Tech Mahindra, IBM, Amazon, Deloitte, Mindtree** and Byju's. The strongest packages go to Computer Science and allied branches; core-branch students also find roles across manufacturing and PSUs.` },
+      { tab: "cutoffs", heading: "SOA Cutoffs (Indicative)", body: `Admission is rank-based via JEE Main / SAAT. Indicative closing positions:\n\n| Branch | JEE Main percentile (indicative) |\n|---|---|\n| Computer Science & Engineering | ~90+ percentile |\n| CSE (AI/ML, Data Science) | ~88+ percentile |\n| Electronics & Communication | ~82+ percentile |\n| Mechanical / Civil | ~72+ percentile |\n\nSAAT provides a separate merit list; ranks vary each year, so treat these as guidance, not guarantees.` },
+      { tab: "scholarships", heading: "Scholarships & Fee Waivers", body: `- **Merit scholarships** for top JEE Main / SAAT rank holders — partial to full tuition concessions.\n- **SC/ST and EWS** concessions as per statutory norms.\n- **Sports and cultural** scholarships for students representing the university.\n- Students also combine central and Odisha state post-matric scholarships where eligible.` },
+      { tab: "rankings", heading: "SOA Rankings & Accreditation", body: `| Ranking | Position |\n|---|---|\n| NIRF 2024 — Engineering | #26 |\n| NIRF 2024 — University | Top 25 band |\n| Accreditation | NAAC A++ |\n\nSOA is one of the highest NAAC-graded deemed universities in eastern India and is UGC-recognised.` },
+      { tab: "hostel", heading: "Hostel & Campus Life", body: `SOA is a **residential campus** with separate hostels for men and women, offering furnished rooms, Wi-Fi, dining halls and 24×7 security. Approximate hostel + mess charges are around **₹1–1.4 lakh per year** (indicative).\n\nCampus life features active technical and cultural clubs, an annual fest, sports facilities and a central library, alongside the SUM Hospital complex for medical support.` },
+    ],
+  },
+
+  // ──────────────────── #27 Delhi Technological University ────────────────────
+  {
+    slug: "delhi-technological-university",
+    college: {
+      estd: 1941,
+      website: "https://www.dtu.ac.in",
+      packageLabel: "₹13.5 LPA",
+      affiliation: "State University (Govt. of NCT of Delhi)",
+      about:
+        "Delhi Technological University (DTU), formerly Delhi College of Engineering (DCE, est. 1941), is a premier Delhi-government engineering university ranked #27 in NIRF Engineering 2024. Admission is via JEE Main through JAC Delhi.",
+      metaTitle: "DTU Delhi (Delhi Technological University): Admission 2026, Fees, Cutoff & Placements",
+    },
+    placement: { avgPackage: "₹13.5 LPA", highestPackage: "₹1.1 Cr", placedPct: "90%+ (indicative)" },
+    recruiters: ["Google", "Microsoft", "Amazon", "Goldman Sachs", "Uber", "Samsung", "Deloitte", "Cisco", "Deutsche Bank", "Sprinklr", "Oracle", "American Express"],
+    highlights: [
+      "NIRF Engineering rank #27 (2024); formerly Delhi College of Engineering (1941)",
+      "Delhi-government state university with strong Delhi/NCR recruiter access",
+      "Average package around ₹13.5 LPA; top offers cross ₹1 crore",
+      "Admission via JEE Main through JAC Delhi counselling",
+      "85-acre campus on Bawana Road, Rohini, North-West Delhi",
+    ],
+    faqs: [
+      { question: "Is DTU and DCE the same?", answer: "Yes. Delhi Technological University (DTU) was formerly Delhi College of Engineering (DCE), one of India's oldest engineering colleges established in 1941. It was upgraded to a state university in 2009 and renamed DTU." },
+      { question: "How do I get admission to DTU B.Tech?", answer: "B.Tech admission to DTU is through JEE Main scores via JAC Delhi (Joint Admission Counselling) counselling. Around 85% of seats are for Delhi-region candidates and 15% for outside-Delhi candidates." },
+      { question: "What is the JEE Main cutoff for DTU CSE?", answer: "DTU Computer Science is highly competitive — the closing rank for CSE (outside Delhi, General) is typically within roughly the top ~7,000–9,000 JEE Main ranks; Delhi-region cutoffs are more relaxed. Ranks vary each year." },
+      { question: "What is the average package at DTU?", answer: "DTU's average package is around ₹13.5 LPA (indicative), with the highest offers exceeding ₹1 crore. Computer Science, Software Engineering and Mathematics & Computing branches command the top packages." },
+    ],
+    courses: [
+      { name: "B.Tech Computer Science & Engineering", duration: "4 years", seats: "—", feesLabel: "₹8.0 L" },
+      { name: "B.Tech Software Engineering", duration: "4 years", seats: "—", feesLabel: "₹8.0 L" },
+      { name: "B.Tech Mathematics & Computing", duration: "4 years", seats: "—", feesLabel: "₹8.0 L" },
+      { name: "B.Tech Electronics & Communication", duration: "4 years", seats: "—", feesLabel: "₹8.0 L" },
+      { name: "B.Tech Mechanical / Civil / Electrical", duration: "4 years", seats: "—", feesLabel: "₹8.0 L" },
+      { name: "M.Tech (various)", duration: "2 years", seats: "—", feesLabel: "₹2.0 L" },
+    ],
+    sections: [
+      { tab: "info", heading: "About Delhi Technological University (DTU)", body: `**Delhi Technological University (DTU)** — formerly the storied **Delhi College of Engineering (DCE)**, established in **1941** — is one of India's oldest and most respected engineering institutions, ranked **#27 in NIRF Engineering 2024**. It was upgraded from a college affiliated to Delhi University into a full **state university** under the Government of NCT of Delhi in 2009.\n\nDTU's **85-acre campus** on Bawana Road in Rohini, North-West Delhi, hosts around 15 engineering departments plus management and applied-sciences programmes. Its DCE lineage gives it a powerful alumni network across technology, business and public life, and its Delhi location provides excellent recruiter and internship access.` },
+      { tab: "info", heading: "DTU Highlights 2026", body: `| Attribute | Details |\n|---|---|\n| Established | 1941 (as DCE); DTU since 2009 |\n| NIRF 2024 (Engineering) | #27 |\n| Type | State University (Govt. of NCT of Delhi) |\n| Campus | 85 acres, Bawana Road, Rohini, Delhi |\n| Admission | JEE Main via JAC Delhi |\n| Average package | ₹13.5 LPA (indicative) |\n| Highest package | ₹1.1 Cr (indicative) |\n| Website | [www.dtu.ac.in](https://www.dtu.ac.in) |` },
+      { tab: "info", heading: "Why Choose DTU?", body: `- **DCE legacy** — one of India's oldest engineering brands with an exceptional alumni network.\n- **Placements** rivalling top NITs — average ~₹13.5 LPA, top offers past ₹1 crore.\n- **Delhi location** — unmatched access to startups, product companies and finance recruiters.\n- Strong **Computer Science, Software Engineering and Mathematics & Computing** programmes.` },
+      { tab: "courses-fees", heading: "DTU Courses & Fee Structure", body: `DTU offers B.Tech across ~15 branches, plus M.Tech, MBA, B.Des, MSc and PhD.\n\n| Programme | Duration | Approx. total fees |\n|---|---|---|\n| B.Tech (all branches) | 4 years | ₹6.5–8 L |\n| M.Tech | 2 years | ₹1.5–2 L |\n| MBA (DSM) | 2 years | ₹3–4 L |\n| B.Des | 4 years | ₹6–7 L |\n\nBeing a government university, DTU's fees are far lower than comparable private colleges. Figures are indicative — check the official fee card.` },
+      { tab: "courses-fees", heading: "Top B.Tech Branches", body: `- Computer Science & Engineering (most competitive)\n- Software Engineering\n- Mathematics & Computing\n- Information Technology\n- Electronics & Communication Engineering\n- Electrical Engineering\n- Mechanical, Civil, Environmental, Chemical and Production Engineering` },
+      { tab: "admissions", heading: "DTU Admission Process 2026", body: `- **Step 1:** Appear for **JEE Main 2026** — DTU admits purely on JEE Main rank.\n- **Step 2:** Register for **JAC Delhi** (Joint Admission Counselling) which covers DTU, NSUT, IIIT-Delhi and IGDTUW.\n- **Step 3:** Fill and lock branch/college choices; JAC Delhi runs multiple allotment rounds.\n- **Step 4:** Pay the seat-acceptance fee, complete verification and report to DTU.\n\n~85% of seats are reserved for Delhi-region candidates and ~15% for outside-Delhi candidates, so cutoffs differ by region.` },
+      { tab: "admissions", heading: "Eligibility & Documents", body: `**Eligibility:** 10+2 with Physics, Chemistry/Mathematics (min. ~60% aggregate) and a valid JEE Main rank.\n\n**Documents:** JEE Main scorecard, Class 10 & 12 marksheets, JAC Delhi allotment letter, Delhi-region proof (if applying under the 85% quota), category certificate and photographs.` },
+      { tab: "placements", heading: "DTU Placements: Highlights", body: `DTU's placement cell is among the strongest for a state university.\n\n| Metric | Value (indicative) |\n|---|---|\n| Average package | ₹13.5 LPA |\n| Highest package | ₹1.1 Cr |\n| Students placed | 90%+ |\n| Companies visiting | 300+ |\n\nComputer Science, Software Engineering and Mathematics & Computing see the highest packages, with strong software, product and finance recruitment. Figures are indicative from recent seasons.` },
+      { tab: "placements", heading: "Top Recruiters", body: `DTU draws marquee recruiters including **Google, Microsoft, Amazon, Goldman Sachs, Uber, Samsung, Cisco, Oracle, Deutsche Bank, American Express, Sprinklr and Deloitte**. Coding-heavy roles and quant/finance positions drive the top offers, while core branches attract PSUs and manufacturing majors.` },
+      { tab: "cutoffs", heading: "DTU JEE Main Cutoffs (Indicative)", body: `Closing ranks vary between the Delhi-region (85%) and outside-Delhi (15%) pools; outside-Delhi ranks are tighter.\n\n| Branch | Outside-Delhi closing rank (General, indicative) |\n|---|---|\n| Computer Science & Engineering | ~7,000–9,000 |\n| Software Engineering | ~9,000–11,000 |\n| Mathematics & Computing | ~10,000–12,000 |\n| Electronics & Communication | ~16,000–20,000 |\n| Mechanical / Electrical | ~30,000–40,000 |\n\nRanks are indicative JEE Main (CRL) ranges from recent JAC Delhi rounds; Delhi-region cutoffs are more relaxed.` },
+      { tab: "scholarships", heading: "Scholarships & Fee Waivers", body: `- **Merit-cum-means** and government post-matric scholarships for eligible students.\n- **SC/ST/EWS/PwD** fee concessions per statutory norms.\n- Alumni- and department-funded **merit awards** for top performers.\n- Central Sector Scheme scholarships for high 12th-percentile scorers.` },
+      { tab: "rankings", heading: "DTU Rankings & Recognition", body: `| Ranking | Position |\n|---|---|\n| NIRF 2024 — Engineering | #27 |\n| NIRF 2024 — University | Top 40 band |\n| Heritage | Formerly DCE, est. 1941 |\n\nDTU is a UGC-recognised state university and a member of the Association of Indian Universities, with NBA-accredited programmes.` },
+      { tab: "hostel", heading: "Hostel & Campus Life", body: `DTU offers on-campus hostels for men and women, though seats are limited relative to intake and allotted by distance/merit. Approximate hostel + mess charges are around **₹80,000–1.1 lakh per year** (indicative).\n\nThe 85-acre campus has a central library, sports grounds, and a vibrant club culture — the technical fest **Troika** and cultural fest **Engifest** are among Delhi's biggest college events.` },
+    ],
+  },
+
+  // ──────────────────── #28 IIT Jodhpur ────────────────────
+  {
+    slug: "indian-institute-of-technology-jodhpur",
+    college: {
+      estd: 2008,
+      website: "https://www.iitj.ac.in",
+      packageLabel: "₹16.0 LPA",
+      affiliation: "Autonomous — Institute of National Importance",
+      about:
+        "IIT Jodhpur, established in 2008, is a second-generation IIT ranked #28 in NIRF Engineering 2024. Known for AI, digital humanities and medical-technology research on a modern 852-acre campus in Rajasthan.",
+      metaTitle: "IIT Jodhpur: Admission 2026, Courses, Fees, Cutoff & Placements",
+    },
+    placement: { avgPackage: "₹16.0 LPA", highestPackage: "₹1 Cr+", placedPct: "80%+ (indicative)" },
+    recruiters: ["Google", "Microsoft", "Amazon", "Qualcomm", "Texas Instruments", "Micron", "Goldman Sachs", "Samsung", "Oracle", "Deloitte", "Wells Fargo", "Cisco"],
+    highlights: [
+      "NIRF Engineering rank #28 (2024); IIT since 2008",
+      "852-acre modern campus in Jodhpur, Rajasthan",
+      "Research strengths in AI, IoT, digital humanities and medical technology",
+      "Admission via JEE Advanced through JoSAA",
+      "Average package around ₹16 LPA with top offers past ₹1 crore",
+    ],
+    faqs: [
+      { question: "Is IIT Jodhpur a good IIT?", answer: "Yes. IIT Jodhpur is a well-regarded second-generation IIT (est. 2008), ranked #28 in NIRF Engineering 2024, with a strong research focus on AI, IoT and medical technology and a rapidly improving placement record." },
+      { question: "What rank is needed for IIT Jodhpur CSE?", answer: "CSE at IIT Jodhpur typically closes within roughly the top ~2,500–3,500 JEE Advanced ranks (General, gender-neutral) in recent JoSAA rounds. Newer branches and core branches close at higher ranks. Figures are indicative." },
+      { question: "What is the fee for B.Tech at IIT Jodhpur?", answer: "The approximate total B.Tech fee is around ₹8–9 lakh for 4 years (tuition ₹2 lakh/year plus hostel and mess), with substantial income-based tuition waivers and full SC/ST/PwD exemptions." },
+      { question: "What is the average package at IIT Jodhpur?", answer: "The average package is around ₹16 LPA (indicative), with top offers crossing ₹1 crore. Computing and electronics branches lead placements, recruiting into software, semiconductor and finance roles." },
+    ],
+    courses: [
+      { name: "B.Tech Computer Science & Engineering", duration: "4 years", seats: "—", feesLabel: "₹8.5 L" },
+      { name: "B.Tech Artificial Intelligence & Data Science", duration: "4 years", seats: "—", feesLabel: "₹8.5 L" },
+      { name: "B.Tech Electrical Engineering", duration: "4 years", seats: "—", feesLabel: "₹8.5 L" },
+      { name: "B.Tech Mechanical Engineering", duration: "4 years", seats: "—", feesLabel: "₹8.5 L" },
+      { name: "B.Tech Civil / Chemical / Materials", duration: "4 years", seats: "—", feesLabel: "₹8.5 L" },
+      { name: "M.Tech / M.Sc / PhD", duration: "2–5 years", seats: "—", feesLabel: "Stipend paid" },
+    ],
+    sections: [
+      { tab: "info", heading: "About IIT Jodhpur", body: `**IIT Jodhpur** is a second-generation Indian Institute of Technology established in **2008**, ranked **#28 in NIRF Engineering 2024**. An Institute of National Importance, it operates from a modern, sustainable **852-acre campus** on the outskirts of Jodhpur, Rajasthan.\n\nIIT Jodhpur has built a distinctive identity around **interdisciplinary research** — AI & Data Science, the Internet of Things, digital humanities, and medical technology (through its School of AI and its medical-tech initiatives). Despite being younger than the older IITs, it offers the full IIT ecosystem of assistantship-funded PG programmes, incubation support and global research collaborations.` },
+      { tab: "info", heading: "IIT Jodhpur Highlights 2026", body: `| Attribute | Details |\n|---|---|\n| Established | 2008 |\n| NIRF 2024 (Engineering) | #28 |\n| Type | Institute of National Importance |\n| Campus | 852 acres, Jodhpur, Rajasthan |\n| Admission | JEE Advanced via JoSAA |\n| Average package | ₹16 LPA (indicative) |\n| Research focus | AI, IoT, digital humanities, med-tech |\n| Website | [www.iitj.ac.in](https://www.iitj.ac.in) |` },
+      { tab: "info", heading: "Why Choose IIT Jodhpur?", body: `- Full **IIT brand and ecosystem** — JEE Advanced entry, assistantships, incubation.\n- **Cutting-edge research** in AI, IoT and medical technology with new-age branches.\n- A vast, modern, environmentally-designed **852-acre campus**.\n- Rapidly rising placements with global tech, semiconductor and finance recruiters.` },
+      { tab: "courses-fees", heading: "IIT Jodhpur Courses & Fees", body: `| Programme | Duration | Approx. total fees |\n|---|---|---|\n| B.Tech (all branches) | 4 years | ₹8–9 L |\n| B.Tech + M.Tech (dual) | 5 years | ₹10 L |\n| M.Tech / M.Sc | 2 years | Nominal (assistantship) |\n| PhD | 4–6 years | Stipend ₹37,000–42,000/mo |\n\nTuition is ~₹2 lakh/year with major income-based waivers; SC/ST/PwD students are exempt from tuition. Figures indicative.` },
+      { tab: "courses-fees", heading: "B.Tech Branches", body: `- Computer Science & Engineering\n- Artificial Intelligence & Data Science\n- Electrical Engineering\n- Mechanical Engineering\n- Civil & Infrastructure Engineering\n- Chemical Engineering\n- Materials Engineering\n- Bioengineering / Engineering with medical-tech focus` },
+      { tab: "admissions", heading: "IIT Jodhpur Admission (JEE Advanced)", body: `- **Step 1:** Qualify **JEE Main**, then appear for **JEE Advanced 2026**.\n- **Step 2:** Register for **JoSAA** counselling and fill IIT Jodhpur branch choices.\n- **Step 3:** Secure allotment across JoSAA rounds (float/slide to upgrade).\n- **Step 4:** Accept the seat, verify documents and report.\n\nPG programmes (M.Tech/M.Sc/PhD) admit via GATE/JAM/interview with monthly stipends.` },
+      { tab: "admissions", heading: "Eligibility & Documents", body: `**Eligibility:** 10+2 with PCM, JEE Main qualification and a valid **JEE Advanced** rank.\n\n**Documents:** JEE Advanced scorecard, Class 10 & 12 certificates, JoSAA allotment & seat-acceptance proof, category certificate (if any), photo ID and medical fitness certificate.` },
+      { tab: "placements", heading: "IIT Jodhpur Placements", body: `| Metric | Value (indicative) |\n|---|---|\n| Average package | ₹16 LPA |\n| Highest package | ₹1 Cr+ |\n| Students placed | 80%+ |\n| Top sectors | Software, semiconductor, finance |\n\nComputing and electronics branches lead, with strong semiconductor recruitment (Qualcomm, Texas Instruments, Micron) reflecting the institute's electronics focus. Figures indicative from recent seasons.` },
+      { tab: "placements", heading: "Top Recruiters", body: `Recruiters include **Google, Microsoft, Amazon, Qualcomm, Texas Instruments, Micron, Samsung, Goldman Sachs, Wells Fargo, Oracle, Cisco and Deloitte**. Semiconductor and core-electronics firms have a notably strong presence given IIT Jodhpur's research strengths.` },
+      { tab: "cutoffs", heading: "IIT Jodhpur Cutoffs (Indicative)", body: `| Branch | JEE Advanced closing rank (General, indicative) |\n|---|---|\n| Computer Science & Engineering | ~2,500–3,500 |\n| Artificial Intelligence & Data Science | ~3,500–4,500 |\n| Electrical Engineering | ~6,000–7,500 |\n| Mechanical Engineering | ~9,000–11,000 |\n| Civil / Chemical / Materials | ~11,000–14,000 |\n\nRanges are indicative of recent JoSAA rounds; final-round numbers vary each year.` },
+      { tab: "scholarships", heading: "Scholarships & Assistantships", body: `- **Merit-cum-Means tuition waiver:** family income < ₹1 lakh → full waiver; ₹1–5 lakh → two-thirds waiver.\n- **SC/ST/PwD:** full tuition exemption.\n- **Institute merit prizes** and **assistantships** (M.Tech ₹12,400/mo; PhD ₹37,000–42,000/mo).\n- External scholarships (Central Sector, state) can be combined.` },
+      { tab: "rankings", heading: "IIT Jodhpur Rankings", body: `| Ranking | Position |\n|---|---|\n| NIRF 2024 — Engineering | #28 |\n| NIRF 2024 — Overall | Top 50 band |\n| Status | Institute of National Importance |\n\nIIT Jodhpur is among the fastest-rising second-generation IITs, with growing research output and international collaborations.` },
+      { tab: "hostel", heading: "Hostel & Campus Life", body: `IIT Jodhpur is **fully residential**, with modern hostels on its 852-acre campus. Approximate hostel + mess charges are around **₹1–1.3 lakh per year** (indicative).\n\nThe campus is designed for sustainability, with sports complexes, a central library, and active technical and cultural festivals. Its relative youth means smaller batches and close faculty-student interaction.` },
+    ],
+  },
+
+  // ──────────────────── #29 Thapar Institute ────────────────────
+  {
+    slug: "thapar-institute-of-engineering-and-technology",
+    college: {
+      estd: 1956,
+      website: "https://www.thapar.edu",
+      packageLabel: "₹10.5 LPA",
+      about:
+        "Thapar Institute of Engineering and Technology (TIET), Patiala is a top private deemed university established in 1956, ranked #29 in NIRF Engineering 2024, known for its Trinity College Dublin collaboration and strong placements.",
+      metaTitle: "Thapar Institute (TIET) Patiala: Admission 2026, Fees, Cutoff & Placements",
+    },
+    placement: { avgPackage: "₹10.5 LPA", highestPackage: "₹1.05 Cr", placedPct: "88%+ (indicative)" },
+    recruiters: ["Microsoft", "Amazon", "Google", "Deloitte", "American Express", "JPMorgan Chase", "Sprinklr", "Cisco", "Nvidia", "Adobe", "Paytm", "L&T"],
+    highlights: [
+      "NIRF Engineering rank #29 (2024); established 1956",
+      "Top private deemed university with NAAC A+ accreditation",
+      "Academic collaboration with Trinity College Dublin (2+2 programme)",
+      "Average package ~₹10.5 LPA; top offers past ₹1 crore",
+      "250-acre campus in Patiala, Punjab",
+    ],
+    faqs: [
+      { question: "Is Thapar Institute worth it?", answer: "Thapar (TIET) is one of India's top private engineering universities — NIRF Engineering #29, NAAC A+, with average packages around ₹10.5 LPA and top offers past ₹1 crore. Its Trinity College Dublin collaboration and strong CSE placements make it a leading private choice." },
+      { question: "How do I get admission to Thapar?", answer: "B.Tech admission to Thapar is primarily through JEE Main score, followed by Thapar's own counselling. Some programmes also consider board merit; the 2+2 Trinity College Dublin track has additional requirements." },
+      { question: "What is the fee at Thapar Institute?", answer: "The approximate total B.Tech fee is around ₹14–16 lakh for 4 years (roughly ₹3.6–4 lakh/year, indicative), plus hostel. Merit scholarships and fee waivers are available for high JEE Main rankers." },
+      { question: "What is the highest package at Thapar?", answer: "The highest package at Thapar has crossed ₹1 crore in recent seasons, with the average around ₹10.5 LPA. Computer Science and allied branches lead placements." },
+    ],
+    courses: [
+      { name: "B.E. Computer Science & Engineering", duration: "4 years", seats: "—", feesLabel: "₹16.0 L" },
+      { name: "B.E. Computer Engineering", duration: "4 years", seats: "—", feesLabel: "₹16.0 L" },
+      { name: "B.E. Electronics & Communication", duration: "4 years", seats: "—", feesLabel: "₹15.0 L" },
+      { name: "B.E. Mechanical Engineering", duration: "4 years", seats: "—", feesLabel: "₹14.0 L" },
+      { name: "B.E. + M.S. (2+2 Trinity College Dublin)", duration: "4 years", seats: "—", feesLabel: "Varies" },
+      { name: "M.E. / M.Tech", duration: "2 years", seats: "—", feesLabel: "₹3.0 L" },
+    ],
+    sections: [
+      { tab: "info", heading: "About Thapar Institute (TIET)", body: `**Thapar Institute of Engineering and Technology (TIET)**, Patiala is one of India's oldest and most reputed **private** engineering institutions, established in **1956** and ranked **#29 in NIRF Engineering 2024**. A NAAC **A+** deemed-to-be university, it sits on a green **250-acre campus** in Patiala, Punjab.\n\nThapar is known for its strong Computer Science programmes, an international **2+2 collaboration with Trinity College Dublin**, active industry tie-ups (including a Thapar–Virginia Tech partnership) and consistently strong placements. It blends the resources of a large private university with a legacy reputation among recruiters.` },
+      { tab: "info", heading: "Thapar Highlights 2026", body: `| Attribute | Details |\n|---|---|\n| Established | 1956 |\n| NIRF 2024 (Engineering) | #29 |\n| Type | Private Deemed University (NAAC A+) |\n| Campus | 250 acres, Patiala, Punjab |\n| Admission | JEE Main + counselling |\n| Average package | ₹10.5 LPA (indicative) |\n| Global tie-up | Trinity College Dublin (2+2) |\n| Website | [www.thapar.edu](https://www.thapar.edu) |` },
+      { tab: "info", heading: "Why Choose Thapar?", body: `- One of India's **top private engineering universities** by NIRF, with a 1956 legacy.\n- **International pathways** — 2+2 with Trinity College Dublin and other global tie-ups.\n- **Strong placements** — average ~₹10.5 LPA, top offers past ₹1 crore, heavy CSE recruitment.\n- Well-funded 250-acre residential campus with modern labs and incubation support.` },
+      { tab: "courses-fees", heading: "Thapar Courses & Fee Structure", body: `| Programme | Duration | Approx. total fees |\n|---|---|---|\n| B.E. (CSE / Computer Engineering) | 4 years | ₹15–16 L |\n| B.E. (ECE / Mechanical / Civil / others) | 4 years | ₹13–15 L |\n| B.E. + M.S. (Trinity College Dublin 2+2) | 4 years | Varies (incl. overseas) |\n| M.E. / M.Tech | 2 years | ₹3 L |\n\nFees are indicative totals; merit scholarships significantly reduce cost for high JEE rankers. Verify on the official fee page.` },
+      { tab: "courses-fees", heading: "Popular Branches", body: `- Computer Science & Engineering (most sought-after)\n- Computer Engineering\n- Electronics & Communication Engineering\n- Electrical Engineering\n- Mechanical Engineering\n- Civil, Chemical and Biotechnology\n- 2+2 international degrees with Trinity College Dublin` },
+      { tab: "admissions", heading: "Thapar Admission Process 2026", body: `- **Step 1:** Appear for **JEE Main** — the primary admission basis for Thapar B.E.\n- **Step 2:** Register on the Thapar admissions portal and participate in **Thapar counselling**.\n- **Step 3:** Fill branch preferences; seats are allotted by JEE Main rank across counselling rounds.\n- **Step 4:** Pay the admission fee and complete verification to confirm your seat.\n\nThe 2+2 Trinity College Dublin track and NRI/international seats have separate application processes.` },
+      { tab: "admissions", heading: "Eligibility & Documents", body: `**Eligibility:** 10+2 with PCM (min. ~60%) and a valid JEE Main score.\n\n**Documents:** JEE Main scorecard, Class 10 & 12 marksheets, Thapar counselling allotment, transfer/migration certificates, category certificate (if any) and photographs.` },
+      { tab: "placements", heading: "Thapar Placements: Highlights", body: `| Metric | Value (indicative) |\n|---|---|\n| Average package | ₹10.5 LPA |\n| Highest package | ₹1.05 Cr |\n| Students placed | 88%+ |\n| Companies visiting | 400+ |\n\nComputer Science and Computer Engineering command the top packages, with strong software, product and finance recruitment. Figures indicative from recent seasons.` },
+      { tab: "placements", heading: "Top Recruiters", body: `Recruiters include **Microsoft, Amazon, Google, Nvidia, Adobe, Cisco, Deloitte, American Express, JPMorgan Chase, Sprinklr, Paytm and L&T**. Software and product companies dominate the top offers; core branches see manufacturing and infrastructure recruiters.` },
+      { tab: "cutoffs", heading: "Thapar JEE Main Cutoffs (Indicative)", body: `| Branch | JEE Main percentile (indicative) |\n|---|---|\n| Computer Science & Engineering | ~97–98 percentile |\n| Computer Engineering | ~96 percentile |\n| Electronics & Communication | ~92 percentile |\n| Mechanical / Civil | ~82–85 percentile |\n\nThapar admits by JEE Main rank; these percentiles are indicative of recent counselling rounds and vary each year.` },
+      { tab: "scholarships", heading: "Scholarships & Fee Waivers", body: `- **Merit scholarships** for top JEE Main rankers — up to full-tuition waivers for the highest ranks.\n- **Thapar School Merit** and need-based financial aid.\n- **SC/ST/EWS** concessions per norms; sports and cultural scholarships.\n- Students combine central/state scholarships where eligible.` },
+      { tab: "rankings", heading: "Thapar Rankings & Recognition", body: `| Ranking | Position |\n|---|---|\n| NIRF 2024 — Engineering | #29 |\n| NIRF 2024 — University | Top 30 band |\n| Accreditation | NAAC A+ |\n\nThapar is consistently ranked among India's top 5 private engineering universities and holds international academic collaborations.` },
+      { tab: "hostel", heading: "Hostel & Campus Life", body: `Thapar is a **fully residential** university with modern hostels, Wi-Fi, dining and 24×7 security on its 250-acre campus. Approximate hostel + mess charges are around **₹1.3–1.7 lakh per year** (indicative).\n\nCampus life is vibrant — the annual fest, technical societies, sports facilities and a strong startup/incubation culture (Thapar Innovate) round out the student experience.` },
+    ],
+  },
+
+  // ──────────────────── #30 Amity University ────────────────────
+  {
+    slug: "amity-university",
+    college: {
+      estd: 2005,
+      website: "https://www.amity.edu",
+      packageLabel: "₹7.0 LPA",
+      about:
+        "Amity University, Noida is one of India's largest private universities, ranked #30 in NIRF Engineering 2024. It offers B.Tech across a wide range of branches on a large campus in Gautam Budh Nagar, Uttar Pradesh.",
+      metaTitle: "Amity University Noida: B.Tech Admission 2026, Fees, Cutoff & Placements",
+    },
+    placement: { avgPackage: "₹7.0 LPA", highestPackage: "₹90 LPA", placedPct: "80%+ (indicative)" },
+    recruiters: ["TCS", "Infosys", "Wipro", "Cognizant", "Accenture", "Amazon", "IBM", "Capgemini", "HCL", "Deloitte", "Microsoft", "KPMG"],
+    highlights: [
+      "NIRF Engineering rank #30 (2024); NAAC A+ accredited",
+      "One of India's largest private universities by campus and intake",
+      "Wide range of B.Tech specialisations including AI, cyber security and IoT",
+      "Large recruiter base led by IT services and consulting firms",
+      "Sprawling campus in Sector 125, Noida (Gautam Budh Nagar)",
+    ],
+    faqs: [
+      { question: "What is the NIRF rank of Amity University Noida?", answer: "Amity University, Noida is ranked #30 in the NIRF 2024 Engineering rankings and holds NAAC A+ accreditation, making it one of the higher-ranked large private universities in India." },
+      { question: "How do I get admission to Amity B.Tech?", answer: "B.Tech admission to Amity is through a valid JEE Main score or Amity's own entrance/board-merit route, followed by counselling. High board/JEE scores also qualify for scholarships." },
+      { question: "What is the average package at Amity Noida?", answer: "The average B.Tech package at Amity Noida is around ₹7 LPA (indicative), driven by large-volume IT-services recruitment, with higher offers for top CSE students and product companies." },
+      { question: "What is the fee for B.Tech at Amity?", answer: "The approximate total B.Tech fee is around ₹12–14 lakh for 4 years (roughly ₹3–3.5 lakh/year, indicative). Amity offers substantial merit scholarships for high scorers." },
+    ],
+    courses: [
+      { name: "B.Tech Computer Science & Engineering", duration: "4 years", seats: "Large intake", feesLabel: "₹14.0 L" },
+      { name: "B.Tech CSE (AI / Cyber Security / Data Science)", duration: "4 years", seats: "—", feesLabel: "₹14.0 L" },
+      { name: "B.Tech Electronics & Communication", duration: "4 years", seats: "—", feesLabel: "₹13.0 L" },
+      { name: "B.Tech Mechanical / Civil / Electrical", duration: "4 years", seats: "—", feesLabel: "₹12.5 L" },
+      { name: "M.Tech (various)", duration: "2 years", seats: "—", feesLabel: "₹3.0 L" },
+    ],
+    sections: [
+      { tab: "info", heading: "About Amity University Noida", body: `**Amity University, Noida** is the flagship campus of the Amity education group and one of **India's largest private universities**, ranked **#30 in NIRF Engineering 2024**. Established under state legislation in **2005** (the Amity group dates to the 1990s), it is NAAC **A+** accredited and located on a large campus in Sector 125, Noida, Gautam Budh Nagar, Uttar Pradesh.\n\nAmity's engineering school (ASET) offers an unusually **wide spread of B.Tech specialisations** — including AI, cyber security, data science and IoT — supported by extensive infrastructure, industry tie-ups and a very large annual recruiter footprint driven by IT-services companies.` },
+      { tab: "info", heading: "Amity Highlights 2026", body: `| Attribute | Details |\n|---|---|\n| Established | 2005 (Amity group since 1990s) |\n| NIRF 2024 (Engineering) | #30 |\n| Type | Private University (NAAC A+) |\n| Campus | Sector 125, Noida, Uttar Pradesh |\n| Admission | JEE Main / Amity entrance / board merit |\n| Average package | ₹7 LPA (indicative) |\n| Website | [www.amity.edu](https://www.amity.edu) |` },
+      { tab: "info", heading: "Why Choose Amity Noida?", body: `- Among the **highest-ranked large private universities** in NIRF Engineering.\n- **Very wide specialisation choice** — AI, cyber security, data science, IoT and more.\n- **Large recruiter base** — high placement volume through IT-services and consulting firms.\n- Extensive infrastructure, international tie-ups and an NCR location with strong internship access.` },
+      { tab: "courses-fees", heading: "Amity Courses & Fee Structure", body: `| Programme | Duration | Approx. total fees |\n|---|---|---|\n| B.Tech CSE / specialisations | 4 years | ₹13–14 L |\n| B.Tech (ECE / ME / Civil / EE) | 4 years | ₹12–13 L |\n| M.Tech | 2 years | ₹3 L |\n| Integrated / dual programmes | 5 years | Varies |\n\nFees are indicative totals; Amity's merit scholarships can substantially reduce cost for high JEE/board scorers. Check the official fee card.` },
+      { tab: "courses-fees", heading: "B.Tech Specialisations", body: `- Computer Science & Engineering\n- CSE with Artificial Intelligence / Machine Learning\n- CSE with Cyber Security / Data Science\n- Electronics & Communication Engineering\n- Mechanical, Civil and Electrical Engineering\n- Aerospace, Automobile and IoT-focused programmes` },
+      { tab: "admissions", heading: "Amity Admission Process 2026", body: `- **Step 1:** Apply with a valid **JEE Main** score, Amity's own entrance test, or on **board merit**.\n- **Step 2:** Complete the online application on the Amity admissions portal.\n- **Step 3:** Attend counselling and receive branch allotment; scholarship eligibility is assessed on score.\n- **Step 4:** Pay the admission fee and complete verification to confirm the seat.\n\nAmity runs rolling admissions with multiple intakes and scholarship slabs.` },
+      { tab: "admissions", heading: "Eligibility & Documents", body: `**Eligibility:** 10+2 with PCM (min. ~60%) and a qualifying JEE Main / Amity entrance / board score.\n\n**Documents:** JEE Main or entrance scorecard, Class 10 & 12 marksheets, transfer/migration certificates, category certificate (if any) and passport photos.` },
+      { tab: "placements", heading: "Amity Placements: Highlights", body: `| Metric | Value (indicative) |\n|---|---|\n| Average package | ₹7 LPA |\n| Highest package | ₹90 LPA |\n| Students placed | 80%+ |\n| Top sector | IT services & consulting |\n\nHigh placement volume is driven by IT-services recruiters hiring large batches; top CSE and product-focused students secure notably higher offers. Figures indicative from recent seasons.` },
+      { tab: "placements", heading: "Top Recruiters", body: `Recruiters include **TCS, Infosys, Wipro, Cognizant, Accenture, Capgemini, HCL, IBM, Amazon, Microsoft, Deloitte and KPMG**. The scale of Amity's batches means very large recruitment drives, especially for computing branches.` },
+      { tab: "cutoffs", heading: "Amity Cutoffs (Indicative)", body: `Admission is score-based via JEE Main / Amity entrance / board merit.\n\n| Branch | JEE Main percentile (indicative) |\n|---|---|\n| Computer Science & Engineering | ~85+ percentile |\n| CSE (AI / Cyber Security) | ~82+ percentile |\n| Electronics & Communication | ~72+ percentile |\n| Mechanical / Civil | ~60+ percentile |\n\nAmity accepts multiple entry routes, so exact cutoffs vary by programme and scholarship slab.` },
+      { tab: "scholarships", heading: "Scholarships & Fee Waivers", body: `- **Amity merit scholarships** — tiered tuition waivers (up to 100%) based on JEE Main / board / entrance performance.\n- **Sports and co-curricular** scholarships.\n- **SC/ST/EWS** concessions and need-based aid.\n- Central and state government scholarships can be combined where eligible.` },
+      { tab: "rankings", heading: "Amity Rankings & Recognition", body: `| Ranking | Position |\n|---|---|\n| NIRF 2024 — Engineering | #30 |\n| NIRF 2024 — University | Top 40 band |\n| Accreditation | NAAC A+ |\n\nAmity University, Noida is UGC-recognised and among the largest and highest-ranked private universities in India, with numerous international collaborations.` },
+      { tab: "hostel", heading: "Hostel & Campus Life", body: `Amity offers separate, well-equipped hostels for men and women with Wi-Fi, dining, gym and 24×7 security. Approximate hostel + mess charges are around **₹1.2–1.8 lakh per year** (indicative, varies by room type).\n\nThe large Noida campus features extensive sports facilities, auditoriums, clubs and frequent industry events, festivals and guest lectures.` },
+    ],
+  },
+];
