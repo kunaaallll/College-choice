@@ -20,6 +20,7 @@
     "seed:nirf": "tsx src/ingest/nirf.ts",
     "seed:online": "tsx src/ingest/onlineUniversities.ts",
     "seed:content": "tsx src/ingest/seedContent.ts",
+    "gen:content": "tsx src/ingest/generateContent.ts",
     "images": "tsx src/ingest/images.ts",
     "images:cities": "tsx src/ingest/cityImages.ts",
     "images:local": "tsx src/ingest/localPhotos.ts",
