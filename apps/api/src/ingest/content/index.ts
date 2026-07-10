@@ -9,6 +9,8 @@ import { engBatch7 } from "./eng-batch7";
 import { engBatch8 } from "./eng-batch8";
 import { dentalBatch1 } from "./dental-batch1";
 import { dentalBatch2 } from "./dental-batch2";
+import { dentalBatch3 } from "./dental-batch3";
+import { dentalBatch4 } from "./dental-batch4";
 
 // All hand-authored content packs. New batches append here.
 export const ALL_PACKS: CollegeContentPack[] = [
@@ -22,4 +24,6 @@ export const ALL_PACKS: CollegeContentPack[] = [
   ...engBatch8,
   ...dentalBatch1,
   ...dentalBatch2,
+  ...dentalBatch3,
+  ...dentalBatch4,
 ];
