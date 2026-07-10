@@ -70,12 +70,13 @@ function userPrompt(c: {
   isOnline: boolean;
   approvals: string[];
 }): string {
+  const isDental = c.stream === "Dental";
   const facts = [
     `Name: ${c.name}`,
     `City: ${c.city}, ${c.state}`,
     `Type: ${c.type ?? "N/A"}`,
     `Stream/field: ${c.stream}`,
-    c.nirfRank ? `NIRF ${c.stream} rank: #${c.nirfRank} (2024)` : "",
+    c.nirfRank ? `NIRF ${c.stream} rank: #${c.nirfRank} (2024)` : "Not in NIRF's formally ranked top-40 for this stream (NIRF Dental only ranks 40 institutes nationally) — do not invent a rank.",
     c.feesLabel ? `Approx total fees: ${c.feesLabel}` : "",
     c.packageLabel ? `Average placement package: ${c.packageLabel}` : "",
     c.examName ? `Admission exam / basis: ${c.examName}` : "",
@@ -90,33 +91,41 @@ function userPrompt(c: {
     ? "info, courses-fees, admissions, placements, scholarships, rankings"
     : "info, courses-fees, admissions, placements, cutoffs, scholarships, rankings, hostel";
 
+  const dentalNote = isDental
+    ? `\n\nDENTAL-SPECIFIC RULES (this is a dental college, not engineering — do NOT use engineering framing):
+- Courses are BDS (5 years incl. 1-year mandatory rotating internship) and MDS specialisations (3 years), NOT B.Tech.
+- Admission exam is NEET-UG (mandatory for all BDS in India). Government colleges use state-quota + MCC All India Quota counselling; deemed universities/private colleges run their own NEET-rank-based counselling.
+- "cutoffs" tab means NEET score/rank cutoffs, NOT JEE branch-wise ranks.
+- "placements" tab: most BDS graduates do NOT go through corporate campus placement. Frame this tab as "Career Outcomes After BDS" — cover MDS specialisation (NEET-MDS), private practice, corporate dental chains (e.g. Clove Dental), government dental officer roles via state PSC exams, and the mandatory internship year. Do NOT invent an "avgPackage" placement stat or a list of corporate "recruiters" — leave the placement/recruiters JSON fields empty/omitted for dental colleges.
+- "hostel" tab: standard hostel/mess coverage is fine.
+- Never claim a NIRF Dental rank if none was given above — NIRF only ranks the top 40 dental institutes nationally.`
+    : "";
+
   return `Write full detail-page content for this college.
 
 FACTS:
-${facts}
+${facts}${dentalNote}
 
 Produce a JSON object with these keys:
 {
   "sections": [ { "tab": <one of: ${tabList}>, "heading": "<section title>", "body": "<markdown>" } , ... ],
   "highlights": [ "<6 short highlight bullets>" ],
   "faqs": [ { "question": "...", "answer": "..." } x6 ],
-  "courses": [ { "name": "...", "duration": "...", "seats": "...", "feesLabel": "..." } x4-7 ],
-  "placement": { "avgPackage": "...", "highestPackage": "...", "placedPct": "..." },
-  "recruiters": [ "<10-14 recruiter names>" ]
+  "courses": [ { "name": "...", "duration": "...", "seats": "...", "feesLabel": "..." } x4-7 ]${isDental ? "" : ',\n  "placement": { "avgPackage": "...", "highestPackage": "...", "placedPct": "..." },\n  "recruiters": [ "<10-14 recruiter names>" ]'}
 }
 
 Requirements for "sections":
 - Provide 2 to 3 sections PER TAB listed above (aim for ~18 sections total${c.isOnline ? " for online colleges" : ""}).
-- Each body: 120-220 words, richly formatted. Include at least one markdown TABLE in courses-fees, placements, ${c.isOnline ? "and rankings" : "cutoffs, and rankings"}.
+- Each body: 120-220 words, richly formatted. Include at least one markdown TABLE in courses-fees, ${isDental ? "cutoffs, and rankings" : "placements, " + (c.isOnline ? "and rankings" : "cutoffs, and rankings")}.
 - info tab: an "About ${c.name}" section, a highlights TABLE section, and a "Why choose" section.
-- courses-fees: fee-structure table + courses/specialisations.
+- courses-fees: fee-structure table + ${isDental ? "BDS/MDS specialisations" : "courses/specialisations"}.
 - admissions: step-by-step process + eligibility & documents.
-- placements: stats + top recruiters (ground the average on the figure above; frame highest/median as indicative).
-- ${c.isOnline ? "" : "cutoffs: indicative branch-wise closing-rank table (clearly labelled indicative).\n- "}scholarships: fee waivers/assistantships + external scholarships.
-- rankings: a rankings table (use the NIRF rank above) + accreditations.
+- placements: ${isDental ? '"Career Outcomes After BDS" — MDS/private practice/govt roles + a separate internship & clinical training section (no invented package stats or recruiter names)' : "stats + top recruiters (ground the average on the figure above; frame highest/median as indicative)"}.
+- ${c.isOnline ? "" : `cutoffs: ${isDental ? "indicative NEET score/rank cutoff" : "indicative branch-wise closing-rank"} table (clearly labelled indicative).\n- `}scholarships: fee waivers/assistantships + external scholarships.
+- rankings: a rankings table${isDental ? " (only include a NIRF rank row if one was given above)" : " (use the NIRF rank above)"} + accreditations.
 ${c.isOnline ? "" : "- hostel: hostel & mess fees (indicative) + campus life."}
 
-Ground every hard number in the FACTS. Output ONLY the JSON.`;
+Ground every hard number in the FACTS. Never invent a rank, package figure, or recruiter name that wasn't grounded above. Output ONLY the JSON.`;
 }
 
 async function generate(c: Parameters<typeof userPrompt>[0]): Promise<Gen | null> {
@@ -204,12 +213,13 @@ async function run() {
   const online = has("online");
   const force = has("force");
 
+  const all = has("all");
   const where: Prisma.CollegeWhereInput = { published: true };
   if (slug) where.slug = slug;
   else if (online) where.mode = "Online";
   else if (stream) {
     where.stream = { slug: stream };
-    where.nirfRank = { not: null };
+    if (!all) where.nirfRank = { not: null };
   }
   if (!force && !slug) where.sections = { none: {} }; // resumable: skip already-generated
 
