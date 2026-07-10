@@ -18,6 +18,8 @@
     "db:load:aicte": "tsx src/ingest/aicte.ts",
     "seed:featured": "tsx src/ingest/featured.ts",
     "seed:nirf": "tsx src/ingest/nirf.ts",
+    "seed:dental": "tsx src/ingest/dental.ts",
+    "seed:dental-all": "tsx src/ingest/dentalAll.ts",
     "seed:online": "tsx src/ingest/onlineUniversities.ts",
     "seed:content": "tsx src/ingest/seedContent.ts",
     "gen:content": "tsx src/ingest/generateContent.ts",
