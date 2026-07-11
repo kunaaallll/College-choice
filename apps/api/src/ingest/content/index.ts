@@ -34,6 +34,10 @@ import { onlineBatch2 } from "./online-batch2";
 import { onlineBatch3 } from "./online-batch3";
 import { onlineBatch4 } from "./online-batch4";
 import { onlineBatch5 } from "./online-batch5";
+import { onlineBatch6 } from "./online-batch6";
+import { onlineBatch7 } from "./online-batch7";
+import { onlineBatch8 } from "./online-batch8";
+import { onlineBatch9 } from "./online-batch9";
 
 // All hand-authored content packs. New batches append here.
 export const ALL_PACKS: CollegeContentPack[] = [
@@ -72,4 +76,8 @@ export const ALL_PACKS: CollegeContentPack[] = [
   ...onlineBatch3,
   ...onlineBatch4,
   ...onlineBatch5,
+  ...onlineBatch6,
+  ...onlineBatch7,
+  ...onlineBatch8,
+  ...onlineBatch9,
 ];
