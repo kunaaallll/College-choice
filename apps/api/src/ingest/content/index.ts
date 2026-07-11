@@ -23,6 +23,12 @@ import { dentalBatch13 } from "./dental-batch13";
 import { dentalBatch14 } from "./dental-batch14";
 import { dentalBatch15 } from "./dental-batch15";
 import { dentalBatch16 } from "./dental-batch16";
+import { dentalBatch17 } from "./dental-batch17";
+import { dentalBatch18 } from "./dental-batch18";
+import { dentalBatch19 } from "./dental-batch19";
+import { dentalBatch20 } from "./dental-batch20";
+import { dentalBatch21 } from "./dental-batch21";
+import { dentalBatch22 } from "./dental-batch22";
 
 // All hand-authored content packs. New batches append here.
 export const ALL_PACKS: CollegeContentPack[] = [
@@ -50,4 +56,10 @@ export const ALL_PACKS: CollegeContentPack[] = [
   ...dentalBatch14,
   ...dentalBatch15,
   ...dentalBatch16,
+  ...dentalBatch17,
+  ...dentalBatch18,
+  ...dentalBatch19,
+  ...dentalBatch20,
+  ...dentalBatch21,
+  ...dentalBatch22,
 ];
