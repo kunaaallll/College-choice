@@ -5,6 +5,10 @@ export const COLLEGE_TABS = [
   ["info", "Info"],
   ["courses-fees", "Courses & Fees"],
   ["admissions", "Admissions"],
+  // Online-degree-specific tabs — only surface for online colleges that have
+  // this content; campus colleges never get sections here so they stay hidden.
+  ["recognition", "Approvals & Recognition"],
+  ["learning", "Learning Experience"],
   ["placements", "Placements"],
   ["cutoffs", "Cutoffs"],
   ["scholarships", "Scholarships"],
@@ -64,6 +68,16 @@ export function tabMeta(name: string, tab: TabKey): { title: string; description
       return {
         title: `${name} Scholarships: Fee Waivers & Financial Aid`,
         description: `${name} scholarships — merit-cum-means fee waivers, category benefits, assistantships and external scholarships.`,
+      };
+    case "recognition":
+      return {
+        title: `${name} Approvals & Recognition: UGC-DEB, NAAC & Degree Validity`,
+        description: `${name} online degree recognition — UGC-DEB entitlement, NAAC/AICTE approvals, WES and whether the degree is valid for jobs, government exams and higher study.`,
+      };
+    case "learning":
+      return {
+        title: `${name} Learning Experience: LMS, Classes, Exams & Support`,
+        description: `${name} online learning — LMS platform, live and recorded classes, remote-proctored exams, mentorship, study material and mobile learning.`,
       };
     case "rankings":
       return {

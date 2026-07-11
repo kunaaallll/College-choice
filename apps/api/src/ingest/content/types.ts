@@ -9,7 +9,10 @@ export interface TabSection {
     | "cutoffs"
     | "scholarships"
     | "rankings"
-    | "hostel";
+    | "hostel"
+    // Online-degree-specific tabs (only rendered for online colleges).
+    | "recognition"
+    | "learning";
   heading: string;
   body: string; // markdown: paragraphs, **bold**, - lists, | tables |
 }
