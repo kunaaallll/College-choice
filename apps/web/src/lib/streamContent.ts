@@ -66,6 +66,19 @@ export const STREAM_CONTENT: Record<string, StreamContent> = {
     scope:
       "Dental graduates can practise clinically, open their own clinics, specialise through MDS, or move into academics and research. Growing awareness of oral health continues to expand demand for qualified dentists.",
   },
+  "online-degrees": {
+    overview: [
+      "Online degrees let working professionals and remote learners earn a UGC-recognised degree — MBA, MCA, BBA, BCA, B.Com, BA and more — without attending a physical campus. Programmes are entitled by the UGC's Distance Education Bureau (UGC-DEB), and under the UGC's 2020 regulations carry the same academic value as the equivalent on-campus degree.",
+      "Delivery is fully online: recorded and live classes, a mobile-friendly LMS, and remote-proctored exams taken from home. This makes an online degree the practical choice for anyone who needs flexibility — a career upgrade without a career break, no relocation, and study on your own schedule.",
+    ],
+    eligibility:
+      "A bachelor's degree for PG programmes (MBA/MCA/M.Com/MA) or 10+2 for UG programmes (BBA/BCA/B.Com/BA), from a recognised board/university with the minimum aggregate the programme specifies. Most online programmes have no entrance exam — admission is based on meeting eligibility and completing the application.",
+    specializations: ["Online MBA", "Online MCA", "Online BBA", "Online BCA", "Online B.Com", "Online BA", "Online M.Com"],
+    careers: ["Working-professional career upgrade", "Management & Analytics roles", "IT & Software roles", "Finance & Commerce roles", "Higher study eligibility", "Government-exam eligibility"],
+    recruiters: ["Career-support cells (platform-specific)", "Employer-recognised for promotions/role-change", "Virtual placement drives"],
+    scope:
+      "Online degrees are best judged on UGC-DEB entitlement, university accreditation (NAAC) and brand recognition rather than a campus rank. They suit learners who need a genuinely flexible, recognised degree — for eligibility, promotion or a career switch — while continuing to work.",
+  },
 };
 
 export const streamContent = (slug: string): StreamContent | null => STREAM_CONTENT[slug] ?? null;
