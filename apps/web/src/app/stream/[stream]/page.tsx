@@ -30,20 +30,19 @@ const TYPES = [
 
 const prettify = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 
-// Sprinkle featured colleges into the list at random 3–4 gaps, in random order,
-// so featured colleges are treated equally and none is always on top.
+// Insert exactly one featured college after every 3 regular colleges, so with a
+// 3-per-row grid each full row is followed by a featured card. Featured order is
+// shuffled on every render so featured colleges rotate and get equal visibility.
 function interleaveFeatured(base: TCollege[], featured: TCollege[]): TCollege[] {
   const shuffled = [...featured].sort(() => Math.random() - 0.5);
   const out: TCollege[] = [];
   let fi = 0;
   let since = 0;
-  let gap = 3 + Math.floor(Math.random() * 2); // 3 or 4
   for (const c of base) {
     out.push(c);
-    if (++since >= gap && fi < shuffled.length) {
+    if (++since >= 3 && fi < shuffled.length) {
       out.push(shuffled[fi++]);
       since = 0;
-      gap = 3 + Math.floor(Math.random() * 2);
     }
   }
   while (fi < shuffled.length) out.push(shuffled[fi++]);
@@ -74,7 +73,9 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
   const [collegesRes, streamsRes, featuredRes] = await Promise.allSettled([
     api.colleges({ stream, pageSize: 60, sort: "rank" }),
     api.streams(),
-    api.colleges({ stream, featured: true, pageSize: 6, sort: "rank" }),
+    // Fetch the full featured set so interleaveFeatured can rotate all of them
+    // (shuffled each render) for equal visibility, not just a fixed top-6.
+    api.colleges({ stream, featured: true, pageSize: 24, sort: "rank" }),
   ]);
 
   const allItems = collegesRes.status === "fulfilled" ? collegesRes.value.items : [];
@@ -247,7 +248,7 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
                   View all →
                 </Link>
               </div>
-              <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {listed.map((c) => (
                   <CollegeCard key={c.id} college={c} />
                 ))}

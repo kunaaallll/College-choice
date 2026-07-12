@@ -29,7 +29,11 @@ citiesRouter.get(
 examsRouter.get(
   "/",
   asyncHandler(async (_req, res) => {
-    const items = await prisma.exam.findMany({ orderBy: { id: "asc" } });
+    // Chronological so the homepage "upcoming exams" shows the soonest first.
+    // examOn nulls sort last; id keeps a stable tiebreak.
+    const items = await prisma.exam.findMany({
+      orderBy: [{ examOn: { sort: "asc", nulls: "last" } }, { id: "asc" }],
+    });
     res.json({ items });
   }),
 );

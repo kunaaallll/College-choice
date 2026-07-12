@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 
 const STATS = [
   { value: "13,000+", label: "Colleges" },
-  { value: "1,500+", label: "Courses" },
+  { value: "150+", label: "Courses" },
   { value: "120+", label: "Exams" },
-  { value: "2M+", label: "Students helped" },
+  { value: "1 Lakh+", label: "Students helped" },
 ];
 
 // Hero carousel: prefer real partner-college photos where we have them, then
@@ -190,7 +190,7 @@ export default async function HomePage() {
 
       {/* ── Browse by stream ── */}
       <section className="container-site py-14">
-        <SectionHead title="Explore colleges by stream" subtitle="Browse colleges by stream" href="/courses" cta="View all courses →" />
+        <SectionHead icon="🎓" title="Explore colleges by stream" subtitle="Browse colleges by stream" href="/courses" cta="View all courses →" />
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {streams.map((s) => (
             <Link
@@ -285,12 +285,22 @@ export default async function HomePage() {
   );
 }
 
-function SectionHead({ title, subtitle, href, cta }: { title: string; subtitle: string; href: string; cta: string }) {
+function SectionHead({ title, subtitle, href, cta, icon }: { title: string; subtitle: string; href: string; cta: string; icon?: string }) {
   return (
     <div className="flex items-end justify-between gap-4">
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-brand-600">{subtitle}</p>
-        <h2 className="mt-1 text-2xl font-extrabold sm:text-3xl">{title}</h2>
+        <h2 className="mt-1 flex items-center gap-2.5 text-2xl font-extrabold sm:text-3xl">
+          {icon && (
+            <span
+              aria-hidden
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-xl sm:h-10 sm:w-10"
+            >
+              {icon}
+            </span>
+          )}
+          {title}
+        </h2>
       </div>
       <Link href={href} className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
         {cta}

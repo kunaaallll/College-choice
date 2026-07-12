@@ -64,7 +64,7 @@ export default async function CollegesPage({ searchParams }: { searchParams: Sea
         <p className="mt-2 text-ink-500">{data.total} colleges match your filters</p>
       </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
         <Filters streams={streams} cities={cities} />
 
         <div>
@@ -76,7 +76,7 @@ export default async function CollegesPage({ searchParams }: { searchParams: Sea
             </div>
           ) : (
             <>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
                 {data.items.map((c) => (
                   <CollegeCard key={c.id} college={c} />
                 ))}

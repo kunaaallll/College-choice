@@ -65,15 +65,18 @@ const CITIES = [
   { name: "Manipal", state: "Karnataka", count: 9, img: null },
 ];
 
+// Dates are the next expected occurrence based on each exam's established annual
+// window (tentative until the official notification releases). `on` drives
+// chronological "upcoming exams" sorting. Refresh when official dates are announced.
 const EXAMS = [
-  { name: "JEE Main", full: "Joint Entrance Examination", level: "National", date: "Jan 24, 2026", mode: "Online", stream: "Engineering" },
-  { name: "NEET UG", full: "National Eligibility cum Entrance Test", level: "National", date: "May 03, 2026", mode: "Offline", stream: "Medical" },
-  { name: "CUET", full: "Common University Entrance Test", level: "National", date: "May 15, 2026", mode: "Online", stream: "Multiple" },
-  { name: "CAT", full: "Common Admission Test", level: "National", date: "Nov 29, 2026", mode: "Online", stream: "Management" },
-  { name: "JEE Advanced", full: "For IIT admissions", level: "National", date: "May 18, 2026", mode: "Online", stream: "Engineering" },
-  { name: "CLAT", full: "Common Law Admission Test", level: "National", date: "Dec 07, 2025", mode: "Offline", stream: "Law" },
-  { name: "GATE", full: "Graduate Aptitude Test in Engineering", level: "National", date: "Feb 07, 2026", mode: "Online", stream: "Engineering" },
-  { name: "BITSAT", full: "BITS Admission Test", level: "University", date: "May 26, 2026", mode: "Online", stream: "Engineering" },
+  { name: "CAT", full: "Common Admission Test", level: "National", date: "Nov 29, 2026", on: "2026-11-29", mode: "Online", stream: "Management" },
+  { name: "CLAT", full: "Common Law Admission Test", level: "National", date: "Dec 06, 2026", on: "2026-12-06", mode: "Offline", stream: "Law" },
+  { name: "JEE Main", full: "Joint Entrance Examination (Session 1)", level: "National", date: "Jan 24, 2027", on: "2027-01-24", mode: "Online", stream: "Engineering" },
+  { name: "GATE", full: "Graduate Aptitude Test in Engineering", level: "National", date: "Feb 06, 2027", on: "2027-02-06", mode: "Online", stream: "Engineering" },
+  { name: "NEET UG", full: "National Eligibility cum Entrance Test", level: "National", date: "May 02, 2027", on: "2027-05-02", mode: "Offline", stream: "Medical" },
+  { name: "CUET", full: "Common University Entrance Test", level: "National", date: "May 15, 2027", on: "2027-05-15", mode: "Online", stream: "Multiple" },
+  { name: "JEE Advanced", full: "For IIT admissions", level: "National", date: "May 16, 2027", on: "2027-05-16", mode: "Online", stream: "Engineering" },
+  { name: "BITSAT", full: "BITS Admission Test", level: "University", date: "May 22, 2027", on: "2027-05-22", mode: "Online", stream: "Engineering" },
 ];
 
 // Maps a college's display exam label → normalised Exam.name (for the M:N link).
@@ -174,7 +177,7 @@ async function main() {
   const examByName = new Map<string, number>();
   for (const e of EXAMS) {
     const row = await prisma.exam.create({
-      data: { name: e.name, slug: slugify(e.name), fullName: e.full, level: e.level, date: e.date, mode: e.mode, stream: e.stream },
+      data: { name: e.name, slug: slugify(e.name), fullName: e.full, level: e.level, date: e.date, examOn: new Date(e.on), mode: e.mode, stream: e.stream },
     });
     examByName.set(e.name, row.id);
   }
