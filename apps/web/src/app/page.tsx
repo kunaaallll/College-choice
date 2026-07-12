@@ -141,13 +141,13 @@ export default async function HomePage() {
             const stream = streams.find((s) => s.slug === course.slug);
             const cols = courseColleges[i] ?? [];
             return (
-              <div key={course.slug} className="card flex flex-col p-5">
-                <div className="flex items-center gap-3">
-                  <span className="badge-grad h-12 w-12 text-xl" style={{ background: course.gradient }}>
+              <div key={course.slug} className="card flex min-w-0 flex-col p-5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="badge-grad h-12 w-12 shrink-0 text-xl" style={{ background: course.gradient }}>
                     {course.icon}
                   </span>
-                  <div>
-                    <h3 className="text-lg font-extrabold text-ink-900">{course.name}</h3>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-extrabold text-ink-900">{course.name}</h3>
                     <p className="text-xs text-ink-400">
                       {stream ? `${stream.collegeCount.toLocaleString("en-IN")} colleges` : "Explore colleges"}
                     </p>
@@ -165,7 +165,7 @@ export default async function HomePage() {
                       <li key={c.id}>
                         <Link
                           href={`/colleges/${c.slug}`}
-                          className="flex items-center gap-2 text-sm text-ink-700 hover:text-brand-600"
+                          className="flex min-w-0 items-center gap-2 text-sm text-ink-700 hover:text-brand-600"
                         >
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-50 text-xs font-bold text-brand-600">
                             {idx + 1}
