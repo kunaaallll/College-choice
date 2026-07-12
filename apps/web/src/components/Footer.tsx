@@ -56,7 +56,7 @@ export function Footer() {
       <div className="container-site grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-6">
         <div className="lg:col-span-1">
           <Link href="/" className="inline-flex rounded-lg bg-white p-2" aria-label="College Choice home">
-            <Image src="/logo.png" alt="College Choice" width={180} height={60} className="h-8 w-auto" />
+            <Image src="/logo.png" alt="College Choice" width={1345} height={284} className="h-7 w-auto" />
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">
             India&apos;s most trusted platform to find, compare and apply to colleges. 100% free for
