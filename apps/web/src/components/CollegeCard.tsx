@@ -16,7 +16,7 @@ export function CollegeCard({ college }: { college: TCollege }) {
 
   return (
     <article className="card group flex flex-col overflow-hidden">
-      <Link href={`/colleges/${college.slug}`} className="relative block aspect-[16/9] overflow-hidden bg-line">
+      <Link href={`/colleges/${college.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-line">
         {college.imgUrl ? (
           <Image
             src={college.imgUrl}
@@ -26,8 +26,9 @@ export function CollegeCard({ college }: { college: TCollege }) {
             className="object-cover transition group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-500 to-brand-700 p-3 text-center">
-            <span className="line-clamp-3 text-sm font-bold text-white/95">{college.name}</span>
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-line/60 p-3 text-center">
+            <span className="text-3xl opacity-30">🏛️</span>
+            <span className="line-clamp-2 text-xs font-semibold text-ink-400">{college.name}</span>
           </div>
         )}
         {college.rank != null && (

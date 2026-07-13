@@ -64,7 +64,7 @@ export default async function CollegesPage({ searchParams }: { searchParams: Sea
         <p className="mt-2 text-ink-500">{data.total} colleges match your filters</p>
       </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[216px_1fr]">
         <Filters streams={streams} cities={cities} />
 
         <div>
