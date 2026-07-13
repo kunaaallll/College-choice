@@ -31,7 +31,7 @@ export function Navbar() {
 
       <nav className="container-site flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center" aria-label="College Choice home">
-          <Image src="/logo.png" alt="College Choice" width={1345} height={284} priority className="h-8 w-auto sm:h-9" />
+          <Image src="/logo.png" alt="College Choice" width={1152} height={240} priority className="h-8 w-auto sm:h-9" />
         </Link>
 
         {/* Desktop nav */}
