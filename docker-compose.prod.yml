@@ -11,9 +11,15 @@ services:
       API_PORT: 4000
       CORS_ORIGIN: ${CORS_ORIGIN:-https://collegechoice.in}
       JWT_SECRET: ${JWT_SECRET}
+      # Shared secret that gates the admin image-upload panel (/admin).
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      # Persistent on-disk location for uploaded college photos.
+      UPLOAD_DIR: /data/uploads
       NODE_ENV: production
     ports:
       - "127.0.0.1:4000:4000"
+    volumes:
+      - uploads:/data/uploads
 
   web:
     build:
@@ -37,3 +43,6 @@ services:
       NODE_ENV: production
     ports:
       - "127.0.0.1:3000:3000"
+
+volumes:
+  uploads:

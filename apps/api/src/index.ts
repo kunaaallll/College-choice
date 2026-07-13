@@ -9,6 +9,7 @@ import { citiesRouter, examsRouter, streamsRouter } from "./routes/taxonomy";
 import { newsRouter } from "./routes/news";
 import { applicationsRouter } from "./routes/applications";
 import { authRouter } from "./routes/auth";
+import { adminRouter, UPLOAD_DIR } from "./routes/admin";
 
 const app = express();
 const PORT = Number(process.env.API_PORT || 4000);
@@ -25,6 +26,11 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 app.get("/health", (_req, res) => res.json({ ok: true, service: "collegechoice-api" }));
 
+// Serve uploaded college photos (persistent volume in prod). Long cache — files
+// are content-addressed by a random filename so they never change.
+app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "365d", immutable: true }));
+
+app.use("/api/admin", adminRouter);
 app.use("/api/colleges", collegesRouter);
 app.use("/api/streams", streamsRouter);
 app.use("/api/cities", citiesRouter);

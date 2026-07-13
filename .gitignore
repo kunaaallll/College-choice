@@ -40,3 +40,6 @@ _decoded_template.html
 
 # Test / coverage
 coverage/
+
+# Locally-uploaded college photos (persisted via Docker volume in prod)
+apps/api/uploads/

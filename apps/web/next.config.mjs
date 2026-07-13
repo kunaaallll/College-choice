@@ -10,6 +10,12 @@ const nextConfig = {
     unoptimized: true,
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
+  // Serve API-hosted college photo uploads under the site origin, so <img
+  // src="/uploads/…"> works in dev (prod uses an nginx /uploads location).
+  async rewrites() {
+    const api = process.env.INTERNAL_API_URL || "http://localhost:4000";
+    return [{ source: "/uploads/:path*", destination: `${api}/uploads/:path*` }];
+  },
   async headers() {
     return [
       {
