@@ -19,7 +19,8 @@ export const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), "up
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Public base path where uploads are served (see index.ts express.static).
-const PUBLIC_BASE = "/uploads";
+// Under /api so the existing nginx /api/ proxy reaches it with no extra config.
+const PUBLIC_BASE = "/api/uploads";
 
 /** Guard: require the shared admin token (Bearer or ?token=). */
 function requireAdmin(req: Request, _res: Response, next: NextFunction) {
@@ -89,7 +90,7 @@ adminRouter.post(
     }
     // Use the first uploaded image as the card thumbnail if the college has none
     // (or still uses an auto-sourced stock/wiki image).
-    if (!college.imgUrl || !/^\/uploads\//.test(college.imgUrl)) {
+    if (!college.imgUrl || !/\/uploads\//.test(college.imgUrl)) {
       await prisma.college.update({ where: { id: collegeId }, data: { imgUrl: created[0].url, source: "manual:upload" } });
     }
     const gallery = await prisma.galleryImage.findMany({ where: { collegeId }, orderBy: { sort: "asc" } });
@@ -105,8 +106,8 @@ adminRouter.delete(
     const img = await prisma.galleryImage.findUnique({ where: { id } });
     if (!img) throw new HttpError(404, "Image not found");
     await prisma.galleryImage.delete({ where: { id } });
-    // Best-effort file cleanup for locally-stored uploads.
-    if (img.url.startsWith(PUBLIC_BASE)) {
+    // Best-effort file cleanup for locally-stored uploads (either URL prefix).
+    if (/\/uploads\//.test(img.url)) {
       const fp = path.join(UPLOAD_DIR, path.basename(img.url));
       fs.promises.unlink(fp).catch(() => {});
     }

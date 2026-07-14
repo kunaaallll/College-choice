@@ -27,8 +27,12 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.get("/health", (_req, res) => res.json({ ok: true, service: "collegechoice-api" }));
 
 // Serve uploaded college photos (persistent volume in prod). Long cache — files
-// are content-addressed by a random filename so they never change.
-app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "365d", immutable: true }));
+// are content-addressed by a random filename so they never change. Served under
+// /api/uploads so the existing nginx /api/ route reaches it (no extra nginx
+// location needed); also kept at /uploads for direct/optional nginx use.
+const serveUploads = express.static(UPLOAD_DIR, { maxAge: "365d", immutable: true });
+app.use("/api/uploads", serveUploads);
+app.use("/uploads", serveUploads);
 
 app.use("/api/admin", adminRouter);
 app.use("/api/colleges", collegesRouter);
