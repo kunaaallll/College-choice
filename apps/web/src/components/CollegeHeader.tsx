@@ -1,14 +1,18 @@
-import Image from "next/image";
 import type { CollegeDetail } from "@/lib/types";
 import { orNA, stars } from "@/lib/format";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { DetailActions } from "@/components/DetailActions";
 import { CollegeTabs } from "@/components/CollegeTabs";
+import { HeroBackground } from "@/components/HeroBackground";
 
 // Shared hero + quick stats + tab bar for all college detail pages.
 export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, string][] }) {
   const isOnline = (c.mode ?? "Campus") !== "Campus";
+  const isDental = c.stream.slug === "dental";
   const approvals = c.approvals ?? [];
+  // Uploaded photos → rotating hero background (falls back to the single imgUrl).
+  const heroImages = (c.gallery ?? []).map((g) => g.url).filter(Boolean);
+  const bg = heroImages.length ? heroImages : c.imgUrl ? [c.imgUrl] : [];
 
   const crumbs = [
     { name: "Home", path: "/" },
@@ -34,23 +38,19 @@ export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, st
           value: c.nirfRank ? `#${c.nirfRank}` : c.rank ? `#${c.rank}` : orNA(null),
           color: "text-ink-900",
         },
-        { label: "Avg Package", value: orNA(c.packageLabel), color: "text-success" },
+        { label: isDental ? "Avg Patient Flow" : "Avg Package", value: orNA(c.packageLabel), color: "text-success" },
         { label: "Total Fees", value: orNA(c.feesLabel), color: "text-brand-700" },
         { label: "Rating", value: stars(c.rating), color: "text-warn" },
       ];
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative bg-ink-900 text-white">
-        {c.imgUrl && (
-          <div className="absolute inset-0 opacity-25">
-            <Image src={c.imgUrl} alt="" fill sizes="100vw" className="object-cover" priority />
-          </div>
-        )}
-        <div className="container-site relative py-10">
+      {/* Hero — tall, with a rotating background of the college's real photos */}
+      <section className="relative flex min-h-[440px] flex-col bg-ink-900 text-white sm:min-h-[540px]">
+        <HeroBackground images={bg} />
+        <div className="container-site relative flex flex-1 flex-col py-8">
           <Breadcrumbs items={crumbs} />
-          <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mt-auto flex flex-col gap-6 pt-12 lg:flex-row lg:items-end lg:justify-between">
             <div>
               {isOnline ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-3 py-1 text-xs font-bold">

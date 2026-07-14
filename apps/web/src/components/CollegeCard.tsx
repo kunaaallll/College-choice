@@ -12,6 +12,7 @@ export function CollegeCard({ college }: { college: TCollege }) {
   const added = inCompare(college.slug);
   // Defensive defaults — tolerate partial/stale data without crashing.
   const isOnline = (college.mode ?? "Campus") !== "Campus";
+  const isDental = college.stream.slug === "dental";
   const approvals = college.approvals ?? [];
 
   return (
@@ -32,7 +33,7 @@ export function CollegeCard({ college }: { college: TCollege }) {
           </div>
         )}
         {college.rank != null && (
-          <span className="absolute left-3 top-3 rounded-full bg-ink-900/85 px-2.5 py-1 text-xs font-bold text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-ink-900/90 px-2.5 py-1 text-[13px] font-extrabold text-white">
             #{college.rank} {college.stream.name}
           </span>
         )}
@@ -70,7 +71,7 @@ export function CollegeCard({ college }: { college: TCollege }) {
             </div>
           ) : (
             <div className="rounded-xl bg-success/5 px-3 py-2">
-              <p className="text-[11px] text-ink-400">Avg Package</p>
+              <p className="text-[11px] text-ink-400">{isDental ? "Avg Patient Flow" : "Avg Package"}</p>
               <p className="font-bold text-success">{orNA(college.packageLabel)}</p>
             </div>
           )}

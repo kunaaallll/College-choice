@@ -8,7 +8,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { CollegeHeader } from "@/components/CollegeHeader";
 import { CollegeSidebar } from "@/components/CollegeSidebar";
 import { SectionList } from "@/components/SectionList";
-import { BrochureCTA } from "@/components/BrochureCTA";
+import { CutoffDownloadTable } from "@/components/CutoffDownloadTable";
 
 // Tabbed college detail sub-pages: /colleges/[slug]/courses-fees, /admissions,
 // /placements, /cutoffs, /scholarships, /rankings, /hostel — each an indexable
@@ -75,8 +75,8 @@ export default async function CollegeTabPage({ params }: Params) {
 
       <div className="container-site grid gap-10 py-10 lg:grid-cols-[1fr_320px]">
         <div className="space-y-12">
-          {/* Download-brochure CTA at the top of the Cutoffs section */}
-          {tab === "cutoffs" && <BrochureCTA collegeName={c.name} collegeId={c.id} />}
+          {/* Year x round PDF cutoff downloads at the top of the Cutoffs section */}
+          {tab === "cutoffs" && <CutoffDownloadTable collegeName={c.name} collegeId={c.id} />}
 
           <SectionList sections={sections} />
 

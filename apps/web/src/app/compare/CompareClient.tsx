@@ -61,6 +61,8 @@ export function CompareClient() {
 
   const ordered = compare.map((slug) => items.find((c) => c.slug === slug)).filter(Boolean) as CollegeCard[];
   const cols = ordered.length || compare.length;
+  // Dental colleges report "Avg Patient Flow" instead of "Avg Package".
+  const allDental = ordered.length > 0 && ordered.every((c) => c.stream.slug === "dental");
 
   // Quick-verdict chips
   const bestRank = bestId(ordered, (c) => c.rank, "min");
@@ -131,7 +133,7 @@ export function CompareClient() {
             return (
               <div key={row.label} className="contents">
                 <div className={clsx("sticky left-0 z-10 flex items-center gap-2 rounded-l-xl py-3 pl-2 pr-2 text-[13px] font-semibold text-ink-500", i % 2 === 0 ? "bg-brand-50/30" : "bg-white")}>
-                  <span className="text-sm">{row.icon}</span>{row.label}
+                  <span className="text-sm">{row.icon}</span>{row.label === "Avg Package" && allDental ? "Avg Patient Flow" : row.label}
                 </div>
                 {ordered.map((c) => {
                   const isBest = winner != null && c.id === winner;

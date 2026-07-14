@@ -124,28 +124,36 @@ export default function AdminPage() {
 function CollegeRow({ college, token, onChanged }: { college: AdminCollege; token: string; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLInputElement>(null);
 
-  const upload = async (files: FileList | null) => {
-    if (!files || !files.length) return;
+  const post = async (url: string, fd: FormData, ok: string) => {
     setBusy(true); setMsg(null);
     try {
-      const fd = new FormData();
-      Array.from(files).slice(0, 8).forEach((f) => fd.append("images", f));
-      const res = await fetch(`${API}/api/admin/colleges/${college.id}/gallery`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
+      const res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Error ${res.status}`);
-      setMsg("Uploaded ✓");
+      setMsg(ok);
       onChanged();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setBusy(false);
-      if (fileRef.current) fileRef.current.value = "";
+      if (galleryRef.current) galleryRef.current.value = "";
+      if (cardRef.current) cardRef.current.value = "";
     }
+  };
+
+  const uploadGallery = (files: FileList | null) => {
+    if (!files?.length) return;
+    const fd = new FormData();
+    Array.from(files).slice(0, 8).forEach((f) => fd.append("images", f));
+    return post(`${API}/api/admin/colleges/${college.id}/gallery`, fd, "Background photos uploaded ✓");
+  };
+  const uploadCard = (files: FileList | null) => {
+    if (!files?.length) return;
+    const fd = new FormData();
+    fd.append("image", files[0]);
+    return post(`${API}/api/admin/colleges/${college.id}/card-image`, fd, "Card image updated ✓");
   };
 
   const remove = async (id: number) => {
@@ -158,44 +166,72 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
     }
   };
 
+  const isUploaded = (u: string | null) => !!u && /\/uploads\//.test(u);
+
   return (
     <div className="card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-bold text-ink-900">{college.name}</h3>
           <p className="text-xs text-ink-400">
-            {college.stream?.name}{college.city ? ` · ${college.city.name}${college.city.state ? ", " + college.city.state : ""}` : ""} · {college.gallery.length} photo(s)
+            {college.stream?.name}{college.city ? ` · ${college.city.name}${college.city.state ? ", " + college.city.state : ""}` : ""} · {college.gallery.length} background photo(s)
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {msg && <span className="text-xs font-semibold text-ink-500">{msg}</span>}
-          <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => upload(e.target.files)} />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-            className="btn-primary px-4 py-2 text-sm disabled:opacity-60"
-          >
-            {busy ? "Uploading…" : "⬆ Upload images"}
-          </button>
-        </div>
+        {msg && <span className="text-xs font-semibold text-ink-500">{msg}</span>}
       </div>
 
-      {college.gallery.length > 0 && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {college.gallery.map((g) => (
-            <div key={g.id} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-line">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={g.url} alt="" className="h-full w-full object-cover" />
-              <button
-                onClick={() => remove(g.id)}
-                className="absolute right-1.5 top-1.5 rounded-lg bg-ink-900/70 px-2 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
-              >
-                Delete
-              </button>
-            </div>
-          ))}
+      <div className="mt-4 grid gap-5 lg:grid-cols-[240px_1fr]">
+        {/* Card / grid image */}
+        <div>
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] font-bold text-ink-700">Card / grid image</p>
+            <input ref={cardRef} type="file" accept="image/*" hidden onChange={(e) => uploadCard(e.target.files)} />
+            <button onClick={() => cardRef.current?.click()} disabled={busy} className="rounded-lg border border-brand-400 px-2.5 py-1 text-[12px] font-semibold text-brand-700 disabled:opacity-60">
+              ⬆ Upload
+            </button>
+          </div>
+          <div className="mt-2 aspect-[16/10] overflow-hidden rounded-xl border border-line bg-line">
+            {college.imgUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={college.imgUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full items-center justify-center text-xs text-ink-400">No card image</span>
+            )}
+          </div>
+          <p className="mt-1 text-[11px] text-ink-400">{isUploaded(college.imgUrl) ? "Uploaded thumbnail" : "Shown on listing/grid cards"}</p>
         </div>
-      )}
+
+        {/* Background photos (rotating hero) */}
+        <div>
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] font-bold text-ink-700">Background photos <span className="font-normal text-ink-400">(rotate in the page hero)</span></p>
+            <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadGallery(e.target.files)} />
+            <button onClick={() => galleryRef.current?.click()} disabled={busy} className="btn-primary px-3.5 py-1.5 text-[12px] disabled:opacity-60">
+              {busy ? "Uploading…" : "⬆ Upload photos"}
+            </button>
+          </div>
+          {college.gallery.length > 0 ? (
+            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {college.gallery.map((g) => (
+                <div key={g.id} className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={g.url} alt="" className="h-full w-full object-cover" />
+                  <button
+                    onClick={() => remove(g.id)}
+                    className="absolute right-1.5 top-1.5 rounded-lg bg-ink-900/70 px-2 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-2 flex aspect-[16/5] items-center justify-center rounded-xl border border-dashed border-line text-xs text-ink-400">
+              No background photos yet
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

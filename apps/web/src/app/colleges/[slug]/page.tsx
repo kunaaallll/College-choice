@@ -110,24 +110,6 @@ export default async function CollegeDetailPage({ params }: { params: Promise<{ 
 
       <CollegeHeader c={c} tabs={tabs} />
 
-      {/* Real photo gallery (admin-uploaded) — hero + thumbnails collage */}
-      {c.gallery.length > 0 && (
-        <section className="container-site pt-8">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:grid-rows-2">
-            <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-line bg-line sm:col-span-2 sm:row-span-2 sm:aspect-auto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.gallery[0].url} alt={c.name} className="h-full w-full object-cover" />
-            </div>
-            {c.gallery.slice(1, 5).map((g) => (
-              <div key={g.id} className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-line bg-line sm:aspect-auto">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={g.url} alt={`${c.name} campus photo`} className="h-full w-full object-cover" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Anchor nav for colleges without tabbed content */}
       {!enriched && (
         <div className="sticky top-16 z-30 border-b border-line bg-white/95 backdrop-blur">

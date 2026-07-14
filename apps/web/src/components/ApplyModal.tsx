@@ -8,8 +8,13 @@ const FIELDS = [
   { key: "fullName", label: "Full name", placeholder: "Your name", type: "text", icon: "user" },
   { key: "mobile", label: "Mobile number", placeholder: "+91 00000 00000", type: "tel", icon: "phone" },
   { key: "email", label: "Email", placeholder: "you@example.com", type: "email", icon: "mail" },
-  { key: "courseInterested", label: "Course you're interested in", placeholder: "e.g. BDS, B.Tech CSE, Online MBA", type: "text", icon: "book" },
 ] as const;
+
+const COURSE_OPTIONS = [
+  "BDS", "MDS", "MBBS", "B.Tech / B.E.", "M.Tech", "MBA / PGDM", "BBA", "BCA", "MCA",
+  "B.Com", "M.Com", "BA", "MA", "B.Sc", "M.Sc", "B.Pharm / Pharmacy", "Nursing", "Law (LLB / BA-LLB)",
+  "Online MBA", "Online BBA", "Online BCA", "Online BCom", "Other",
+];
 
 const VALUE_PROPS = [
   { icon: "✔", text: "Verified fees, cutoffs & placements" },
@@ -136,7 +141,7 @@ export function ApplyModal() {
                     <span className="text-ink-400"><FieldIcon name={f.icon} /></span>
                     <input
                       type={f.type}
-                      required={f.key !== "courseInterested"}
+                      required
                       placeholder={f.placeholder}
                       value={form[f.key] || ""}
                       onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
@@ -145,6 +150,21 @@ export function ApplyModal() {
                   </span>
                 </label>
               ))}
+              {/* Course interested in — dropdown */}
+              <label className="block">
+                <span className="mb-1 block text-[13px] font-semibold text-ink-700">Course you&apos;re interested in</span>
+                <span className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15">
+                  <span className="text-ink-400"><FieldIcon name="book" /></span>
+                  <select
+                    value={form.courseInterested || ""}
+                    onChange={(e) => setForm((s) => ({ ...s, courseInterested: e.target.value }))}
+                    className="w-full cursor-pointer bg-transparent py-2.5 text-sm outline-none"
+                  >
+                    <option value="">Select a course…</option>
+                    {COURSE_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </span>
+              </label>
               {error && <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
               <button type="submit" disabled={busy} className="btn-primary w-full gap-2 disabled:opacity-60">
                 {busy ? "Submitting…" : "Get my free shortlist →"}

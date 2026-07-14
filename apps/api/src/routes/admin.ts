@@ -82,19 +82,30 @@ adminRouter.post(
     const maxSort = await prisma.galleryImage.aggregate({ where: { collegeId }, _max: { sort: true } });
     let sort = (maxSort._max.sort ?? -1) + 1;
 
-    const created = [];
     for (const f of files) {
       const url = `${PUBLIC_BASE}/${f.filename}`;
-      const row = await prisma.galleryImage.create({ data: { collegeId, url, sort: sort++ } });
-      created.push(row);
+      await prisma.galleryImage.create({ data: { collegeId, url, sort: sort++ } });
     }
-    // Use the first uploaded image as the card thumbnail if the college has none
-    // (or still uses an auto-sourced stock/wiki image).
-    if (!college.imgUrl || !/\/uploads\//.test(college.imgUrl)) {
-      await prisma.college.update({ where: { id: collegeId }, data: { imgUrl: created[0].url, source: "manual:upload" } });
-    }
+    // Note: background photos do NOT change the card thumbnail (imgUrl) — that is
+    // uploaded separately via /card-image, keeping the grid image distinct.
     const gallery = await prisma.galleryImage.findMany({ where: { collegeId }, orderBy: { sort: "asc" } });
     res.status(201).json({ gallery });
+  }),
+);
+
+/** POST /api/admin/colleges/:id/card-image — set ONLY the grid/card thumbnail. */
+adminRouter.post(
+  "/colleges/:id/card-image",
+  upload.single("image"),
+  asyncHandler(async (req, res) => {
+    const collegeId = Number(req.params.id);
+    const college = await prisma.college.findUnique({ where: { id: collegeId }, select: { id: true } });
+    if (!college) throw new HttpError(404, "College not found");
+    const f = req.file as Express.Multer.File | undefined;
+    if (!f) throw new HttpError(400, "No image uploaded");
+    const url = `${PUBLIC_BASE}/${f.filename}`;
+    await prisma.college.update({ where: { id: collegeId }, data: { imgUrl: url, source: "manual:upload" } });
+    res.status(201).json({ imgUrl: url });
   }),
 );
 
