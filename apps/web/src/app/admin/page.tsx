@@ -188,9 +188,11 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
               <img src={g.url} alt="" className="h-full w-full object-cover" />
               <button
                 onClick={() => remove(g.id)}
-                className="absolute right-1.5 top-1.5 rounded-lg bg-ink-900/70 px-2 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
+                disabled={busy}
+                aria-label="Delete photo"
+                className="absolute right-1.5 top-1.5 rounded-lg bg-ink-900/80 px-2 py-1 text-xs font-bold text-white transition hover:bg-danger disabled:opacity-60"
               >
-                Delete
+                ✕ Delete
               </button>
             </div>
           ))}
