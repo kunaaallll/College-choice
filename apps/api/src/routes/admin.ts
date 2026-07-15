@@ -68,7 +68,13 @@ adminRouter.get(
   }),
 );
 
-/** POST /api/admin/colleges/:id/gallery — upload 1..N images (multipart field "images"). */
+/**
+ * POST /api/admin/colleges/:id/gallery — upload 1..N images (multipart field "images").
+ * These photos power BOTH the rotating detail-page hero and the rotating grid/card
+ * thumbnail (every 3s, see HeroBackground.tsx / CardImageRotator.tsx) — one upload,
+ * used everywhere. The first-ever upload also becomes `imgUrl`, the plain single-image
+ * fallback used for OG/meta tags and the compare page.
+ */
 adminRouter.post(
   "/colleges/:id/gallery",
   upload.array("images", 8),
@@ -82,30 +88,17 @@ adminRouter.post(
     const maxSort = await prisma.galleryImage.aggregate({ where: { collegeId }, _max: { sort: true } });
     let sort = (maxSort._max.sort ?? -1) + 1;
 
+    const urls: string[] = [];
     for (const f of files) {
       const url = `${PUBLIC_BASE}/${f.filename}`;
+      urls.push(url);
       await prisma.galleryImage.create({ data: { collegeId, url, sort: sort++ } });
     }
-    // Note: background photos do NOT change the card thumbnail (imgUrl) — that is
-    // uploaded separately via /card-image, keeping the grid image distinct.
+    if (!college.imgUrl) {
+      await prisma.college.update({ where: { id: collegeId }, data: { imgUrl: urls[0], source: "manual:upload" } });
+    }
     const gallery = await prisma.galleryImage.findMany({ where: { collegeId }, orderBy: { sort: "asc" } });
     res.status(201).json({ gallery });
-  }),
-);
-
-/** POST /api/admin/colleges/:id/card-image — set ONLY the grid/card thumbnail. */
-adminRouter.post(
-  "/colleges/:id/card-image",
-  upload.single("image"),
-  asyncHandler(async (req, res) => {
-    const collegeId = Number(req.params.id);
-    const college = await prisma.college.findUnique({ where: { id: collegeId }, select: { id: true } });
-    if (!college) throw new HttpError(404, "College not found");
-    const f = req.file as Express.Multer.File | undefined;
-    if (!f) throw new HttpError(400, "No image uploaded");
-    const url = `${PUBLIC_BASE}/${f.filename}`;
-    await prisma.college.update({ where: { id: collegeId }, data: { imgUrl: url, source: "manual:upload" } });
-    res.status(201).json({ imgUrl: url });
   }),
 );
 

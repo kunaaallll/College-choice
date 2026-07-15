@@ -83,7 +83,7 @@ export default function AdminPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold">College photos</h1>
-          <p className="mt-1 text-sm text-ink-500">Upload 3–4 real images per college. The first becomes the card thumbnail.</p>
+          <p className="mt-1 text-sm text-ink-500">Upload 3–4 real images per college — they rotate every 3s on both the listing/grid cards and the detail-page hero.</p>
         </div>
         <button
           onClick={() => { localStorage.removeItem("cc_admin_token"); setAuthed(false); setToken(""); }}
@@ -125,7 +125,6 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
-  const cardRef = useRef<HTMLInputElement>(null);
 
   const post = async (url: string, fd: FormData, ok: string) => {
     setBusy(true); setMsg(null);
@@ -139,7 +138,6 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
     } finally {
       setBusy(false);
       if (galleryRef.current) galleryRef.current.value = "";
-      if (cardRef.current) cardRef.current.value = "";
     }
   };
 
@@ -147,13 +145,7 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
     if (!files?.length) return;
     const fd = new FormData();
     Array.from(files).slice(0, 8).forEach((f) => fd.append("images", f));
-    return post(`${API}/api/admin/colleges/${college.id}/gallery`, fd, "Background photos uploaded ✓");
-  };
-  const uploadCard = (files: FileList | null) => {
-    if (!files?.length) return;
-    const fd = new FormData();
-    fd.append("image", files[0]);
-    return post(`${API}/api/admin/colleges/${college.id}/card-image`, fd, "Card image updated ✓");
+    return post(`${API}/api/admin/colleges/${college.id}/gallery`, fd, "Photos uploaded ✓");
   };
 
   const remove = async (id: number) => {
@@ -166,72 +158,48 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
     }
   };
 
-  const isUploaded = (u: string | null) => !!u && /\/uploads\//.test(u);
-
   return (
     <div className="card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-bold text-ink-900">{college.name}</h3>
           <p className="text-xs text-ink-400">
-            {college.stream?.name}{college.city ? ` · ${college.city.name}${college.city.state ? ", " + college.city.state : ""}` : ""} · {college.gallery.length} background photo(s)
+            {college.stream?.name}{college.city ? ` · ${college.city.name}${college.city.state ? ", " + college.city.state : ""}` : ""} · {college.gallery.length} photo(s)
           </p>
         </div>
-        {msg && <span className="text-xs font-semibold text-ink-500">{msg}</span>}
-      </div>
-
-      <div className="mt-4 grid gap-5 lg:grid-cols-[240px_1fr]">
-        {/* Card / grid image */}
-        <div>
-          <div className="flex items-center justify-between">
-            <p className="text-[13px] font-bold text-ink-700">Card / grid image</p>
-            <input ref={cardRef} type="file" accept="image/*" hidden onChange={(e) => uploadCard(e.target.files)} />
-            <button onClick={() => cardRef.current?.click()} disabled={busy} className="rounded-lg border border-brand-400 px-2.5 py-1 text-[12px] font-semibold text-brand-700 disabled:opacity-60">
-              ⬆ Upload
-            </button>
-          </div>
-          <div className="mt-2 aspect-[16/10] overflow-hidden rounded-xl border border-line bg-line">
-            {college.imgUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={college.imgUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span className="flex h-full items-center justify-center text-xs text-ink-400">No card image</span>
-            )}
-          </div>
-          <p className="mt-1 text-[11px] text-ink-400">{isUploaded(college.imgUrl) ? "Uploaded thumbnail" : "Shown on listing/grid cards"}</p>
-        </div>
-
-        {/* Background photos (rotating hero) */}
-        <div>
-          <div className="flex items-center justify-between">
-            <p className="text-[13px] font-bold text-ink-700">Background photos <span className="font-normal text-ink-400">(rotate in the page hero)</span></p>
-            <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadGallery(e.target.files)} />
-            <button onClick={() => galleryRef.current?.click()} disabled={busy} className="btn-primary px-3.5 py-1.5 text-[12px] disabled:opacity-60">
-              {busy ? "Uploading…" : "⬆ Upload photos"}
-            </button>
-          </div>
-          {college.gallery.length > 0 ? (
-            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {college.gallery.map((g) => (
-                <div key={g.id} className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-line">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g.url} alt="" className="h-full w-full object-cover" />
-                  <button
-                    onClick={() => remove(g.id)}
-                    className="absolute right-1.5 top-1.5 rounded-lg bg-ink-900/70 px-2 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-2 flex aspect-[16/5] items-center justify-center rounded-xl border border-dashed border-line text-xs text-ink-400">
-              No background photos yet
-            </div>
-          )}
+        <div className="flex items-center gap-3">
+          {msg && <span className="text-xs font-semibold text-ink-500">{msg}</span>}
+          <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadGallery(e.target.files)} />
+          <button onClick={() => galleryRef.current?.click()} disabled={busy} className="btn-primary px-3.5 py-1.5 text-[12px] disabled:opacity-60">
+            {busy ? "Uploading…" : "⬆ Upload photos"}
+          </button>
         </div>
       </div>
+
+      <p className="mt-3 text-[11px] text-ink-400">
+        These photos rotate every 3s on the listing/grid card and the detail-page hero — the first upload also becomes the fallback thumbnail (search/social previews).
+      </p>
+
+      {college.gallery.length > 0 ? (
+        <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          {college.gallery.map((g) => (
+            <div key={g.id} className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-line">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={g.url} alt="" className="h-full w-full object-cover" />
+              <button
+                onClick={() => remove(g.id)}
+                className="absolute right-1.5 top-1.5 rounded-lg bg-ink-900/70 px-2 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-3 flex aspect-[16/5] items-center justify-center rounded-xl border border-dashed border-line text-xs text-ink-400">
+          No photos yet — upload 3–4 to enable rotation.
+        </div>
+      )}
     </div>
   );
 }
