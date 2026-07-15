@@ -28,6 +28,7 @@ const cardSelect = {
   approvals: true,
   stream: { select: { name: true, slug: true } },
   city: { select: { name: true, slug: true } },
+  gallery: { select: { id: true, url: true }, orderBy: { sort: "asc" }, take: 4 },
 } satisfies Prisma.CollegeSelect;
 
 const ORDER: Record<string, Prisma.CollegeOrderByWithRelationInput[]> = {

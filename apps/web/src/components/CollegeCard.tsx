@@ -6,6 +6,7 @@ import clsx from "clsx";
 import type { CollegeCard as TCollege } from "@/lib/types";
 import { orNA, stars } from "@/lib/format";
 import { useSite } from "./site-context";
+import { CardImageRotator } from "./CardImageRotator";
 
 export function CollegeCard({ college }: { college: TCollege }) {
   const { toggleCompare, inCompare, openApply } = useSite();
@@ -14,18 +15,15 @@ export function CollegeCard({ college }: { college: TCollege }) {
   const isOnline = (college.mode ?? "Campus") !== "Campus";
   const isDental = college.stream.slug === "dental";
   const approvals = college.approvals ?? [];
+  // Uploaded photos → rotating card image (falls back to the single imgUrl).
+  const cardImages = (college.gallery ?? []).map((g) => g.url).filter(Boolean);
+  const images = cardImages.length ? cardImages : college.imgUrl ? [college.imgUrl] : [];
 
   return (
     <article className="card group flex flex-col overflow-hidden">
       <Link href={`/colleges/${college.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-line">
-        {college.imgUrl ? (
-          <Image
-            src={college.imgUrl}
-            alt={college.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover transition group-hover:scale-105"
-          />
+        {images.length ? (
+          <CardImageRotator images={images} alt={college.name} />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-line/60 p-3 text-center">
             <span className="text-3xl opacity-30">🏛️</span>

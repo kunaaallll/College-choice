@@ -33,6 +33,7 @@ export interface CollegeCard {
   featured?: boolean;
   stream: StreamRef;
   city: CityRef;
+  gallery?: GalleryImage[];
 }
 
 export interface Course {

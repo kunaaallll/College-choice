@@ -83,7 +83,6 @@ export default async function OnlinePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(99,102,241,0.35),transparent)]" />
         <div className="container-site relative py-12 sm:py-16">
           <div className="text-white/80">
             <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Online", path: "/online" }]} />

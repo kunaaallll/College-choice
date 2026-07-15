@@ -45,12 +45,13 @@ export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, st
 
   return (
     <>
-      {/* Hero — tall, with a rotating background of the college's real photos */}
-      <section className="relative flex min-h-[440px] flex-col bg-ink-900 text-white sm:min-h-[540px]">
+      {/* Hero — a bit taller than default, with a rotating background of the
+          college's real photos; content anchored to the bottom. */}
+      <section className="relative flex min-h-[240px] flex-col bg-ink-900 text-white sm:min-h-[300px]">
         <HeroBackground images={bg} />
-        <div className="container-site relative flex flex-1 flex-col py-8">
+        <div className="container-site relative flex flex-1 flex-col py-6">
           <Breadcrumbs items={crumbs} />
-          <div className="mt-auto flex flex-col gap-6 pt-12 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mt-auto flex flex-col gap-6 pt-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               {isOnline ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-3 py-1 text-xs font-bold">
