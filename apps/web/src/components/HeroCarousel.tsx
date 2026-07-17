@@ -29,9 +29,9 @@ export function HeroCarousel({ images }: { images: string[] }) {
           }`}
         />
       ))}
-      {/* Neutral dark overlay — readable text, no colour tint, campus stays visible. */}
-      <div className="absolute inset-0 bg-black/45" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/60" />
+      {/* Light bottom-only scrim — keeps the photo raw/clearly visible; hero text
+          carries its own drop-shadow for legibility instead of a full wash. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
     </div>
   );
 }

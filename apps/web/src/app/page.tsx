@@ -111,7 +111,7 @@ export default async function HomePage() {
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
         <HeroCarousel images={heroList} />
-        <div className="container-site relative py-16 text-center sm:py-24">
+        <div className="container-site relative py-16 text-center sm:py-24 [text-shadow:0_1px_4px_rgb(0_0_0_/_60%)]">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
             ★ India&apos;s most trusted college discovery platform
           </span>
