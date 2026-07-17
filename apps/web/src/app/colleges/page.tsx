@@ -17,6 +17,7 @@ function toQuery(sp: Record<string, string | string[] | undefined>): CollegeQuer
     search: str(sp.search),
     stream: str(sp.stream),
     type: str(sp.type),
+    mode: str(sp.mode),
     city: str(sp.city),
     state: str(sp.state),
     maxFees: str(sp.maxFees) ? Number(str(sp.maxFees)) : undefined,

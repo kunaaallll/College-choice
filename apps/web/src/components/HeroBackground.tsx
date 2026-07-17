@@ -5,8 +5,9 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 
 // Rotating college-photo background for the detail-page hero. Cycles the uploaded
-// gallery images every 3 seconds with a cross-fade; a dark scrim keeps the hero
-// text legible. Falls back to a single image (or nothing) gracefully.
+// gallery images every 3 seconds with a cross-fade. Only a light bottom-anchored
+// scrim is used (not a full wash) so the photo itself stays clearly visible; the
+// text above it carries its own drop-shadow for legibility.
 export function HeroBackground({ images }: { images: string[] }) {
   const [i, setI] = useState(0);
 
@@ -29,8 +30,8 @@ export function HeroBackground({ images }: { images: string[] }) {
           className={clsx("object-cover transition-opacity duration-1000 ease-in-out", idx === i ? "opacity-100" : "opacity-0")}
         />
       ))}
-      {/* Dark scrim for legible hero text over any photo */}
-      <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/75 to-ink-900/45" />
+      {/* Light bottom-only scrim — keeps the photo visible, just anchors the text */}
+      <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 to-transparent" />
       {/* Slide dots */}
       {images.length > 1 && (
         <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">

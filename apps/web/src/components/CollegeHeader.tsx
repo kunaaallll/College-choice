@@ -45,11 +45,11 @@ export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, st
 
   return (
     <>
-      {/* Hero — a bit taller than default, with a rotating background of the
-          college's real photos; content anchored to the bottom. */}
-      <section className="relative flex min-h-[240px] flex-col bg-ink-900 text-white sm:min-h-[300px]">
+      {/* Hero — the college's real photos rotate behind the title; content
+          anchored to the bottom so the photo itself stays the focus. */}
+      <section className="relative flex min-h-[300px] flex-col bg-ink-900 text-white sm:min-h-[375px]">
         <HeroBackground images={bg} />
-        <div className="container-site relative flex flex-1 flex-col py-6">
+        <div className="container-site relative flex flex-1 flex-col py-6 [text-shadow:0_1px_3px_rgb(0_0_0_/_55%)]">
           <Breadcrumbs items={crumbs} />
           <div className="mt-auto flex flex-col gap-6 pt-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -59,23 +59,23 @@ export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, st
                 </span>
               ) : (
                 c.rank != null && (
-                  <span className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-bold">
+                  <span className="inline-flex rounded-full bg-black/40 px-3 py-1 text-xs font-bold">
                     NIRF #{c.nirfRank ?? c.rank} in {c.stream.name}
                   </span>
                 )
               )}
               <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">{c.name}</h1>
-              <p className="mt-2 text-white/70">
+              <p className="mt-2 text-white/90">
                 ⚲ {c.location} · {orNA(c.type)} {c.estd ? `· Estd ${c.estd}` : ""}
               </p>
-              <p className="mt-1 text-sm text-white/70">
+              <p className="mt-1 text-sm text-white/90">
                 {stars(c.rating)} {c.reviewsLabel ? `(${c.reviewsLabel} reviews)` : ""}
                 {updated ? ` · Updated on ${updated}` : ""}
               </p>
               {isOnline && approvals.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {approvals.map((a) => (
-                    <span key={a} className="rounded-md bg-white/10 px-2 py-1 text-xs font-semibold text-white">
+                    <span key={a} className="rounded-md bg-black/40 px-2 py-1 text-xs font-semibold text-white">
                       ✓ {a}
                     </span>
                   ))}

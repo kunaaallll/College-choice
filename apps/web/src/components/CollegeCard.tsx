@@ -20,7 +20,12 @@ export function CollegeCard({ college }: { college: TCollege }) {
   const images = cardImages.length ? cardImages : college.imgUrl ? [college.imgUrl] : [];
 
   return (
-    <article className="card group flex flex-col overflow-hidden">
+    <article
+      className={clsx(
+        "card group flex flex-col overflow-hidden",
+        college.featured && "ring-2 ring-warn/50 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.45)]",
+      )}
+    >
       <Link href={`/colleges/${college.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-line">
         {images.length ? (
           <CardImageRotator images={images} alt={college.name} />
@@ -30,9 +35,14 @@ export function CollegeCard({ college }: { college: TCollege }) {
             <span className="line-clamp-2 text-xs font-semibold text-ink-400">{college.name}</span>
           </div>
         )}
+        {college.featured && (
+          <span className="absolute left-0 top-4 z-10 flex items-center gap-1 rounded-r-full bg-gradient-to-r from-warn to-orange-500 py-1 pl-3 pr-3 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-md">
+            ⭐ Featured
+          </span>
+        )}
         {college.rank != null && (
-          <span className="absolute left-3 top-3 rounded-full bg-ink-900/90 px-2.5 py-1 text-[13px] font-extrabold text-white">
-            #{college.rank} {college.stream.name}
+          <span className={clsx("absolute top-3 rounded-full bg-ink-900/90 px-2.5 py-1 text-[13px] font-extrabold text-white", college.featured ? "left-3 mt-8" : "left-3")}>
+            Rank <span className="text-red-500">#{college.rank}</span>
           </span>
         )}
         {college.rating != null && (
@@ -45,11 +55,6 @@ export function CollegeCard({ college }: { college: TCollege }) {
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[12.5px] text-ink-400">⚲ {college.location}</p>
-          {college.featured && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-bold text-warn">
-              ★ Featured
-            </span>
-          )}
         </div>
         <h3 className="mt-1 text-[16px] font-bold leading-snug">
           <Link href={`/colleges/${college.slug}`} className="hover:text-brand-600">

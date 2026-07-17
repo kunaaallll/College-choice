@@ -106,7 +106,9 @@ export function CompareClient() {
                 )}
                 <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink-900/70 to-transparent" />
                 {c.rank != null && (
-                  <span className="absolute left-2 top-2 rounded-full bg-ink-900/85 px-2 py-0.5 text-[11px] font-bold text-white">#{c.rank}</span>
+                  <span className="absolute left-2 top-2 rounded-full bg-ink-900/85 px-2 py-0.5 text-[11px] font-bold text-white">
+                    Rank <span className="text-red-500">#{c.rank}</span>
+                  </span>
                 )}
                 {c.rating != null && (
                   <span className="absolute bottom-2 left-2 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-bold text-warn">{stars(c.rating)}</span>

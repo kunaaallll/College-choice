@@ -6,6 +6,7 @@ import { PROGRAMS } from "@/lib/online";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
 import { JsonLd } from "@/components/JsonLd";
+import { Collapsible } from "@/components/Collapsible";
 
 export const revalidate = 3600;
 
@@ -102,6 +103,34 @@ export default async function OnlinePage() {
               <span key={t} className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold">✓ {t}</span>
             ))}
           </div>
+          <form action="/colleges" method="get" className="mx-auto mt-8 flex max-w-xl flex-col gap-2 rounded-2xl bg-white p-2 shadow-pop sm:flex-row">
+            <input type="hidden" name="mode" value="Online" />
+            <div className="flex flex-1 items-center gap-2 rounded-xl border border-line px-3">
+              <span className="text-ink-400">⌕</span>
+              <input
+                name="search"
+                placeholder="Search online universities or programs…"
+                className="w-full bg-transparent py-3 text-sm text-ink-900 outline-none"
+              />
+            </div>
+            <button type="submit" className="btn-primary px-6 py-3">Search</button>
+          </form>
+        </div>
+      </section>
+
+      {/* Recognition & validity — moved above the program list so visitors see
+          "is this valid?" before browsing programs. */}
+      <section className="container-site py-8">
+        <h2 className="text-2xl font-extrabold sm:text-3xl">Is an online degree valid? What to check</h2>
+        <p className="mt-2 max-w-2xl text-ink-500">Four markers decide whether an online degree is genuinely recognised and worth your money.</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {RECOGNITION.map((r) => (
+            <div key={r.badge} className="card p-5">
+              <span className="inline-flex rounded-lg bg-success/10 px-2.5 py-1 text-xs font-bold text-success">{r.badge}</span>
+              <h3 className="mt-3 text-base font-bold text-ink-900">{r.title}</h3>
+              <p className="mt-1.5 text-sm text-ink-500">{r.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -122,21 +151,23 @@ export default async function OnlinePage() {
       <section className="container-site pb-4">
         <div className="max-w-3xl">
           <h2 className="text-2xl font-extrabold sm:text-3xl">Online degrees in India — a complete guide</h2>
-          <p className="mt-3 text-ink-600">
-            Online education has moved from the fringes to the mainstream. Since the UGC&apos;s 2020
-            regulations, degrees earned fully online from entitled universities carry the <strong>same
-            academic value as on-campus degrees</strong> — valid for jobs, promotions, government
-            examinations and higher study. For India&apos;s millions of working professionals and
-            remote learners, that means a real, recognised qualification without quitting a job or
-            relocating.
-          </p>
-          <p className="mt-3 text-ink-600">
-            The catch is that quality varies. The safest online degrees come from <strong>UGC-DEB
-            entitled, NAAC-accredited universities</strong> with a recognised brand — that combination
-            is what employers and foreign universities actually respect. This guide breaks down the
-            popular courses, what makes a degree valid, how online learning works, and how to choose
-            the right university.
-          </p>
+          <Collapsible previewHeight={110}>
+            <p className="mt-3 text-ink-600">
+              Online education has moved from the fringes to the mainstream. Since the UGC&apos;s 2020
+              regulations, degrees earned fully online from entitled universities carry the <strong>same
+              academic value as on-campus degrees</strong> — valid for jobs, promotions, government
+              examinations and higher study. For India&apos;s millions of working professionals and
+              remote learners, that means a real, recognised qualification without quitting a job or
+              relocating.
+            </p>
+            <p className="mt-3 text-ink-600">
+              The catch is that quality varies. The safest online degrees come from <strong>UGC-DEB
+              entitled, NAAC-accredited universities</strong> with a recognised brand — that combination
+              is what employers and foreign universities actually respect. This guide breaks down the
+              popular courses, what makes a degree valid, how online learning works, and how to choose
+              the right university.
+            </p>
+          </Collapsible>
         </div>
       </section>
 
@@ -160,21 +191,6 @@ export default async function OnlinePage() {
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {c.specs.map((s) => <span key={s} className="chip">{s}</span>)}
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Recognition & validity */}
-      <section className="container-site py-8">
-        <h2 className="text-2xl font-extrabold sm:text-3xl">Is an online degree valid? What to check</h2>
-        <p className="mt-2 max-w-2xl text-ink-500">Four markers decide whether an online degree is genuinely recognised and worth your money.</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {RECOGNITION.map((r) => (
-            <div key={r.badge} className="card p-5">
-              <span className="inline-flex rounded-lg bg-success/10 px-2.5 py-1 text-xs font-bold text-success">{r.badge}</span>
-              <h3 className="mt-3 text-base font-bold text-ink-900">{r.title}</h3>
-              <p className="mt-1.5 text-sm text-ink-500">{r.body}</p>
             </div>
           ))}
         </div>
