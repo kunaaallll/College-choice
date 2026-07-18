@@ -315,6 +315,7 @@ model Application {
   fullName        String
   mobile          String
   email           String
+  city            String?
   courseInterested String?
   collegeName     String? // free-text snapshot at submit time
   collegeId       Int?

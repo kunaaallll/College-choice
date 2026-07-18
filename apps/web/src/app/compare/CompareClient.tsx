@@ -105,9 +105,9 @@ export function CompareClient() {
                   <span className="flex h-full items-center justify-center text-xs text-ink-400">No image</span>
                 )}
                 <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink-900/70 to-transparent" />
-                {c.rank != null && (
-                  <span className="absolute left-2 top-2 rounded-full bg-ink-900/85 px-2 py-0.5 text-[11px] font-bold text-white">
-                    Rank <span className="text-red-500">#{c.rank}</span>
+                {c.rank != null && !c.featured && (
+                  <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                    #{c.rank}
                   </span>
                 )}
                 {c.rating != null && (

@@ -26,6 +26,7 @@ applicationsRouter.post(
         fullName: data.fullName,
         mobile: data.mobile,
         email: data.email,
+        city: data.city ?? null,
         courseInterested: data.courseInterested ?? null,
         collegeName,
         collegeId: data.collegeId ?? null,

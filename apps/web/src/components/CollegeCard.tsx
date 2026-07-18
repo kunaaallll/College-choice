@@ -40,9 +40,9 @@ export function CollegeCard({ college }: { college: TCollege }) {
             ⭐ Featured
           </span>
         )}
-        {college.rank != null && (
-          <span className={clsx("absolute top-3 rounded-full bg-ink-900/90 px-2.5 py-1 text-[13px] font-extrabold text-white", college.featured ? "left-3 mt-8" : "left-3")}>
-            Rank <span className="text-red-500">#{college.rank}</span>
+        {college.rank != null && !college.featured && (
+          <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-[13px] font-extrabold text-white">
+            #{college.rank}
           </span>
         )}
         {college.rating != null && (

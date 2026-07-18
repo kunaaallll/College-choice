@@ -44,7 +44,7 @@ export function Filters({ streams, cities }: { streams: Opt[]; cities: Opt[] }) 
   const activeStream = current("stream");
 
   return (
-    <aside className="card sticky top-20 h-fit p-5">
+    <aside className="card h-fit p-5 lg:sticky lg:top-20">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold">Filters</h2>
         <button onClick={() => router.push("/colleges")} className="text-xs font-semibold text-brand-600">
