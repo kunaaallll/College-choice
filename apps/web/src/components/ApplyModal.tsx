@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { postJSON } from "@/lib/api";
-import { useSite } from "./site-context";
+import { useSite, type PredictorFamily } from "./site-context";
 
 const FIELDS = [
   { key: "fullName", label: "Full name", placeholder: "Your name", type: "text", icon: "user" },
@@ -16,6 +16,40 @@ const COURSE_OPTIONS = [
   "B.Com", "M.Com", "BA", "MA", "B.Sc", "M.Sc", "B.Pharm / Pharmacy", "Nursing", "Law (LLB / BA-LLB)",
   "Online MBA", "Online BBA", "Online BCA", "Online BCom", "Other",
 ];
+
+const CATEGORY_OPTIONS = ["General", "EWS", "OBC-NCL", "SC", "ST", "PwD"];
+
+const STATE_OPTIONS = [
+  "Andhra Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+  "Madhya Pradesh", "Maharashtra", "Odisha", "Punjab", "Rajasthan",
+  "Tamil Nadu", "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Other",
+];
+
+// Rank-predictor calculator fields, shown above the contact details when the
+// CTA that opened this modal is course-specific (JEE/NEET). Each family also
+// pins the "course interested in" dropdown below to the right course.
+const FAMILY_META: Record<PredictorFamily, { heading: string; marksMax: number; courseValue: string; showGender: boolean; submitLabel?: string }> = {
+  btech: {
+    heading: "JEE Main College Predictor 2026 (JoSAA): Predict B.Tech Colleges based on JoSAA Opening and Closing Ranks",
+    marksMax: 300,
+    courseValue: "B.Tech / B.E.",
+    showGender: true,
+    submitLabel: "Check results →",
+  },
+  "neet-bds": {
+    heading: "NEET College Predictor 2026 - Predict BDS Colleges by Rank for Free",
+    marksMax: 720,
+    courseValue: "BDS",
+    showGender: false,
+  },
+  "neet-mbbs": {
+    heading: "NEET College Predictor 2026 - Predict MBBS Colleges by Rank for Free",
+    marksMax: 720,
+    courseValue: "MBBS",
+    showGender: false,
+  },
+};
 
 const VALUE_PROPS = [
   { icon: "✔", text: "Verified fees, cutoffs & placements" },
@@ -36,7 +70,7 @@ function FieldIcon({ name }: { name: string }) {
 }
 
 export function ApplyModal() {
-  const { applyOpen, applyCollege, closeApply, openLogin } = useSite();
+  const { applyOpen, applyCollege, applyFamily, closeApply, openLogin } = useSite();
   const [form, setForm] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -44,6 +78,9 @@ export function ApplyModal() {
   const [otpSent, setOtpSent] = useState(false);
 
   if (!applyOpen) return null;
+
+  const fam = applyFamily ? FAMILY_META[applyFamily] : null;
+  const courseValue = form.courseInterested || fam?.courseValue || "";
 
   const requestOtp = () => {
     if (!form.mobile || form.mobile.trim().length < 7) {
@@ -59,12 +96,21 @@ export function ApplyModal() {
     setBusy(true);
     setError(null);
     try {
+      const notesParts = fam
+        ? [
+            form.marks ? `Marks: ${form.marks}/${fam.marksMax}` : form.rank ? `Rank: ${form.rank}` : null,
+            form.category ? `Category: ${form.category}` : null,
+            form.state ? `State: ${form.state}` : null,
+            fam.showGender && form.gender ? `Gender: ${form.gender}` : null,
+          ].filter(Boolean)
+        : [];
       await postJSON("/api/applications", {
         fullName: form.fullName,
         mobile: form.mobile,
         email: form.email,
         city: form.city,
-        courseInterested: form.courseInterested,
+        courseInterested: courseValue || undefined,
+        notes: notesParts.length ? notesParts.join(" | ") : undefined,
         collegeName: applyCollege?.name,
         collegeId: applyCollege?.id,
       });
@@ -81,7 +127,7 @@ export function ApplyModal() {
     setTimeout(() => { setDone(false); setForm({}); setError(null); setOtpSent(false); }, 200);
   };
 
-  const heading = applyCollege?.name ? `Get admission help for ${applyCollege.name}` : "Find your best-fit college";
+  const heading = fam?.heading ?? (applyCollege?.name ? `Get admission help for ${applyCollege.name}` : "Find your best-fit college");
 
   return (
     <div
@@ -148,6 +194,81 @@ export function ApplyModal() {
             </div>
           ) : (
             <form onSubmit={submit} className="mt-5 space-y-3">
+              {fam && (
+                <div className="space-y-3 rounded-xl bg-brand-50/60 p-3.5">
+                  <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-1 block text-[13px] font-semibold text-ink-700">
+                        Marks <span className="text-danger">(Out of {fam.marksMax})</span>
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={fam.marksMax}
+                        placeholder="Enter your marks"
+                        value={form.marks || ""}
+                        onChange={(e) => setForm((s) => ({ ...s, marks: e.target.value, rank: "" }))}
+                        className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[13px] font-semibold text-ink-700">— OR — Enter your rank</span>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Enter your rank"
+                        value={form.rank || ""}
+                        onChange={(e) => setForm((s) => ({ ...s, rank: e.target.value, marks: "" }))}
+                        className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-1 block text-[13px] font-semibold text-ink-700">Reservation Category</span>
+                      <select
+                        value={form.category || "General"}
+                        onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
+                        className="w-full cursor-pointer rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                      >
+                        {CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[13px] font-semibold text-ink-700">Select {fam.showGender ? "Home State" : "State"}</span>
+                      <select
+                        value={form.state || ""}
+                        onChange={(e) => setForm((s) => ({ ...s, state: e.target.value }))}
+                        className="w-full cursor-pointer rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                      >
+                        <option value="">Select {fam.showGender ? "Home State" : "State"}</option>
+                        {STATE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  {fam.showGender && (
+                    <div>
+                      <span className="mb-1 block text-[13px] font-semibold text-ink-700">Gender</span>
+                      <div className="flex gap-4">
+                        {["Male", "Female"].map((g) => (
+                          <label key={g} className="flex items-center gap-1.5 text-sm text-ink-700">
+                            <input
+                              type="radio"
+                              name="gender"
+                              value={g}
+                              checked={(form.gender || "Male") === g}
+                              onChange={(e) => setForm((s) => ({ ...s, gender: e.target.value }))}
+                              className="accent-brand-600"
+                            />
+                            {g}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {FIELDS.map((f) => (
                   <label key={f.key} className="block">
@@ -195,24 +316,27 @@ export function ApplyModal() {
               </div>
               {otpSent && <p className="-mt-1 text-[11px] text-ink-400">You&apos;ll receive an OTP on your mobile number.</p>}
 
-              {/* Course interested in — dropdown */}
+              {/* Course interested in — dropdown; locked to the predictor's course when opened from a JEE/NEET CTA */}
               <label className="block">
-                <span className="mb-1 block text-[13px] font-semibold text-ink-700">Course you&apos;re interested in</span>
-                <span className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15">
+                <span className="mb-1 block text-[13px] font-semibold text-ink-700">
+                  {fam ? "Course Name" : "Course you're interested in"}
+                </span>
+                <span className={`flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15 ${fam ? "bg-line/40" : ""}`}>
                   <span className="text-ink-400"><FieldIcon name="book" /></span>
                   <select
-                    value={form.courseInterested || ""}
+                    value={courseValue}
+                    disabled={!!fam}
                     onChange={(e) => setForm((s) => ({ ...s, courseInterested: e.target.value }))}
-                    className="w-full cursor-pointer bg-transparent py-2.5 text-sm outline-none"
+                    className="w-full cursor-pointer bg-transparent py-2.5 text-sm outline-none disabled:cursor-not-allowed disabled:text-ink-500"
                   >
-                    <option value="">Select a course…</option>
+                    {!fam && <option value="">Select a course…</option>}
                     {COURSE_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </span>
               </label>
               {error && <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
               <button type="submit" disabled={busy} className="btn-primary w-full gap-2 disabled:opacity-60">
-                {busy ? "Submitting…" : "Get my free shortlist →"}
+                {busy ? "Submitting…" : fam?.submitLabel ?? "Get my free shortlist →"}
               </button>
               <p className="text-center text-[12px] text-ink-500">
                 Already registered?{" "}

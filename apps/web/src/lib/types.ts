@@ -87,6 +87,7 @@ export interface ContentSection {
 
 export interface CollegeDetail extends CollegeCard {
   about: string | null;
+  sampleDegreeUrl: string | null;
   descriptionLong: string | null;
   metaTitle: string | null;
   metaDescription: string | null;

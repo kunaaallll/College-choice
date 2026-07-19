@@ -22,6 +22,7 @@ export const applicationSchema = z.object({
   email: z.string().trim().email(),
   city: z.string().trim().max(120).optional(),
   courseInterested: z.string().trim().max(120).optional(),
+  notes: z.string().trim().max(500).optional(),
   collegeName: z.string().trim().max(200).optional(),
   collegeId: z.coerce.number().int().positive().optional(),
 });

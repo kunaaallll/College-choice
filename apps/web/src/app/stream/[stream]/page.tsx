@@ -7,6 +7,7 @@ import { CollegeCard } from "@/components/CollegeCard";
 import type { CollegeCard as TCollege } from "@/lib/types";
 import { JsonLd } from "@/components/JsonLd";
 import { PredictorCTA } from "@/components/PredictorCTA";
+import type { PredictorFamily } from "@/components/site-context";
 import { StateSelect } from "@/components/StateSelect";
 import { Collapsible } from "@/components/Collapsible";
 import { streamContent } from "@/lib/streamContent";
@@ -29,6 +30,13 @@ const TYPES = [
 ] as const;
 
 const prettify = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+
+// Which streams get the JEE/NEET-style rank-predictor calculator fields.
+const PREDICTOR_FAMILY: Record<string, PredictorFamily> = {
+  engineering: "btech",
+  dental: "neet-bds",
+  medical: "neet-mbbs",
+};
 
 // Insert exactly one featured college after every 3 regular colleges, so with a
 // 3-per-row grid each full row is followed by a featured card. Featured order is
@@ -202,7 +210,7 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
 
       {/* College predictor */}
       <div className="mt-6">
-        <PredictorCTA course={name} />
+        <PredictorCTA course={name} family={PREDICTOR_FAMILY[stream]} />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[264px_1fr]">

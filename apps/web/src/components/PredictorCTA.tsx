@@ -1,6 +1,6 @@
 "use client";
 
-import { useSite } from "./site-context";
+import { useSite, type PredictorFamily } from "./site-context";
 
 // A prominent "college predictor" entry point for course landing pages.
 // Reuses the lead-capture modal so counsellors can follow up with a shortlist.
@@ -37,9 +37,9 @@ const REASONS = [
   },
 ];
 
-export function PredictorCTA({ course }: { course: string }) {
+export function PredictorCTA({ course, family }: { course: string; family?: PredictorFamily }) {
   const { openApply } = useSite();
-  const predict = () => openApply(`${course} College Predictor`);
+  const predict = () => openApply(`${course} College Predictor`, undefined, family);
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-white sm:p-8">

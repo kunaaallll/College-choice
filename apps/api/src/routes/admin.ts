@@ -56,7 +56,7 @@ adminRouter.get(
     const items = await prisma.college.findMany({
       where: search ? { name: { contains: search, mode: "insensitive" } } : { OR: [{ featured: true }, { nirfRank: { not: null } }] },
       select: {
-        id: true, name: true, slug: true, imgUrl: true,
+        id: true, name: true, slug: true, imgUrl: true, sampleDegreeUrl: true, mode: true,
         city: { select: { name: true, state: true } },
         stream: { select: { name: true } },
         gallery: { orderBy: { sort: "asc" }, select: { id: true, url: true, sort: true } },
@@ -99,6 +99,22 @@ adminRouter.post(
     }
     const gallery = await prisma.galleryImage.findMany({ where: { collegeId }, orderBy: { sort: "asc" } });
     res.status(201).json({ gallery });
+  }),
+);
+
+/** POST /api/admin/colleges/:id/sample-degree — upload the sample-degree photo (online colleges). */
+adminRouter.post(
+  "/colleges/:id/sample-degree",
+  upload.single("image"),
+  asyncHandler(async (req, res) => {
+    const collegeId = Number(req.params.id);
+    const college = await prisma.college.findUnique({ where: { id: collegeId }, select: { id: true } });
+    if (!college) throw new HttpError(404, "College not found");
+    const f = req.file as Express.Multer.File | undefined;
+    if (!f) throw new HttpError(400, "No image uploaded");
+    const url = `${PUBLIC_BASE}/${f.filename}`;
+    await prisma.college.update({ where: { id: collegeId }, data: { sampleDegreeUrl: url } });
+    res.status(201).json({ sampleDegreeUrl: url });
   }),
 );
 

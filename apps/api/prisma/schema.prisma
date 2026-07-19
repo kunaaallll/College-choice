@@ -100,6 +100,7 @@ model College {
   estd         Int?
   imgUrl       String?
   logoUrl      String?
+  sampleDegreeUrl String? // uploaded sample-degree photo, shown on the Placements tab (online colleges)
   about        String? // short summary (cards / meta fallback)
 
   // ── SEO / detailed content ──────────────────────────────
@@ -317,6 +318,7 @@ model Application {
   email           String
   city            String?
   courseInterested String?
+  notes           String? // predictor-form context: marks/rank, category, state, gender etc.
   collegeName     String? // free-text snapshot at submit time
   collegeId       Int?
   college         College?          @relation(fields: [collegeId], references: [id])

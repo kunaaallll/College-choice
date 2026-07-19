@@ -9,6 +9,7 @@ import { CollegeHeader } from "@/components/CollegeHeader";
 import { CollegeSidebar } from "@/components/CollegeSidebar";
 import { SectionList } from "@/components/SectionList";
 import { CutoffDownloadTable } from "@/components/CutoffDownloadTable";
+import { SampleDegreeReveal } from "@/components/SampleDegreeReveal";
 
 // Tabbed college detail sub-pages: /colleges/[slug]/courses-fees, /admissions,
 // /placements, /cutoffs, /scholarships, /rankings, /hostel — each an indexable
@@ -107,6 +108,10 @@ export default async function CollegeTabPage({ params }: Params) {
                 </table>
               </div>
             </section>
+          )}
+
+          {tab === "placements" && c.sampleDegreeUrl && (
+            <SampleDegreeReveal imageUrl={c.sampleDegreeUrl} collegeName={c.name} />
           )}
 
           {tab === "placements" && c.placement && (

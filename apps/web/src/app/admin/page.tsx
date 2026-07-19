@@ -14,6 +14,8 @@ interface AdminCollege {
   name: string;
   slug: string;
   imgUrl: string | null;
+  sampleDegreeUrl: string | null;
+  mode: string;
   city?: { name: string; state: string | null } | null;
   stream?: { name: string } | null;
   gallery: GalleryImage[];
@@ -125,8 +127,9 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const degreeRef = useRef<HTMLInputElement>(null);
 
-  const post = async (url: string, fd: FormData, ok: string) => {
+  const post = async (url: string, fd: FormData, ok: string, resetRef?: React.RefObject<HTMLInputElement | null>) => {
     setBusy(true); setMsg(null);
     try {
       const res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
@@ -137,7 +140,7 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
       setMsg(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setBusy(false);
-      if (galleryRef.current) galleryRef.current.value = "";
+      if (resetRef?.current) resetRef.current.value = "";
     }
   };
 
@@ -145,7 +148,14 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
     if (!files?.length) return;
     const fd = new FormData();
     Array.from(files).slice(0, 8).forEach((f) => fd.append("images", f));
-    return post(`${API}/api/admin/colleges/${college.id}/gallery`, fd, "Photos uploaded ✓");
+    return post(`${API}/api/admin/colleges/${college.id}/gallery`, fd, "Photos uploaded ✓", galleryRef);
+  };
+
+  const uploadSampleDegree = (files: FileList | null) => {
+    if (!files?.length) return;
+    const fd = new FormData();
+    fd.append("image", files[0]);
+    return post(`${API}/api/admin/colleges/${college.id}/sample-degree`, fd, "Sample degree uploaded ✓", degreeRef);
   };
 
   const remove = async (id: number) => {
@@ -200,6 +210,26 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
       ) : (
         <div className="mt-3 flex aspect-[16/5] items-center justify-center rounded-xl border border-dashed border-line text-xs text-ink-400">
           No photos yet — upload 3–4 to enable rotation.
+        </div>
+      )}
+
+      {college.mode !== "Campus" && (
+        <div className="mt-4 border-t border-line pt-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] font-bold text-ink-700">Sample degree photo <span className="font-normal text-ink-400">(Placements tab, "View sample degree")</span></p>
+            <input ref={degreeRef} type="file" accept="image/*" hidden onChange={(e) => uploadSampleDegree(e.target.files)} />
+            <button onClick={() => degreeRef.current?.click()} disabled={busy} className="rounded-lg border border-brand-400 px-2.5 py-1 text-[12px] font-semibold text-brand-700 disabled:opacity-60">
+              ⬆ Upload
+            </button>
+          </div>
+          <div className="mt-2 aspect-[16/10] w-40 overflow-hidden rounded-xl border border-line bg-line">
+            {college.sampleDegreeUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={college.sampleDegreeUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full items-center justify-center text-center text-xs text-ink-400">No sample degree yet</span>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -42,7 +42,7 @@ export function CollegeCard({ college }: { college: TCollege }) {
         )}
         {college.rank != null && !college.featured && (
           <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-[13px] font-extrabold text-white">
-            #{college.rank}
+            Rank #{college.rank}
           </span>
         )}
         {college.rating != null && (

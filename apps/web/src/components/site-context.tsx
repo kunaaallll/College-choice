@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type LoginMode = "login" | "signup";
+export type PredictorFamily = "btech" | "neet-bds" | "neet-mbbs";
 
 interface SiteState {
   // compare
@@ -13,7 +14,8 @@ interface SiteState {
   // apply modal
   applyOpen: boolean;
   applyCollege: { name: string; id?: number } | null;
-  openApply: (name: string, id?: number) => void;
+  applyFamily: PredictorFamily | null;
+  openApply: (name: string, id?: number, family?: PredictorFamily) => void;
   closeApply: () => void;
   // login modal
   loginOpen: boolean;
@@ -32,6 +34,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [compare, setCompare] = useState<string[]>([]);
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyCollege, setApplyCollege] = useState<{ name: string; id?: number } | null>(null);
+  const [applyFamily, setApplyFamily] = useState<PredictorFamily | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginMode, setLoginMode] = useState<LoginMode>("login");
 
@@ -64,8 +67,9 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const inCompare = useCallback((slug: string) => compare.includes(slug), [compare]);
   const clearCompare = useCallback(() => setCompare([]), []);
 
-  const openApply = useCallback((name: string, id?: number) => {
+  const openApply = useCallback((name: string, id?: number, family?: PredictorFamily) => {
     setApplyCollege({ name, id });
+    setApplyFamily(family ?? null);
     setApplyOpen(true);
   }, []);
   const closeApply = useCallback(() => setApplyOpen(false), []);
@@ -84,6 +88,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       clearCompare,
       applyOpen,
       applyCollege,
+      applyFamily,
       openApply,
       closeApply,
       loginOpen,
@@ -92,7 +97,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       closeLogin,
       setLoginMode,
     }),
-    [compare, toggleCompare, inCompare, clearCompare, applyOpen, applyCollege, openApply, closeApply, loginOpen, loginMode, openLogin, closeLogin],
+    [compare, toggleCompare, inCompare, clearCompare, applyOpen, applyCollege, applyFamily, openApply, closeApply, loginOpen, loginMode, openLogin, closeLogin],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

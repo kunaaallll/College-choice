@@ -28,6 +28,7 @@ applicationsRouter.post(
         email: data.email,
         city: data.city ?? null,
         courseInterested: data.courseInterested ?? null,
+        notes: data.notes ?? null,
         collegeName,
         collegeId: data.collegeId ?? null,
       },
