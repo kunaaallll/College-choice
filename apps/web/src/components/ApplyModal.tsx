@@ -135,7 +135,7 @@ export function ApplyModal() {
       onClick={close}
     >
       <div
-        className="relative grid w-full max-w-md overflow-hidden rounded-t-3xl bg-white shadow-pop sm:max-w-3xl sm:grid-cols-[0.9fr_1.1fr] sm:rounded-3xl"
+        className="relative grid max-h-[92vh] w-full max-w-md overflow-hidden rounded-t-3xl bg-white shadow-pop sm:max-h-[88vh] sm:max-w-3xl sm:grid-cols-[0.9fr_1.1fr] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left brand panel — desktop only */}
@@ -168,8 +168,9 @@ export function ApplyModal() {
           </div>
         </div>
 
-        {/* Right form panel */}
-        <div className="p-6 sm:p-7">
+        {/* Right form panel — scrolls internally so tall predictor forms never
+            get clipped by the viewport; heading/close button scroll with it. */}
+        <div className="max-h-[92vh] overflow-y-auto p-6 sm:max-h-[88vh] sm:p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-brand-600 sm:hidden">🎯 Free College Predictor</p>
@@ -194,6 +195,53 @@ export function ApplyModal() {
             </div>
           ) : (
             <form onSubmit={submit} className="mt-5 space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {FIELDS.map((f) => (
+                  <label key={f.key} className="block">
+                    <span className="mb-1 block text-[13px] font-semibold text-ink-700">{f.label}</span>
+                    <span className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15">
+                      <span className="text-ink-400"><FieldIcon name={f.icon} /></span>
+                      <input
+                        type={f.type}
+                        required
+                        placeholder={f.placeholder}
+                        value={form[f.key] || ""}
+                        onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
+                        className="w-full bg-transparent py-2.5 text-sm outline-none placeholder:text-ink-400"
+                      />
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Mobile verification — soft gate; not wired to a real SMS provider yet */}
+              <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="block">
+                  <span className="mb-1 block text-[13px] font-semibold text-ink-700">OTP</span>
+                  <span className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15">
+                    <span className="text-ink-400"><FieldIcon name="shield" /></span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      disabled={!otpSent}
+                      placeholder={otpSent ? "Enter OTP" : "Request an OTP first"}
+                      value={form.otp || ""}
+                      onChange={(e) => setForm((s) => ({ ...s, otp: e.target.value }))}
+                      className="w-full bg-transparent py-2.5 text-sm outline-none placeholder:text-ink-400 disabled:cursor-not-allowed"
+                    />
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={requestOtp}
+                  disabled={otpSent}
+                  className="h-[42px] shrink-0 rounded-xl bg-ink-900 px-4 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {otpSent ? "OTP sent ✓" : "Get OTP"}
+                </button>
+              </div>
+              {otpSent && <p className="-mt-1 text-[11px] text-ink-400">You&apos;ll receive an OTP on your mobile number.</p>}
+
               {fam && (
                 <div className="space-y-3 rounded-xl bg-brand-50/60 p-3.5">
                   <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
@@ -268,53 +316,6 @@ export function ApplyModal() {
                   )}
                 </div>
               )}
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {FIELDS.map((f) => (
-                  <label key={f.key} className="block">
-                    <span className="mb-1 block text-[13px] font-semibold text-ink-700">{f.label}</span>
-                    <span className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15">
-                      <span className="text-ink-400"><FieldIcon name={f.icon} /></span>
-                      <input
-                        type={f.type}
-                        required
-                        placeholder={f.placeholder}
-                        value={form[f.key] || ""}
-                        onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
-                        className="w-full bg-transparent py-2.5 text-sm outline-none placeholder:text-ink-400"
-                      />
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              {/* Mobile verification — soft gate; not wired to a real SMS provider yet */}
-              <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto]">
-                <label className="block">
-                  <span className="mb-1 block text-[13px] font-semibold text-ink-700">OTP</span>
-                  <span className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/15">
-                    <span className="text-ink-400"><FieldIcon name="shield" /></span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      disabled={!otpSent}
-                      placeholder={otpSent ? "Enter OTP" : "Request an OTP first"}
-                      value={form.otp || ""}
-                      onChange={(e) => setForm((s) => ({ ...s, otp: e.target.value }))}
-                      className="w-full bg-transparent py-2.5 text-sm outline-none placeholder:text-ink-400 disabled:cursor-not-allowed"
-                    />
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={requestOtp}
-                  disabled={otpSent}
-                  className="h-[42px] shrink-0 rounded-xl bg-ink-900 px-4 text-sm font-bold text-white disabled:opacity-50"
-                >
-                  {otpSent ? "OTP sent ✓" : "Get OTP"}
-                </button>
-              </div>
-              {otpSent && <p className="-mt-1 text-[11px] text-ink-400">You&apos;ll receive an OTP on your mobile number.</p>}
 
               {/* Course interested in — dropdown; locked to the predictor's course when opened from a JEE/NEET CTA */}
               <label className="block">
