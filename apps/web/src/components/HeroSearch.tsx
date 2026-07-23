@@ -38,7 +38,7 @@ export function HeroSearch() {
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && go()}
             placeholder="Search colleges, courses or cities…"
-            className="w-full bg-transparent py-3 text-sm outline-none"
+            className="w-full bg-transparent py-3 text-sm text-ink-900 outline-none placeholder:text-ink-400"
           />
         </div>
         <button onClick={go} className="btn-primary px-6 py-3">

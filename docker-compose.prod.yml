@@ -13,6 +13,9 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       # Shared secret that gates the admin image-upload panel (/admin).
       ADMIN_TOKEN: ${ADMIN_TOKEN}
+      # Google Sheets lead sink — mirrors apply/enquiry leads to a Google Sheet.
+      GOOGLE_SHEETS_WEBHOOK_URL: ${GOOGLE_SHEETS_WEBHOOK_URL:-}
+      GOOGLE_SHEETS_SECRET: ${GOOGLE_SHEETS_SECRET:-}
       # Persistent on-disk location for uploaded college photos.
       UPLOAD_DIR: /data/uploads
       NODE_ENV: production

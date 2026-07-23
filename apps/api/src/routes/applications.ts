@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { asyncHandler } from "../middleware/error";
 import { applicationSchema } from "../lib/validation";
+import { sendLeadToSheet } from "../lib/sheet";
 
 export const applicationsRouter = Router();
 
@@ -33,6 +34,19 @@ applicationsRouter.post(
         collegeId: data.collegeId ?? null,
       },
       select: { id: true, createdAt: true },
+    });
+
+    // Mirror the lead to the Google Sheet (fire-and-forget; never blocks the response).
+    sendLeadToSheet({
+      id: application.id,
+      createdAt: application.createdAt,
+      fullName: data.fullName,
+      mobile: data.mobile,
+      email: data.email,
+      city: data.city ?? null,
+      courseInterested: data.courseInterested ?? null,
+      collegeName,
+      notes: data.notes ?? null,
     });
 
     res.status(201).json({
