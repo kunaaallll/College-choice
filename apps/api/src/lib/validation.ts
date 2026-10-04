@@ -38,3 +38,47 @@ export const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
 });
+
+// ── Admin: college detail content ─────────────────────────────
+const TAB_KEYS = [
+  "info", "courses-fees", "admissions", "recognition", "learning",
+  "placements", "cutoffs", "scholarships", "rankings", "hostel",
+] as const;
+
+export const sectionSchema = z.object({
+  tab: z.enum(TAB_KEYS),
+  heading: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(20000),
+  sort: z.coerce.number().int().min(0).max(9999).default(0),
+});
+export const sectionUpdateSchema = sectionSchema.partial();
+
+export const highlightSchema = z.object({ text: z.string().trim().min(1).max(300) });
+
+export const courseSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  duration: z.string().trim().min(1).max(120),
+  seats: z.string().trim().max(120).default(""),
+  feesLabel: z.string().trim().max(120).default(""),
+});
+export const courseUpdateSchema = courseSchema.partial();
+
+export const faqSchema = z.object({
+  question: z.string().trim().min(1).max(500),
+  answer: z.string().trim().min(1).max(5000),
+  sort: z.coerce.number().int().min(0).max(9999).default(0),
+});
+export const faqUpdateSchema = faqSchema.partial();
+
+// ── Admin: news / blog ────────────────────────────────────────
+export const newsSchema = z.object({
+  slug: z.string().trim().max(200).regex(/^[a-z0-9-]*$/i, "slug may only contain letters, numbers and hyphens").optional(),
+  category: z.string().trim().min(1).max(60),
+  title: z.string().trim().min(3).max(200),
+  excerpt: z.string().trim().min(1).max(600),
+  body: z.string().trim().max(40000).optional(),
+  date: z.string().trim().min(1).max(60),
+  readTime: z.string().trim().max(40).default("3 min read"),
+  imgUrl: z.string().trim().max(500).optional(),
+});
+export const newsUpdateSchema = newsSchema.partial();

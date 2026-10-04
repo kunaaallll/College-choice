@@ -14,6 +14,16 @@ import multer from "multer";
 import { prisma } from "../prisma";
 import { asyncHandler, HttpError } from "../middleware/error";
 import type { NextFunction, Request, Response } from "express";
+import {
+  sectionSchema, sectionUpdateSchema, highlightSchema,
+  courseSchema, courseUpdateSchema, faqSchema, faqUpdateSchema,
+  newsSchema, newsUpdateSchema,
+} from "../lib/validation";
+
+/** Slugify a title into a URL-safe slug. */
+function slugify(s: string): string {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200);
+}
 
 export const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -144,5 +154,247 @@ adminRouter.put(
     await prisma.$transaction(order.map((id, i) => prisma.galleryImage.update({ where: { id }, data: { sort: i } })));
     const gallery = await prisma.galleryImage.findMany({ where: { collegeId }, orderBy: { sort: "asc" } });
     res.json({ gallery });
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+// College detail content — sections (tabs), highlights, courses, FAQs
+// ─────────────────────────────────────────────────────────────
+
+async function requireCollege(id: number) {
+  const college = await prisma.college.findUnique({ where: { id }, select: { id: true, name: true } });
+  if (!college) throw new HttpError(404, "College not found");
+  return college;
+}
+
+/** GET /api/admin/colleges/:id/content — all editable detail content for one college. */
+adminRouter.get(
+  "/colleges/:id/content",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const college = await prisma.college.findUnique({
+      where: { id },
+      select: {
+        id: true, name: true, slug: true,
+        sections: { orderBy: [{ tab: "asc" }, { sort: "asc" }] },
+        highlights: { orderBy: { id: "asc" } },
+        courses: { orderBy: { id: "asc" } },
+        faqs: { orderBy: { sort: "asc" } },
+      },
+    });
+    if (!college) throw new HttpError(404, "College not found");
+    res.json(college);
+  }),
+);
+
+// ── Sections ──
+adminRouter.post(
+  "/colleges/:id/sections",
+  asyncHandler(async (req, res) => {
+    const collegeId = Number(req.params.id);
+    await requireCollege(collegeId);
+    const data = sectionSchema.parse(req.body);
+    const section = await prisma.contentSection.create({ data: { collegeId, ...data } });
+    res.status(201).json(section);
+  }),
+);
+
+adminRouter.put(
+  "/sections/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const data = sectionUpdateSchema.parse(req.body);
+    const section = await prisma.contentSection.update({ where: { id }, data }).catch(() => null);
+    if (!section) throw new HttpError(404, "Section not found");
+    res.json(section);
+  }),
+);
+
+adminRouter.delete(
+  "/sections/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    await prisma.contentSection.delete({ where: { id } }).catch(() => { throw new HttpError(404, "Section not found"); });
+    res.json({ ok: true });
+  }),
+);
+
+// ── Highlights ──
+adminRouter.post(
+  "/colleges/:id/highlights",
+  asyncHandler(async (req, res) => {
+    const collegeId = Number(req.params.id);
+    await requireCollege(collegeId);
+    const { text } = highlightSchema.parse(req.body);
+    const highlight = await prisma.highlight.create({ data: { collegeId, text } });
+    res.status(201).json(highlight);
+  }),
+);
+
+adminRouter.put(
+  "/highlights/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const { text } = highlightSchema.parse(req.body);
+    const highlight = await prisma.highlight.update({ where: { id }, data: { text } }).catch(() => null);
+    if (!highlight) throw new HttpError(404, "Highlight not found");
+    res.json(highlight);
+  }),
+);
+
+adminRouter.delete(
+  "/highlights/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    await prisma.highlight.delete({ where: { id } }).catch(() => { throw new HttpError(404, "Highlight not found"); });
+    res.json({ ok: true });
+  }),
+);
+
+// ── Courses ──
+adminRouter.post(
+  "/colleges/:id/courses",
+  asyncHandler(async (req, res) => {
+    const collegeId = Number(req.params.id);
+    await requireCollege(collegeId);
+    const data = courseSchema.parse(req.body);
+    const course = await prisma.course.create({ data: { collegeId, ...data } });
+    res.status(201).json(course);
+  }),
+);
+
+adminRouter.put(
+  "/courses/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const data = courseUpdateSchema.parse(req.body);
+    const course = await prisma.course.update({ where: { id }, data }).catch(() => null);
+    if (!course) throw new HttpError(404, "Course not found");
+    res.json(course);
+  }),
+);
+
+adminRouter.delete(
+  "/courses/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    await prisma.course.delete({ where: { id } }).catch(() => { throw new HttpError(404, "Course not found"); });
+    res.json({ ok: true });
+  }),
+);
+
+// ── FAQs ──
+adminRouter.post(
+  "/colleges/:id/faqs",
+  asyncHandler(async (req, res) => {
+    const collegeId = Number(req.params.id);
+    await requireCollege(collegeId);
+    const data = faqSchema.parse(req.body);
+    const faq = await prisma.faq.create({ data: { collegeId, ...data } });
+    res.status(201).json(faq);
+  }),
+);
+
+adminRouter.put(
+  "/faqs/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const data = faqUpdateSchema.parse(req.body);
+    const faq = await prisma.faq.update({ where: { id }, data }).catch(() => null);
+    if (!faq) throw new HttpError(404, "FAQ not found");
+    res.json(faq);
+  }),
+);
+
+adminRouter.delete(
+  "/faqs/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    await prisma.faq.delete({ where: { id } }).catch(() => { throw new HttpError(404, "FAQ not found"); });
+    res.json({ ok: true });
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+// News / blog articles
+// ─────────────────────────────────────────────────────────────
+
+/** GET /api/admin/news — all articles (newest first). */
+adminRouter.get(
+  "/news",
+  asyncHandler(async (_req, res) => {
+    const items = await prisma.newsArticle.findMany({ orderBy: { publishedAt: "desc" } });
+    res.json({ items });
+  }),
+);
+
+/** POST /api/admin/news/upload — upload an article image, returns { url } to save as imgUrl. */
+adminRouter.post(
+  "/news/upload",
+  upload.single("image"),
+  asyncHandler(async (req, res) => {
+    const f = req.file as Express.Multer.File | undefined;
+    if (!f) throw new HttpError(400, "No image uploaded");
+    res.status(201).json({ url: `${PUBLIC_BASE}/${f.filename}` });
+  }),
+);
+
+/** POST /api/admin/news — create an article (slug auto-generated from title if omitted). */
+adminRouter.post(
+  "/news",
+  asyncHandler(async (req, res) => {
+    const data = newsSchema.parse(req.body);
+    let slug = data.slug ? slugify(data.slug) : slugify(data.title);
+    if (!slug) throw new HttpError(400, "Could not derive a slug from the title");
+    // Ensure uniqueness by suffixing -2, -3, … if needed.
+    const base = slug;
+    for (let n = 2; await prisma.newsArticle.findUnique({ where: { slug }, select: { id: true } }); n++) {
+      slug = `${base}-${n}`;
+    }
+    const article = await prisma.newsArticle.create({
+      data: {
+        slug,
+        category: data.category,
+        title: data.title,
+        excerpt: data.excerpt,
+        body: data.body ?? null,
+        date: data.date,
+        readTime: data.readTime,
+        imgUrl: data.imgUrl || null,
+      },
+    });
+    res.status(201).json(article);
+  }),
+);
+
+/** PUT /api/admin/news/:id — update an article. */
+adminRouter.put(
+  "/news/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const data = newsUpdateSchema.parse(req.body);
+    const patch: Record<string, unknown> = { ...data };
+    if (data.slug !== undefined) {
+      const slug = slugify(data.slug);
+      if (!slug) throw new HttpError(400, "Invalid slug");
+      const clash = await prisma.newsArticle.findFirst({ where: { slug, NOT: { id } }, select: { id: true } });
+      if (clash) throw new HttpError(409, "Another article already uses that slug");
+      patch.slug = slug;
+    }
+    if (data.imgUrl !== undefined) patch.imgUrl = data.imgUrl || null;
+    if (data.body !== undefined) patch.body = data.body || null;
+    const article = await prisma.newsArticle.update({ where: { id }, data: patch }).catch(() => null);
+    if (!article) throw new HttpError(404, "Article not found");
+    res.json(article);
+  }),
+);
+
+/** DELETE /api/admin/news/:id — delete an article. */
+adminRouter.delete(
+  "/news/:id",
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    await prisma.newsArticle.delete({ where: { id } }).catch(() => { throw new HttpError(404, "Article not found"); });
+    res.json({ ok: true });
   }),
 );
