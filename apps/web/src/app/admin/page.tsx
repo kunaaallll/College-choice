@@ -4,10 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { API } from "./adminApi";
 import { CollegeContentEditor } from "./CollegeContentEditor";
 import { NewsAdmin } from "./NewsAdmin";
+import { SeoPanel } from "./seo/SeoPanel";
 
 // Self-contained admin console. Gated by the shared ADMIN_TOKEN (kept in
-// localStorage after first entry). Two areas: college content (photos + detail
-// tabs/highlights/courses/FAQs) and news/blog. No public nav link.
+// localStorage after first entry). Three areas: college content (photos + detail
+// tabs/highlights/courses/FAQs), news/blog and SEO. No public nav link.
 
 interface GalleryImage { id: number; url: string; sort: number }
 interface AdminCollege {
@@ -22,7 +23,7 @@ interface AdminCollege {
   gallery: GalleryImage[];
 }
 
-type Panel = "colleges" | "news";
+type Panel = "colleges" | "news" | "seo";
 
 export default function AdminPage() {
   const [token, setToken] = useState("");
@@ -69,7 +70,7 @@ export default function AdminPage() {
       <div className="container-site flex min-h-[70vh] items-center justify-center py-10">
         <form onSubmit={signIn} className="card w-full max-w-sm p-6">
           <h1 className="text-xl font-extrabold">College Choice — Admin</h1>
-          <p className="mt-1 text-sm text-ink-500">Enter the admin token to manage college content and news.</p>
+          <p className="mt-1 text-sm text-ink-500">Enter the admin token to manage college content, news and SEO.</p>
           <input
             type="password"
             value={token}
@@ -88,13 +89,13 @@ export default function AdminPage() {
     <div className="container-site py-8">
       <div className="flex items-center justify-between gap-4">
         <div className="flex gap-1 rounded-xl border border-line p-1">
-          {(["colleges", "news"] as Panel[]).map((p) => (
+          {(["colleges", "news", "seo"] as Panel[]).map((p) => (
             <button
               key={p}
               onClick={() => setPanel(p)}
               className={`rounded-lg px-4 py-1.5 text-sm font-bold capitalize transition ${panel === p ? "bg-brand-600 text-white" : "text-ink-600 hover:bg-line/50"}`}
             >
-              {p === "colleges" ? "Colleges" : "News & blog"}
+              {p === "colleges" ? "Colleges" : p === "news" ? "News & blog" : "SEO"}
             </button>
           ))}
         </div>
@@ -106,7 +107,9 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {panel === "news" ? (
+      {panel === "seo" ? (
+        <div className="mt-6"><SeoPanel token={token} /></div>
+      ) : panel === "news" ? (
         <div className="mt-6"><NewsAdmin token={token} /></div>
       ) : (
         <div className="mt-6">

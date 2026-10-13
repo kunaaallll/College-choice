@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { CollegeDetail } from "@/lib/types";
-import { buildMetadata, breadcrumbJsonLd, collegeJsonLd, faqJsonLd } from "@/lib/seo";
+import { buildMetadata, pageMetadata, breadcrumbJsonLd, collegeJsonLd, faqJsonLd } from "@/lib/seo";
 import { availableTabs, tabSections } from "@/lib/collegeTabs";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 import { ReadMore } from "@/components/ReadMore";
 import { CollegeHeader } from "@/components/CollegeHeader";
 import { CollegeSidebar } from "@/components/CollegeSidebar";
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const c = await getCollege(slug);
   if (!c) return buildMetadata({ title: "College not found", description: "", path: `/colleges/${slug}`, noindex: true });
-  return buildMetadata({
+  return pageMetadata({
     title: c.metaTitle || `${c.name} — Fees, Admission, Placements & Reviews`,
     description: c.metaDescription || c.about || `${c.name} in ${c.location}: fees, courses, placements and reviews.`,
     path: `/colleges/${c.slug}`,
@@ -100,7 +100,8 @@ export default async function CollegeDetailPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <JsonLd
+      <PageJsonLd
+        path={`/colleges/${c.slug}`}
         data={[
           collegeJsonLd({ ...c, reviewsCount: c.reviews.length }),
           breadcrumbJsonLd(crumbs),

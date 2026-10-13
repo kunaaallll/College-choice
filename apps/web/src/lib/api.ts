@@ -11,7 +11,7 @@ import type {
 // Server-side rendering talks to the API over the internal Docker network
 // (INTERNAL_API_URL=http://api:4000) so it never round-trips through the public
 // domain/DNS/Cloudflare. The browser still uses the public NEXT_PUBLIC_API_URL.
-const API =
+export const API =
   (typeof window === "undefined" ? process.env.INTERNAL_API_URL : "") ||
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:4000";

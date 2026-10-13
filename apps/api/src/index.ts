@@ -9,7 +9,9 @@ import { citiesRouter, examsRouter, streamsRouter } from "./routes/taxonomy";
 import { newsRouter } from "./routes/news";
 import { applicationsRouter } from "./routes/applications";
 import { authRouter } from "./routes/auth";
-import { adminRouter, UPLOAD_DIR } from "./routes/admin";
+import { adminRouter, requireAdmin, UPLOAD_DIR } from "./routes/admin";
+import { adminSeoRouter } from "./routes/adminSeo";
+import { seoRouter } from "./routes/seo";
 
 const app = express();
 const PORT = Number(process.env.API_PORT || 4000);
@@ -21,6 +23,8 @@ const origins = (process.env.CORS_ORIGIN || "http://localhost:3000")
 
 app.use(helmet());
 app.use(cors({ origin: origins, credentials: true }));
+// SEO CSV imports can be several MB; registered first so the 1mb parser below skips them.
+app.use("/api/admin/seo", express.json({ limit: "10mb" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
@@ -34,7 +38,9 @@ const serveUploads = express.static(UPLOAD_DIR, { maxAge: "365d", immutable: tru
 app.use("/api/uploads", serveUploads);
 app.use("/uploads", serveUploads);
 
+app.use("/api/admin/seo", requireAdmin, adminSeoRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/seo", seoRouter);
 app.use("/api/colleges", collegesRouter);
 app.use("/api/streams", streamsRouter);
 app.use("/api/cities", citiesRouter);

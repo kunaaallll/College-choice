@@ -1,22 +1,26 @@
 import type { Metadata } from "next";
 import { api } from "@/lib/api";
-import { buildMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { PageJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = buildMetadata({
-  title: "Entrance Exams 2026 — Dates, Eligibility & Accepting Colleges",
-  description:
-    "Entrance exams in India 2026: JEE Main, NEET, CUET, CAT, CLAT and more. Exam dates, mode, eligibility and the colleges that accept each exam.",
-  path: "/exams",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Entrance Exams 2026 — Dates, Eligibility & Accepting Colleges",
+    description:
+      "Entrance exams in India 2026: JEE Main, NEET, CUET, CAT, CLAT and more. Exam dates, mode, eligibility and the colleges that accept each exam.",
+    path: "/exams",
+  });
+}
 
 export default async function ExamsPage() {
   const { items: exams } = await api.exams().catch(() => ({ items: [] }));
 
   return (
     <div className="container-site py-8">
+      <PageJsonLd path="/exams" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Exams", path: "/exams" }]} />
       <header className="mt-4 max-w-3xl">
         <h1 className="text-3xl font-extrabold sm:text-4xl">Entrance Exams 2026</h1>

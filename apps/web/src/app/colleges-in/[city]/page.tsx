@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { api } from "@/lib/api";
-import { buildMetadata, itemListJsonLd } from "@/lib/seo";
+import { pageMetadata, itemListJsonLd } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -23,7 +23,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ city: string }> }): Promise<Metadata> {
   const { city } = await params;
   const name = prettify(city);
-  return buildMetadata({
+  return pageMetadata({
     title: `Top Colleges in ${name} 2026 — Fees, Courses & Admission`,
     description: `Explore the best colleges in ${name}. Compare fees, placements, cutoffs, courses and reviews. Apply free with expert counselling.`,
     path: `/colleges-in/${city}`,
@@ -43,7 +43,8 @@ export default async function CityLandingPage({ params }: { params: Promise<{ ci
 
   return (
     <div className="container-site py-8">
-      <JsonLd
+      <PageJsonLd
+        path={`/colleges-in/${city}`}
         data={itemListJsonLd(
           `Colleges in ${name}`,
           items.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })),

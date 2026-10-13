@@ -2,23 +2,27 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { buildMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { PageJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 1800;
 
-export const metadata: Metadata = buildMetadata({
-  title: "Education News & Admission Updates 2026",
-  description:
-    "Latest admission alerts, exam updates, counselling guides, scholarships and rankings for students in India.",
-  path: "/news",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Education News & Admission Updates 2026",
+    description:
+      "Latest admission alerts, exam updates, counselling guides, scholarships and rankings for students in India.",
+    path: "/news",
+  });
+}
 
 export default async function NewsPage() {
   const { items: news } = await api.news().catch(() => ({ items: [] }));
 
   return (
     <div className="container-site py-8">
+      <PageJsonLd path="/news" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "News", path: "/news" }]} />
       <header className="mt-4 max-w-3xl">
         <h1 className="text-3xl font-extrabold sm:text-4xl">News &amp; Articles</h1>

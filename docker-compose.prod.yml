@@ -18,6 +18,10 @@ services:
       GOOGLE_SHEETS_SECRET: ${GOOGLE_SHEETS_SECRET:-}
       # Persistent on-disk location for uploaded college photos.
       UPLOAD_DIR: /data/uploads
+      # Admin SEO saves ask the web app to refresh affected pages immediately.
+      SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://collegechoice.in}
+      WEB_INTERNAL_URL: http://web:3000
+      REVALIDATE_SECRET: ${ADMIN_TOKEN}
       NODE_ENV: production
     ports:
       - "127.0.0.1:4000:4000"
@@ -43,6 +47,8 @@ services:
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://collegechoice.in}
       # SSR fetches the API directly over the Docker network — avoids public DNS.
       INTERNAL_API_URL: http://api:4000
+      # Must match the API's REVALIDATE_SECRET (see /internal/revalidate).
+      REVALIDATE_SECRET: ${ADMIN_TOKEN}
       NODE_ENV: production
     ports:
       - "127.0.0.1:3000:3000"

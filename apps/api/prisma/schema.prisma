@@ -290,6 +290,72 @@ model NewsArticle {
 }
 
 // ─────────────────────────────────────────────────────────────
+// SEO (managed from the admin SEO panel)
+// ─────────────────────────────────────────────────────────────
+
+// Per-URL SEO overrides. Keyed by site path ("/colleges/iit-bombay" — no domain,
+// query or trailing slash). Empty fields fall back to the page's built-in defaults.
+model SeoMeta {
+  id                 Int      @id @default(autoincrement())
+  path               String   @unique
+  title              String?
+  description        String?
+  keyword            String? // primary / target keyword
+  canonical          String? // absolute URL or site path; null → self-referencing
+  noindex            Boolean  @default(false)
+  nofollow           Boolean  @default(false)
+  ogTitle            String?
+  ogDescription      String?
+  ogImage            String?
+  twitterTitle       String?
+  twitterDescription String?
+  excludeFromSitemap Boolean  @default(false)
+  disableSchema      Boolean  @default(false) // turn off the page's automatic JSON-LD
+  customSchema       String?  @db.Text // extra JSON-LD (validated JSON object/array)
+  urlLocked          Boolean  @default(false) // block slug changes on critical pages
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([noindex])
+  @@index([updatedAt])
+}
+
+// 301/302 redirects, applied by the web app's middleware.
+model Redirect {
+  id         Int       @id @default(autoincrement())
+  fromPath   String    @unique
+  toPath     String // site path or absolute URL
+  statusCode Int       @default(301) // 301 | 302
+  isPrefix   Boolean   @default(false) // also redirect everything under fromPath/…
+  enabled    Boolean   @default(true)
+  note       String?
+  hits       Int       @default(0)
+  lastHitAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// URLs that served the 404 page — for spotting broken links and adding redirects.
+model NotFoundLog {
+  id        Int      @id @default(autoincrement())
+  path      String   @unique
+  hits      Int      @default(1)
+  referrer  String?
+  firstSeen DateTime @default(now())
+  lastSeen  DateTime @default(now())
+  resolved  Boolean  @default(false)
+
+  @@index([resolved, hits])
+}
+
+// Site-wide key/value settings (robots.txt, sitemap sections, …).
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
 // Users & leads
 // ─────────────────────────────────────────────────────────────
 

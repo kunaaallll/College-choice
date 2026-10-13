@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { PageJsonLd } from "@/components/JsonLd";
 
-export const metadata: Metadata = buildMetadata({
-  title: "About College Choice — Open, Free College Discovery for India",
-  description:
-    "College Choice helps millions of Indian students discover, compare and apply to the right colleges — transparently, on open data, and 100% free.",
-  path: "/about",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "About College Choice — Open, Free College Discovery for India",
+    description:
+      "College Choice helps millions of Indian students discover, compare and apply to the right colleges — transparently, on open data, and 100% free.",
+    path: "/about",
+  });
+}
 
 const STATS = [
   { value: "13,000+", label: "Colleges listed" },
@@ -32,6 +35,7 @@ const STEPS = [
 export default function AboutPage() {
   return (
     <div className="container-site py-8">
+      <PageJsonLd path="/about" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "About", path: "/about" }]} />
 
       {/* Mission */}

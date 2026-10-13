@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { buildMetadata, itemListJsonLd } from "@/lib/seo";
+import { pageMetadata, itemListJsonLd } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
 import type { CollegeCard as TCollege } from "@/lib/types";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 import { PredictorCTA } from "@/components/PredictorCTA";
 import type { PredictorFamily } from "@/components/site-context";
 import { StateSelect } from "@/components/StateSelect";
@@ -69,7 +69,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ stream: string }> }): Promise<Metadata> {
   const { stream } = await params;
   const name = prettify(stream);
-  return buildMetadata({
+  return pageMetadata({
     title: `Best ${name} Colleges in India 2026 — Fees, Ranking & Placements`,
     description: `Top ${name} colleges in India ranked by placements, fees and reviews. Compare cutoffs, courses and admission, and apply free.`,
     path: `/stream/${stream}`,
@@ -136,13 +136,16 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
 
   return (
     <div className="container-site py-8">
-      <JsonLd
-        data={itemListJsonLd(
-          `${name} colleges in India`,
-          listed.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })),
-        )}
+      <PageJsonLd
+        path={`/stream/${stream}`}
+        data={[
+          itemListJsonLd(
+            `${name} colleges in India`,
+            listed.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })),
+          ),
+          faqJsonLd,
+        ]}
       />
-      <JsonLd data={faqJsonLd} />
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">

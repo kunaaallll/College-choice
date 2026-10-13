@@ -19,6 +19,8 @@ import {
   courseSchema, courseUpdateSchema, faqSchema, faqUpdateSchema,
   newsSchema, newsUpdateSchema,
 } from "../lib/validation";
+import { invalidateInventory, recordUrlChange } from "../lib/seo";
+import { revalidateWeb } from "../lib/revalidate";
 
 /** Slugify a title into a URL-safe slug. */
 function slugify(s: string): string {
@@ -33,7 +35,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 const PUBLIC_BASE = "/api/uploads";
 
 /** Guard: require the shared admin token (Bearer or ?token=). */
-function requireAdmin(req: Request, _res: Response, next: NextFunction) {
+export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   const expected = process.env.ADMIN_TOKEN;
   if (!expected) throw new HttpError(503, "Admin uploads are not configured (ADMIN_TOKEN unset).");
   const header = req.headers.authorization;
@@ -363,6 +365,8 @@ adminRouter.post(
         imgUrl: data.imgUrl || null,
       },
     });
+    invalidateInventory();
+    revalidateWeb({ paths: ["/news", `/news/${article.slug}`] });
     res.status(201).json(article);
   }),
 );
@@ -383,8 +387,16 @@ adminRouter.put(
     }
     if (data.imgUrl !== undefined) patch.imgUrl = data.imgUrl || null;
     if (data.body !== undefined) patch.body = data.body || null;
-    const article = await prisma.newsArticle.update({ where: { id }, data: patch }).catch(() => null);
-    if (!article) throw new HttpError(404, "Article not found");
+    const before = await prisma.newsArticle.findUnique({ where: { id }, select: { slug: true } });
+    if (!before) throw new HttpError(404, "Article not found");
+    const article = await prisma.$transaction(async (tx) => {
+      const a = await tx.newsArticle.update({ where: { id }, data: patch });
+      // Renamed → 301 the old URL so links and rankings carry over.
+      if (a.slug !== before.slug) await recordUrlChange(tx, `/news/${before.slug}`, `/news/${a.slug}`, false);
+      return a;
+    });
+    if (article.slug !== before.slug) invalidateInventory();
+    revalidateWeb({ paths: ["/news", `/news/${article.slug}`, `/news/${before.slug}`] });
     res.json(article);
   }),
 );
@@ -394,7 +406,9 @@ adminRouter.delete(
   "/news/:id",
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
-    await prisma.newsArticle.delete({ where: { id } }).catch(() => { throw new HttpError(404, "Article not found"); });
+    const article = await prisma.newsArticle.delete({ where: { id } }).catch(() => { throw new HttpError(404, "Article not found"); });
+    invalidateInventory();
+    revalidateWeb({ paths: ["/news", `/news/${article.slug}`] });
     res.json({ ok: true });
   }),
 );
