@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { api, buildCollegeQuery, type CollegeQuery } from "@/lib/api";
-import { buildMetadata } from "@/lib/seo";
+import { canonical, pageMetadata } from "@/lib/seo";
+import { PageJsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Filters } from "@/components/Filters";
 import { CollegeCard } from "@/components/CollegeCard";
@@ -27,17 +28,28 @@ function toQuery(sp: Record<string, string | string[] | undefined>): CollegeQuer
   };
 }
 
+// Query params that create a filtered/sorted variant of the listing.
+const FILTER_PARAMS = ["search", "stream", "type", "mode", "city", "state", "maxFees", "sort"];
+
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
   const sp = await searchParams;
   const stream = str(sp.stream);
   const city = str(sp.city);
+  const page = Math.max(1, Number(str(sp.page)) || 1);
   const titleBits = [stream && cap(stream), "Colleges", city && `in ${cap(city)}`].filter(Boolean).join(" ");
-  return buildMetadata({
-    title: `${titleBits || "Explore Colleges in India"} — Fees, Cutoffs & Reviews`,
+  const meta = await pageMetadata({
+    title: `${titleBits || "Explore Colleges in India"} — Fees, Cutoffs & Reviews${page > 1 ? ` — Page ${page}` : ""}`,
     description:
       "Browse and compare colleges in India by stream, city, fees and ranking. View placements, cutoffs, courses and verified student reviews.",
     path: "/colleges",
   });
+  // Filtered/sorted variants duplicate the stream/city landing pages: keep them out
+  // of the index (links still followed) and point canonical at the main listing.
+  const isFiltered = FILTER_PARAMS.some((k) => str(sp[k]) && !(k === "sort" && str(sp[k]) === "rank"));
+  if (isFiltered) return { ...meta, robots: { index: false, follow: true } };
+  // Pagination: each page is its own canonical URL so deeper colleges stay discoverable.
+  if (page > 1) return { ...meta, alternates: { canonical: canonical(`/colleges?page=${page}`) } };
+  return meta;
 }
 
 export default async function CollegesPage({ searchParams }: { searchParams: SearchParams }) {
@@ -54,10 +66,18 @@ export default async function CollegesPage({ searchParams }: { searchParams: Sea
   const streams = streamsRes.status === "fulfilled" ? streamsRes.value.items.map((s) => ({ name: s.name, slug: s.slug })) : [];
   const cities = citiesRes.status === "fulfilled" ? citiesRes.value.items.map((c) => ({ name: c.name, slug: c.slug })) : [];
 
-  const makeHref = (page: number) => `/colleges${buildCollegeQuery({ ...query, page })}`;
+  // Leave defaults out of pagination links so page URLs stay clean: /colleges?page=2.
+  const makeHref = (page: number) =>
+    `/colleges${buildCollegeQuery({
+      ...query,
+      sort: query.sort === "rank" ? undefined : query.sort,
+      pageSize: undefined,
+      page: page > 1 ? page : undefined,
+    })}`;
 
   return (
     <div className="container-site py-8">
+      <PageJsonLd path="/colleges" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Colleges", path: "/colleges" }]} />
 
       <header className="mt-4">

@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { API } from "./adminApi";
+import { CollegeContentEditor } from "./CollegeContentEditor";
+import { NewsAdmin } from "./NewsAdmin";
+import { SeoPanel } from "./seo/SeoPanel";
 
-// Self-contained admin console for uploading real college photos (the 3–4
-// images shown in a grid on each college's detail page). Gated by the shared
-// ADMIN_TOKEN — kept in localStorage after the first entry. No public nav link.
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+// Self-contained admin console. Gated by the shared ADMIN_TOKEN (kept in
+// localStorage after first entry). Three areas: college content (photos + detail
+// tabs/highlights/courses/FAQs), news/blog and SEO. No public nav link.
 
 interface GalleryImage { id: number; url: string; sort: number }
 interface AdminCollege {
@@ -21,9 +23,12 @@ interface AdminCollege {
   gallery: GalleryImage[];
 }
 
+type Panel = "colleges" | "news" | "seo";
+
 export default function AdminPage() {
   const [token, setToken] = useState("");
   const [authed, setAuthed] = useState(false);
+  const [panel, setPanel] = useState<Panel>("colleges");
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<AdminCollege[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +70,7 @@ export default function AdminPage() {
       <div className="container-site flex min-h-[70vh] items-center justify-center py-10">
         <form onSubmit={signIn} className="card w-full max-w-sm p-6">
           <h1 className="text-xl font-extrabold">College Choice — Admin</h1>
-          <p className="mt-1 text-sm text-ink-500">Enter the admin token to manage college photos.</p>
+          <p className="mt-1 text-sm text-ink-500">Enter the admin token to manage college content, news and SEO.</p>
           <input
             type="password"
             value={token}
@@ -83,9 +88,16 @@ export default function AdminPage() {
   return (
     <div className="container-site py-8">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold">College photos</h1>
-          <p className="mt-1 text-sm text-ink-500">Upload 3–4 real images per college — they rotate every 3s on both the listing/grid cards and the detail-page hero.</p>
+        <div className="flex gap-1 rounded-xl border border-line p-1">
+          {(["colleges", "news", "seo"] as Panel[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPanel(p)}
+              className={`rounded-lg px-4 py-1.5 text-sm font-bold capitalize transition ${panel === p ? "bg-brand-600 text-white" : "text-ink-600 hover:bg-line/50"}`}
+            >
+              {p === "colleges" ? "Colleges" : p === "news" ? "News & blog" : "SEO"}
+            </button>
+          ))}
         </div>
         <button
           onClick={() => { localStorage.removeItem("cc_admin_token"); setAuthed(false); setToken(""); }}
@@ -95,28 +107,38 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <form
-        onSubmit={(e) => { e.preventDefault(); load(search, token); }}
-        className="mt-5 flex gap-2"
-      >
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search a college by name…"
-          className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
-        />
-        <button type="submit" className="btn-primary px-5">Search</button>
-      </form>
-
-      {error && <p className="mt-4 text-sm text-danger">{error}</p>}
-      {loading ? (
-        <p className="mt-8 text-ink-500">Loading…</p>
+      {panel === "seo" ? (
+        <div className="mt-6"><SeoPanel token={token} /></div>
+      ) : panel === "news" ? (
+        <div className="mt-6"><NewsAdmin token={token} /></div>
       ) : (
-        <div className="mt-6 space-y-4">
-          {items.map((c) => (
-            <CollegeRow key={c.id} college={c} token={token} onChanged={() => load(search, token)} />
-          ))}
-          {items.length === 0 && <p className="text-ink-500">No colleges found. Try a search.</p>}
+        <div className="mt-6">
+          <div>
+            <h1 className="text-2xl font-extrabold">College content</h1>
+            <p className="mt-1 text-sm text-ink-500">Upload photos and manage each college&apos;s detail tabs, highlights, courses and FAQs. Content changes appear on the site after the page cache refreshes (up to ~1 hour).</p>
+          </div>
+
+          <form onSubmit={(e) => { e.preventDefault(); load(search, token); }} className="mt-5 flex gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search a college by name…"
+              className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
+            />
+            <button type="submit" className="btn-primary px-5">Search</button>
+          </form>
+
+          {error && <p className="mt-4 text-sm text-danger">{error}</p>}
+          {loading ? (
+            <p className="mt-8 text-ink-500">Loading…</p>
+          ) : (
+            <div className="mt-6 space-y-4">
+              {items.map((c) => (
+                <CollegeRow key={c.id} college={c} token={token} onChanged={() => load(search, token)} />
+              ))}
+              {items.length === 0 && <p className="text-ink-500">No colleges found. Try a search.</p>}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -126,6 +148,7 @@ export default function AdminPage() {
 function CollegeRow({ college, token, onChanged }: { college: AdminCollege; token: string; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [showContent, setShowContent] = useState(false);
   const galleryRef = useRef<HTMLInputElement>(null);
   const degreeRef = useRef<HTMLInputElement>(null);
 
@@ -179,6 +202,12 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
         </div>
         <div className="flex items-center gap-3">
           {msg && <span className="text-xs font-semibold text-ink-500">{msg}</span>}
+          <button
+            onClick={() => setShowContent((v) => !v)}
+            className={`rounded-lg border px-3.5 py-1.5 text-[12px] font-semibold ${showContent ? "border-brand-500 bg-brand-50 text-brand-700" : "border-line text-ink-600 hover:border-brand-400"}`}
+          >
+            {showContent ? "▲ Hide content" : "✎ Manage content"}
+          </button>
           <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadGallery(e.target.files)} />
           <button onClick={() => galleryRef.current?.click()} disabled={busy} className="btn-primary px-3.5 py-1.5 text-[12px] disabled:opacity-60">
             {busy ? "Uploading…" : "⬆ Upload photos"}
@@ -216,7 +245,7 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
       {college.mode !== "Campus" && (
         <div className="mt-4 border-t border-line pt-4">
           <div className="flex items-center justify-between">
-            <p className="text-[13px] font-bold text-ink-700">Sample degree photo <span className="font-normal text-ink-400">(Placements tab, "View sample degree")</span></p>
+            <p className="text-[13px] font-bold text-ink-700">Sample degree photo <span className="font-normal text-ink-400">(Placements tab, &quot;View sample degree&quot;)</span></p>
             <input ref={degreeRef} type="file" accept="image/*" hidden onChange={(e) => uploadSampleDegree(e.target.files)} />
             <button onClick={() => degreeRef.current?.click()} disabled={busy} className="rounded-lg border border-brand-400 px-2.5 py-1 text-[12px] font-semibold text-brand-700 disabled:opacity-60">
               ⬆ Upload
@@ -232,6 +261,8 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
           </div>
         </div>
       )}
+
+      {showContent && <CollegeContentEditor collegeId={college.id} token={token} />}
     </div>
   );
 }

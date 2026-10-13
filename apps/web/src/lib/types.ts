@@ -150,6 +150,7 @@ export interface NewsArticle {
   date: string;
   readTime: string;
   imgUrl: string | null;
+  publishedAt?: string;
 }
 
 export interface Paginated<T> {

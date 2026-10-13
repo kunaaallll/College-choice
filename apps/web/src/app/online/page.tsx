@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { buildMetadata, itemListJsonLd, faqJsonLd } from "@/lib/seo";
+import { pageMetadata, itemListJsonLd, faqJsonLd } from "@/lib/seo";
 import { PROGRAMS } from "@/lib/online";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 import { Collapsible } from "@/components/Collapsible";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = buildMetadata({
-  title: "Online Degree Courses & Universities in India 2026 — UGC-DEB Approved",
-  description:
-    "Compare UGC-DEB approved online universities in India. Online MBA, MCA, BBA, BCA, M.Com & more — fees, approvals (NAAC, AICTE, WES), EMI and admission. 100% online, valid degrees.",
-  path: "/online",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Online Degree Courses & Universities in India 2026 — UGC-DEB Approved",
+    description:
+      "Compare UGC-DEB approved online universities in India. Online MBA, MCA, BBA, BCA, M.Com & more — fees, approvals (NAAC, AICTE, WES), EMI and admission. 100% online, valid degrees.",
+    path: "/online",
+  });
+}
 
 const TRUST = ["UGC-DEB entitled", "NAAC accredited", "AICTE approved", "WES recognised"];
 
@@ -75,7 +77,8 @@ export default async function OnlinePage() {
 
   return (
     <>
-      <JsonLd
+      <PageJsonLd
+        path="/online"
         data={[
           itemListJsonLd("Online universities in India", items.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` }))),
           faqJsonLd(FAQS),

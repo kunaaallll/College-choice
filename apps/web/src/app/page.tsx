@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -5,6 +6,8 @@ import { HeroSearch } from "@/components/HeroSearch";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { CityGrid } from "@/components/CityGrid";
 import { CollegeCard } from "@/components/CollegeCard";
+import { PageJsonLd } from "@/components/JsonLd";
+import { pageMetadata, SITE } from "@/lib/seo";
 
 // Render per-request so fresh DB data shows immediately. The API call goes over
 // the internal Docker network (see lib/api.ts), so this stays fast.
@@ -70,6 +73,15 @@ const FEATURED_COURSES = [
   },
 ];
 
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: `${SITE.name} — ${SITE.tagline}`,
+    description: SITE.description,
+    path: "/",
+    absoluteTitle: true,
+  });
+}
+
 export default async function HomePage() {
   // Fetch in parallel; tolerate API being down so the shell still renders.
   // Kick off both batches before awaiting so they run concurrently.
@@ -108,6 +120,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <PageJsonLd path="/" />
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-ink-900 text-white">
         <HeroCarousel images={heroList} />

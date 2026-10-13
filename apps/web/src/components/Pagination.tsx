@@ -19,7 +19,7 @@ export function Pagination({
   return (
     <nav aria-label="Pagination" className="mt-10 flex items-center justify-center gap-1.5">
       {page > 1 && (
-        <Link href={makeHref(page - 1)} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:border-brand-400">
+        <Link href={makeHref(page - 1)} rel="prev" aria-label="Previous page" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:border-brand-400">
           ←
         </Link>
       )}
@@ -42,7 +42,7 @@ export function Pagination({
         );
       })}
       {page < totalPages && (
-        <Link href={makeHref(page + 1)} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:border-brand-400">
+        <Link href={makeHref(page + 1)} rel="next" aria-label="Next page" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:border-brand-400">
           →
         </Link>
       )}

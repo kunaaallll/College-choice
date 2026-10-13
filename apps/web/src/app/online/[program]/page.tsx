@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
-import { buildMetadata, itemListJsonLd } from "@/lib/seo";
+import { buildMetadata, pageMetadata, itemListJsonLd } from "@/lib/seo";
 import { PROGRAMS, programBySlug } from "@/lib/online";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
 export const dynamicParams = false; // only the known program slugs
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ program: 
   const { program } = await params;
   const p = programBySlug(program);
   if (!p) return buildMetadata({ title: "Program not found", description: "", path: `/online/${program}`, noindex: true });
-  return buildMetadata({
+  return pageMetadata({
     title: `${p.label} — Best Universities, Fees & Admission 2026`,
     description: `Compare ${p.label} (${p.full}) from UGC-DEB approved universities in India. Fees, approvals, EMI, duration and admission. 100% online, valid degree.`,
     path: `/online/${p.slug}`,
@@ -43,7 +43,7 @@ export default async function OnlineProgramPage({ params }: { params: Promise<{ 
 
   return (
     <div className="container-site py-8">
-      <JsonLd data={itemListJsonLd(`${p.label} universities`, items.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })))} />
+      <PageJsonLd path={`/online/${p.slug}`} data={itemListJsonLd(`${p.label} universities`, items.map((c) => ({ name: c.name, path: `/colleges/${c.slug}` })))} />
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">

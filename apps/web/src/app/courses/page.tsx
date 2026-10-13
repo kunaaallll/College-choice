@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { buildMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { PageJsonLd } from "@/components/JsonLd";
 import { PosterAd } from "@/components/PosterAd";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = buildMetadata({
-  title: "Courses & Streams in India — Degrees, Eligibility & Fees",
-  description:
-    "Explore courses and streams in India — Engineering, Medical, Management, Law, Commerce and more. Degrees, eligibility, average fees and top colleges.",
-  path: "/courses",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Courses & Streams in India — Degrees, Eligibility & Fees",
+    description:
+      "Explore courses and streams in India — Engineering, Medical, Management, Law, Commerce and more. Degrees, eligibility, average fees and top colleges.",
+    path: "/courses",
+  });
+}
 
 // Streams hidden from the courses listing.
 const HIDDEN_STREAMS = new Set(["design"]);
@@ -23,6 +26,7 @@ export default async function CoursesPage() {
 
   return (
     <div className="container-site py-8">
+      <PageJsonLd path="/courses" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Courses", path: "/courses" }]} />
 
       <div className="mt-4 flex flex-col gap-6 lg:flex-row">

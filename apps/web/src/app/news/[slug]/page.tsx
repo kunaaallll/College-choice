@@ -3,9 +3,9 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import type { NewsArticle } from "@/lib/types";
-import { buildMetadata, canonical, SITE } from "@/lib/seo";
+import { buildMetadata, pageMetadata, canonical, SITE } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 1800;
 export const dynamicParams = true;
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const a = await getArticle(slug);
   if (!a) return buildMetadata({ title: "Article not found", description: "", path: `/news/${slug}`, noindex: true });
-  return buildMetadata({
+  return pageMetadata({
     title: a.title,
     description: a.excerpt,
     path: `/news/${a.slug}`,
@@ -48,14 +48,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   return (
     <article className="container-site max-w-3xl py-8">
-      <JsonLd
+      <PageJsonLd
+        path={`/news/${a.slug}`}
         data={{
           "@context": "https://schema.org",
           "@type": "NewsArticle",
           headline: a.title,
           description: a.excerpt,
           image: a.imgUrl || undefined,
-          datePublished: a.date,
+          datePublished: a.publishedAt ?? a.date,
           articleSection: a.category,
           mainEntityOfPage: canonical(`/news/${a.slug}`),
           publisher: { "@type": "Organization", name: SITE.name },

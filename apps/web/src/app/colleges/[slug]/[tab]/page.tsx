@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { api } from "@/lib/api";
 import { CollegeDetail } from "@/lib/types";
-import { buildMetadata, breadcrumbJsonLd } from "@/lib/seo";
+import { buildMetadata, pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 import { availableTabs, isTabKey, TAB_LABEL, tabMeta, tabSections } from "@/lib/collegeTabs";
-import { JsonLd } from "@/components/JsonLd";
+import { PageJsonLd } from "@/components/JsonLd";
 import { CollegeHeader } from "@/components/CollegeHeader";
 import { CollegeSidebar } from "@/components/CollegeSidebar";
 import { SectionList } from "@/components/SectionList";
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const c = await getCollege(slug);
   if (!c) return buildMetadata({ title: "College not found", description: "", path: `/colleges/${slug}`, noindex: true });
   const meta = tabMeta(c.name, tab);
-  return buildMetadata({
+  return pageMetadata({
     title: meta.title,
     description: meta.description,
     path: `/colleges/${c.slug}/${tab}`,
@@ -71,7 +71,7 @@ export default async function CollegeTabPage({ params }: Params) {
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <PageJsonLd path={`/colleges/${c.slug}/${tab}`} data={breadcrumbJsonLd(crumbs)} />
       <CollegeHeader c={c} tabs={tabs} />
 
       <div className="container-site grid gap-10 py-10 lg:grid-cols-[1fr_320px]">

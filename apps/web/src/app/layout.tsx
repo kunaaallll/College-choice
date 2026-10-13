@@ -34,7 +34,8 @@ export const metadata: Metadata = {
     "college fees",
     "placements",
   ],
-  alternates: { canonical: "/" },
+  // No site-wide canonical: every page sets its own (see pageMetadata), and a
+  // default of "/" would wrongly point 404s and utility pages at the homepage.
   openGraph: {
     type: "website",
     siteName: SITE.name,
