@@ -4,6 +4,7 @@ import { pageMetadata, itemListJsonLd } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
 import { PageJsonLd } from "@/components/JsonLd";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -53,7 +54,7 @@ export default async function CityLandingPage({ params }: { params: Promise<{ ci
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Top Colleges in {name}</h1>
+        <PageH1 path={`/colleges-in/${city}`} className="text-3xl font-extrabold sm:text-4xl">Top Colleges in {name}</PageH1>
         <p className="mt-3 text-ink-500">
           Discover {items.length}+ top-ranked colleges in {name}. Compare fees, placements, courses and
           cutoffs side by side, read verified student reviews, and apply for free with expert counselling —

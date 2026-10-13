@@ -13,6 +13,10 @@ import { adminRouter, UPLOAD_DIR } from "./routes/admin";
 import { adminSeoRouter } from "./routes/adminSeo";
 import { adminAuthRouter, adminUsersRouter } from "./routes/adminAuth";
 import { auditRouter, revisionsRouter } from "./routes/revisions";
+import { adminEntriesRouter } from "./routes/adminEntries";
+import { adminMediaRouter } from "./routes/adminMedia";
+import { adminImportRouter, adminSiteRouter, adminTaxonomyRouter } from "./routes/adminSite";
+import { entriesRouter, siteRouter } from "./routes/entries";
 import { seoRouter } from "./routes/seo";
 import { requireAdminUser } from "./lib/adminAuth";
 import { auditMutations } from "./lib/audit";
@@ -29,7 +33,7 @@ const origins = (process.env.CORS_ORIGIN || "http://localhost:3000")
 app.use(helmet());
 app.use(cors({ origin: origins, credentials: true }));
 // SEO CSV imports can be several MB; registered first so the 1mb parser below skips them.
-app.use("/api/admin/seo", express.json({ limit: "10mb" }));
+app.use(["/api/admin/seo", "/api/admin/entries/import", "/api/admin/import"], express.json({ limit: "10mb" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
@@ -50,8 +54,15 @@ app.use("/api/admin/users", adminUsersRouter);
 app.use("/api/admin/revisions", requireAdminUser, revisionsRouter);
 app.use("/api/admin/audit", requireAdminUser, auditRouter);
 app.use("/api/admin/seo", requireAdminUser, adminSeoRouter);
+app.use("/api/admin/entries", requireAdminUser, adminEntriesRouter);
+app.use("/api/admin/media", requireAdminUser, adminMediaRouter);
+app.use("/api/admin/taxonomy", requireAdminUser, adminTaxonomyRouter);
+app.use("/api/admin/site", requireAdminUser, adminSiteRouter);
+app.use("/api/admin/import", requireAdminUser, adminImportRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/seo", seoRouter);
+app.use("/api/entries", entriesRouter);
+app.use("/api/site", siteRouter);
 app.use("/api/colleges", collegesRouter);
 app.use("/api/streams", streamsRouter);
 app.use("/api/cities", citiesRouter);

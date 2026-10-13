@@ -30,6 +30,8 @@ export interface SeoOverride {
   twitterDescription?: string | null;
   disableSchema?: boolean;
   customSchema?: string | null;
+  h1?: string | null;
+  breadcrumbLabel?: string | null;
 }
 
 /**

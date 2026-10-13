@@ -7,6 +7,7 @@ import { PROGRAMS, programBySlug } from "@/lib/online";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
 import { PageJsonLd } from "@/components/JsonLd";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 export const dynamicParams = false; // only the known program slugs
@@ -47,7 +48,7 @@ export default async function OnlineProgramPage({ params }: { params: Promise<{ 
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">{p.label} in India</h1>
+        <PageH1 path={`/online/${p.slug}`} className="text-3xl font-extrabold sm:text-4xl">{p.label} in India</PageH1>
         <p className="mt-3 text-ink-500">
           Compare {items.length}+ UGC-DEB approved universities offering an {p.label} ({p.full}). See
           fees, approvals (NAAC, AICTE, WES), EMI options, duration and admission — and apply free with

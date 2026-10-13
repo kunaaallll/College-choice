@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { asyncHandler } from "../middleware/error";
+import { liveEntryWhere } from "../lib/entries";
 
 // Streams, cities and exams — used by nav, filters and landing pages.
 export const streamsRouter = Router();
@@ -34,7 +35,9 @@ examsRouter.get(
     const items = await prisma.exam.findMany({
       orderBy: [{ examOn: { sort: "asc", nulls: "last" } }, { id: "asc" }],
     });
-    res.json({ items });
+    // Exams with a published detail page link to /exams/<pageSlug>.
+    const pages = await prisma.contentEntry.findMany({ where: { type: "EXAM", examId: { not: null }, ...liveEntryWhere() }, select: { examId: true, slug: true } });
+    res.json({ items: items.map((x) => ({ ...x, pageSlug: pages.find((p) => p.examId === x.id)?.slug ?? null })) });
   }),
 );
 

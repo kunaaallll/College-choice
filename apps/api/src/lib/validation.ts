@@ -80,6 +80,7 @@ export const newsSchema = z.object({
   date: z.string().trim().min(1).max(60),
   readTime: z.string().trim().max(40).default("3 min read"),
   imgUrl: z.string().trim().max(500).optional(),
+  tags: z.array(z.string().trim().min(1).max(60)).max(30).optional(),
 });
 export const newsUpdateSchema = newsSchema.partial();
 
@@ -104,11 +105,13 @@ export const seoFieldsSchema = z.object({
   disableSchema: z.boolean().default(false),
   customSchema: optText(20000),
   urlLocked: z.boolean().default(false),
+  h1: optText(200),
+  breadcrumbLabel: optText(80),
 });
 export const seoPageSchema = seoFieldsSchema.extend({ path: z.string().trim().min(1).max(500) });
 
 export const seoListQuerySchema = z.object({
-  type: z.enum(["static", "college", "stream", "city", "online", "news", "other"]).optional(),
+  type: z.enum(["static", "college", "stream", "city", "online", "news", "course", "exam", "page", "other"]).optional(),
   q: z.string().trim().max(200).optional(),
   index: z.enum(["index", "noindex"]).optional(),
   issue: z

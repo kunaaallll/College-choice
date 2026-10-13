@@ -3,21 +3,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { adminJson, adminRequest, adminUpload, SESSION_KEY, UNAUTHORIZED_EVENT } from "./adminApi";
 import { AccountPanel } from "./AccountPanel";
-import { AuditLogPanel } from "./AuditLogPanel";
 import { CollegeContentEditor } from "./CollegeContentEditor";
+import { EntriesAdmin } from "./EntriesAdmin";
+import { MediaLibrary } from "./MediaLibrary";
 import { NewsAdmin } from "./NewsAdmin";
 import { RevisionHistory } from "./RevisionHistory";
 import { SeoPanel } from "./seo/SeoPanel";
 import { SessionContext, useSession, type AdminSession, type AdminUser, type Permission } from "./session";
+import { CollegeImport, SettingsPanel, settingsVisible } from "./SettingsPanel";
 import { ChangePassword, SignIn } from "./SignIn";
-import { UsersAdmin } from "./UsersAdmin";
+import { TaxonomyAdmin } from "./TaxonomyAdmin";
 
 // CMS console. Each person signs in with their own account; what they see and can
-// do depends on their role (Admin / SEO Manager / Content Editor). Areas: college
-// content, news & blog (with review workflow), SEO, users and the audit log.
-// No public nav link; the session token is kept in localStorage.
+// do depends on their role (Admin / SEO Manager / Content Editor). Areas: Content
+// (colleges, courses, exams, news, pages), SEO, Media, Categories and Settings
+// (users, audit log, tracking, backup). No public nav link; the session token is
+// kept in localStorage.
 
-interface GalleryImage { id: number; url: string; sort: number }
+interface GalleryImage { id: number; url: string; sort: number; alt: string | null }
 interface AdminCollege {
   id: number;
   name: string;
@@ -31,15 +34,18 @@ interface AdminCollege {
   gallery: GalleryImage[];
 }
 
-type Panel = "colleges" | "news" | "seo" | "users" | "audit" | "account";
+type Panel = "content" | "seo" | "media" | "categories" | "settings" | "account";
 
-const PANELS: [Panel, string, Permission | null][] = [
-  ["colleges", "Colleges", "content:edit"],
-  ["news", "News & blog", "content:edit"],
-  ["seo", "SEO", "seo:basic"],
-  ["users", "Users", "users:manage"],
-  ["audit", "Audit log", "audit:view"],
+const PANELS: [Panel, string, (can: (p: Permission) => boolean) => boolean][] = [
+  ["content", "Content", (can) => can("content:edit")],
+  ["seo", "SEO", (can) => can("seo:basic")],
+  ["media", "Media", (can) => can("content:edit")],
+  ["categories", "Categories", (can) => can("content:edit")],
+  ["settings", "Settings", settingsVisible],
 ];
+
+type ContentTab = "colleges" | "courses" | "exams" | "news" | "pages";
+const CONTENT_TABS: [ContentTab, string][] = [["colleges", "Colleges"], ["courses", "Courses"], ["exams", "Exams"], ["news", "News & blog"], ["pages", "Pages"]];
 
 const readToken = () => { try { return localStorage.getItem(SESSION_KEY); } catch { return null; } };
 const storeToken = (t: string | null) => {
@@ -94,7 +100,7 @@ export default function AdminPage() {
 
 function Console({ onSignOut }: { onSignOut: () => void }) {
   const { user, can } = useSession();
-  const visible = PANELS.filter(([, , perm]) => !perm || can(perm));
+  const visible = PANELS.filter(([, , allowed]) => allowed(can));
   const [panel, setPanel] = useState<Panel>(visible[0]?.[0] ?? "account");
 
   return (
@@ -121,19 +127,40 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
       </div>
 
       <div className="mt-6">
-        {panel === "colleges" && <CollegesPanel />}
-        {panel === "news" && <NewsAdmin />}
+        {panel === "content" && <ContentPanel />}
         {panel === "seo" && <SeoPanel />}
-        {panel === "users" && <UsersAdmin />}
-        {panel === "audit" && <AuditLogPanel />}
+        {panel === "media" && <MediaLibrary />}
+        {panel === "categories" && <TaxonomyAdmin />}
+        {panel === "settings" && <SettingsPanel />}
         {panel === "account" && <AccountPanel />}
       </div>
     </div>
   );
 }
 
+function ContentPanel() {
+  const [tab, setTab] = useState<ContentTab>("colleges");
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 border-b border-line">
+        {CONTENT_TABS.map(([t, label]) => (
+          <button key={t} onClick={() => setTab(t)} className={`-mb-px border-b-2 px-3.5 py-2 text-sm font-bold transition ${tab === t ? "border-brand-600 text-brand-700" : "border-transparent text-ink-500 hover:text-ink-900"}`}>{label}</button>
+        ))}
+      </div>
+      <div className="mt-5">
+        {tab === "colleges" && <CollegesPanel />}
+        {tab === "courses" && <EntriesAdmin key="course" kind="course" />}
+        {tab === "exams" && <EntriesAdmin key="exam" kind="exam" />}
+        {tab === "news" && <NewsAdmin />}
+        {tab === "pages" && <EntriesAdmin key="page" kind="page" />}
+      </div>
+    </div>
+  );
+}
+
 function CollegesPanel() {
-  const { token } = useSession();
+  const { token, can } = useSession();
+  const [importing, setImporting] = useState(false);
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<AdminCollege[]>([]);
   const [loading, setLoading] = useState(false);
@@ -155,10 +182,14 @@ function CollegesPanel() {
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-extrabold">College content</h1>
-        <p className="mt-1 text-sm text-ink-500">Upload photos and manage each college&apos;s detail tabs, highlights, courses and FAQs. Changes appear on the site within seconds, and every change is kept in the version history.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold">College content</h1>
+          <p className="mt-1 text-sm text-ink-500">Upload photos and manage each college&apos;s detail tabs, highlights, courses and FAQs. Changes appear on the site within seconds, and every change is kept in the version history.</p>
+        </div>
+        {can("content:publish") && <button className="rounded-lg border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-600 hover:border-brand-400" onClick={() => setImporting((v) => !v)}>{importing ? "Close import" : "Import / update via CSV"}</button>}
       </div>
+      {importing && <CollegeImport onDone={() => load(search)} />}
 
       <form onSubmit={(e) => { e.preventDefault(); load(search); }} className="mt-5 flex gap-2">
         <input
@@ -295,7 +326,8 @@ function CollegeRow({ college, onChanged }: { college: AdminCollege; onChanged: 
           {college.gallery.map((g) => (
             <div key={g.id} className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-line">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={g.url} alt="" className="h-full w-full object-cover" />
+              <img src={g.url} alt={g.alt ?? ""} className="h-full w-full object-cover" />
+              <PhotoAlt id={g.id} alt={g.alt} />
               <button
                 onClick={() => remove(g.id)}
                 disabled={busy}
@@ -338,5 +370,29 @@ function CollegeRow({ college, onChanged }: { college: AdminCollege; onChanged: 
       )}
       {showContent && <CollegeContentEditor key={contentKey} collegeId={college.id} token={token} />}
     </div>
+  );
+}
+
+/** Inline alt-text editor for one college photo (saved on blur). */
+function PhotoAlt({ id, alt }: { id: number; alt: string | null }) {
+  const { token } = useSession();
+  const [v, setV] = useState(alt ?? "");
+  const [state, setState] = useState<"" | "saving" | "saved" | "error">("");
+  const save = async () => {
+    if (v === (alt ?? "")) return;
+    setState("saving");
+    try { await adminJson(`/api/admin/gallery/${id}`, token, { method: "PUT", body: { alt: v || null } }); setState("saved"); }
+    catch { setState("error"); }
+  };
+  return (
+    <input
+      value={v}
+      onChange={(e) => { setV(e.target.value); setState(""); }}
+      onBlur={save}
+      placeholder="Alt text…"
+      aria-label="Photo alt text"
+      title={state === "saved" ? "Saved" : state === "error" ? "Couldn't save" : "Describe the photo for search engines"}
+      className={`absolute inset-x-1.5 bottom-1.5 rounded-md border bg-white/90 px-1.5 py-0.5 text-[11px] outline-none ${state === "error" ? "border-danger" : !v ? "border-warn" : "border-line"}`}
+    />
   );
 }

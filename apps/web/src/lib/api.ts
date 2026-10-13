@@ -2,11 +2,17 @@ import type {
   City,
   CollegeCard,
   CollegeDetail,
+  EntryCard,
+  EntryDetail,
+  EntryKind,
   Exam,
   NewsArticle,
   Paginated,
   Stream,
 } from "./types";
+
+/** A 404 from the API — not retried. */
+export class NotFoundError extends Error {}
 
 // Server-side rendering talks to the API over the internal Docker network
 // (INTERNAL_API_URL=http://api:4000) so it never round-trips through the public
@@ -30,9 +36,11 @@ async function get<T>(path: string, init?: RequestInit): Promise<T> {
         headers: { Accept: "application/json" },
         ...init,
       });
+      if (res.status === 404) throw new NotFoundError(`API 404 for ${path}`);
       if (!res.ok) throw new Error(`API ${res.status} for ${path}`);
       return (await res.json()) as T;
     } catch (err) {
+      if (err instanceof NotFoundError) throw err; // a missing page won't appear on retry
       lastErr = err;
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
     }
@@ -77,7 +85,20 @@ export const api = {
   exams: () => get<{ items: Exam[] }>(`/api/exams`),
   news: (category?: string) =>
     get<{ items: NewsArticle[] }>(`/api/news${category ? `?category=${encodeURIComponent(category)}` : ""}`),
+  entries: (type: EntryKind, stream?: string) =>
+    get<{ items: EntryCard[] }>(`/api/entries?type=${type}${stream ? `&stream=${encodeURIComponent(stream)}` : ""}`),
+  entry: (type: EntryKind, slug: string) => get<EntryDetail>(`/api/entries/${type}/${encodeURIComponent(slug)}`),
 };
+
+/** An entry page, or null if it doesn't exist / isn't live. */
+export async function getEntry(type: EntryKind, slug: string): Promise<EntryDetail | null> {
+  try {
+    return await api.entry(type, slug);
+  } catch (e) {
+    if (e instanceof NotFoundError) return null;
+    throw e;
+  }
+}
 
 // Browser-side POSTs (forms). Not cached.
 export async function postJSON<T>(path: string, body: unknown): Promise<T> {

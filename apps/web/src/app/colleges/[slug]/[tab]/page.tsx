@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { api } from "@/lib/api";
 import { CollegeDetail } from "@/lib/types";
-import { buildMetadata, pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
+import { buildMetadata, pageMetadata, breadcrumbJsonLd, getSeoOverride } from "@/lib/seo";
 import { availableTabs, isTabKey, TAB_LABEL, tabMeta, tabSections } from "@/lib/collegeTabs";
 import { PageJsonLd } from "@/components/JsonLd";
 import { CollegeHeader } from "@/components/CollegeHeader";
@@ -72,7 +72,7 @@ export default async function CollegeTabPage({ params }: Params) {
   return (
     <>
       <PageJsonLd path={`/colleges/${c.slug}/${tab}`} data={breadcrumbJsonLd(crumbs)} />
-      <CollegeHeader c={c} tabs={tabs} />
+      <CollegeHeader c={c} tabs={tabs} h1={(await getSeoOverride(`/colleges/${c.slug}/${tab}`)).h1} />
 
       <div className="container-site grid gap-10 py-10 lg:grid-cols-[1fr_320px]">
         <div className="space-y-12">

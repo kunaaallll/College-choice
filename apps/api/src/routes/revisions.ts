@@ -13,10 +13,11 @@ import { invalidateInventory } from "../lib/seo";
 import { revalidateCollege } from "../lib/content";
 import { revalidateWeb } from "../lib/revalidate";
 import { pickFields, writeSeo, type SeoFields } from "./adminSeo";
+import { entryPath, entrySnapshot } from "../lib/entries";
 
 export const revisionsRouter = Router();
 
-const ENTITY = z.enum(["news", "college", "seo"]);
+const ENTITY = z.enum(["news", "college", "seo", "entry"]);
 
 /** Who may view/restore each kind of history. */
 async function restorePermission(entityType: string, entityId: string): Promise<Permission> {
@@ -24,6 +25,10 @@ async function restorePermission(entityType: string, entityId: string): Promise<
   if (entityType === "news") {
     const a = await prisma.newsArticle.findUnique({ where: { id: Number(entityId) }, select: { status: true } });
     return a?.status === "PUBLISHED" ? "content:publish" : "content:edit";
+  }
+  if (entityType === "entry") {
+    const e = await prisma.contentEntry.findUnique({ where: { id: Number(entityId) }, select: { status: true } });
+    return e?.status === "PUBLISHED" ? "content:publish" : "content:edit";
   }
   return "content:edit";
 }
@@ -103,6 +108,36 @@ revisionsRouter.post(
       const after = await collegeSnapshot(id);
       await snapshot("college", id, after, label, req);
       void revalidateCollege(id);
+    } else if (rev.entityType === "entry") {
+      const id = Number(rev.entityId);
+      const load = async () => entrySnapshot(await prisma.contentEntry.findUniqueOrThrow({ where: { id }, include: { tags: true } }));
+      const entry = await prisma.contentEntry.findUnique({ where: { id } });
+      if (!entry) throw new HttpError(404, "That page no longer exists.");
+      await baseline("entry", id, load);
+      // Content only — the URL and publishing state stay as they are now.
+      const d = rev.data as Record<string, unknown>;
+      await prisma.$transaction(async (tx) => {
+        await tx.contentEntry.update({
+          where: { id },
+          data: {
+            title: (d.title as string) ?? entry.title, summary: (d.summary as string | null) ?? null, body: (d.body as string | null) ?? null,
+            data: (d.data ?? {}) as Prisma.InputJsonValue, faqs: (d.faqs ?? []) as Prisma.InputJsonValue, related: (d.related ?? {}) as Prisma.InputJsonValue,
+            heroImage: (d.heroImage as string | null) ?? null, heroAlt: (d.heroAlt as string | null) ?? null,
+            streamId: (d.streamId as number | null) ?? null, categoryId: (d.categoryId as number | null) ?? null,
+            updatedById: req.admin!.id,
+          },
+        });
+        if (Array.isArray(d.tagIds)) {
+          await tx.entryTag.deleteMany({ where: { entryId: id } });
+          const existing = await tx.tag.findMany({ where: { id: { in: d.tagIds as number[] } }, select: { id: true } });
+          for (const t of existing) await tx.entryTag.create({ data: { entryId: id, tagId: t.id } });
+        }
+      });
+      await snapshot("entry", id, await load(), label, req);
+      if (entry.status === "PUBLISHED") {
+        invalidateInventory();
+        revalidateWeb({ paths: [entryPath(entry.type, entry.slug)] });
+      }
     } else if (rev.entityType === "seo") {
       const path = rev.entityId;
       await baseline("seo", path, async () => pickFields(await prisma.seoMeta.findUnique({ where: { path } })));

@@ -33,6 +33,9 @@ export const TYPE_LABELS: Record<string, string> = {
   city: "City",
   online: "Online program",
   news: "News",
+  course: "Course",
+  exam: "Exam",
+  page: "Info page",
   other: "Other URL",
 };
 

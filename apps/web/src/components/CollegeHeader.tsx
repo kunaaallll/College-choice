@@ -6,7 +6,7 @@ import { CollegeTabs } from "@/components/CollegeTabs";
 import { HeroBackground } from "@/components/HeroBackground";
 
 // Shared hero + quick stats + tab bar for all college detail pages.
-export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, string][] }) {
+export function CollegeHeader({ c, tabs, h1 }: { c: CollegeDetail; tabs: [string, string][]; h1?: string | null }) {
   const isOnline = (c.mode ?? "Campus") !== "Campus";
   const isDental = c.stream.slug === "dental";
   const approvals = c.approvals ?? [];
@@ -64,7 +64,7 @@ export function CollegeHeader({ c, tabs }: { c: CollegeDetail; tabs: [string, st
                   </span>
                 )
               )}
-              <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">{c.name}</h1>
+              <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">{h1 || c.name}</h1>
               <p className="mt-2 text-white/90">
                 ⚲ {c.location} · {orNA(c.type)} {c.estd ? `· Estd ${c.estd}` : ""}
               </p>

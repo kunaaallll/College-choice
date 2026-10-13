@@ -25,6 +25,10 @@ import { revalidateWeb } from "../lib/revalidate";
 import { can, requireAdminUser, requirePermission } from "../lib/adminAuth";
 import { baseline, newsSnapshot, snapshot, withCollegeRevision } from "../lib/revisions";
 import { displayStatus, liveNewsWhere, revalidateCollege } from "../lib/content";
+import { sanitizeRichHtml } from "../lib/html";
+
+/** Article bodies: HTML from the rich editor is sanitised; older markdown bodies are kept as-is. */
+const cleanBody = (b: string | null | undefined) => (!b?.trim() ? null : b.trimStart().startsWith("<") ? sanitizeRichHtml(b) : b);
 
 /** Slugify a title into a URL-safe slug. */
 function slugify(s: string): string {
@@ -60,13 +64,15 @@ adminRouter.get(
   requirePermission("content:edit"),
   asyncHandler(async (req, res) => {
     const search = String(req.query.search || "").trim();
+    // ?ids=1,2,3 looks colleges up by id (e.g. to show already-linked colleges).
+    const ids = String(req.query.ids || "").split(",").map(Number).filter((x) => Number.isInteger(x) && x > 0);
     const items = await prisma.college.findMany({
-      where: search ? { name: { contains: search, mode: "insensitive" } } : { OR: [{ featured: true }, { nirfRank: { not: null } }] },
+      where: ids.length ? { id: { in: ids } } : search ? { name: { contains: search, mode: "insensitive" } } : { OR: [{ featured: true }, { nirfRank: { not: null } }] },
       select: {
         id: true, name: true, slug: true, imgUrl: true, sampleDegreeUrl: true, mode: true, published: true, updatedAt: true,
         city: { select: { name: true, state: true } },
         stream: { select: { name: true } },
-        gallery: { orderBy: { sort: "asc" }, select: { id: true, url: true, sort: true } },
+        gallery: { orderBy: { sort: "asc" }, select: { id: true, url: true, sort: true, alt: true } },
       },
       orderBy: [{ nirfRank: "asc" }, { name: "asc" }],
       take: 40,
@@ -145,6 +151,19 @@ adminRouter.delete(
       fs.promises.unlink(fp).catch(() => {});
     }
     res.json({ ok: true });
+  }),
+);
+
+/** PUT /api/admin/gallery/:id { alt } — alt text for one college photo (image SEO). */
+adminRouter.put(
+  "/gallery/:id",
+  requirePermission("content:edit"),
+  asyncHandler(async (req, res) => {
+    const { alt } = z.object({ alt: z.string().trim().max(300).nullable() }).parse(req.body);
+    const img = await prisma.galleryImage.update({ where: { id: Number(req.params.id) }, data: { alt: alt || null } }).catch(() => null);
+    if (!img) throw new HttpError(404, "Image not found");
+    void revalidateCollege(img.collegeId);
+    res.json(img);
   }),
 );
 
@@ -411,15 +430,26 @@ async function applyNewsPatch(tx: Parameters<Parameters<typeof prisma.$transacti
   const slug = await checkSlug(article.id, article.slug, data.slug);
   const patch: Prisma.NewsArticleUpdateInput = { ...extra, updatedById: adminId };
   for (const k of ["category", "title", "excerpt", "date", "readTime"] as const) if (data[k] !== undefined) patch[k] = data[k];
-  if (data.body !== undefined) patch.body = data.body || null;
+  if (data.body !== undefined) patch.body = cleanBody(data.body);
   if (data.imgUrl !== undefined) patch.imgUrl = data.imgUrl || null;
   if (slug) patch.slug = slug;
   const updated = await tx.newsArticle.update({ where: { id: article.id }, data: patch });
+  if (data.tags !== undefined) await setNewsTags(tx, article.id, data.tags);
   // Only a URL that has been public needs a redirect.
   if (slug && (article.status === "PUBLISHED" || article.status === "UNPUBLISHED")) {
     await recordUrlChange(tx, `/news/${article.slug}`, `/news/${slug}`, false);
   }
   return updated;
+}
+
+async function setNewsTags(tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0], newsId: number, names: string[]) {
+  await tx.newsTag.deleteMany({ where: { newsId } });
+  for (const name of [...new Set(names.map((n) => n.trim()).filter(Boolean))]) {
+    const tagSlug = slugify(name);
+    if (!tagSlug) continue;
+    const tag = await tx.tag.upsert({ where: { slug: tagSlug }, create: { name, slug: tagSlug }, update: {} });
+    await tx.newsTag.create({ data: { newsId, tagId: tag.id } });
+  }
 }
 
 async function requireArticle(id: number) {
@@ -433,8 +463,10 @@ async function withPeople<T extends NewsArticle>(items: T[]) {
   const ids = [...new Set(items.flatMap((a) => [a.authorId, a.updatedById]).filter((x): x is number => !!x))];
   const users = ids.length ? await prisma.adminUser.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : [];
   const name = (id: number | null) => users.find((u) => u.id === id)?.name ?? null;
+  const tagRows = await prisma.newsTag.findMany({ where: { newsId: { in: items.map((a) => a.id) } }, include: { tag: true } });
   return items.map((a) => ({
     ...a,
+    tags: tagRows.filter((t) => t.newsId === a.id).map((t) => t.tag.name),
     displayStatus: displayStatus(a),
     hasPendingChanges: !!a.pendingData,
     authorName: name(a.authorId),
@@ -494,11 +526,12 @@ adminRouter.post(
     }
     const article = await prisma.newsArticle.create({
       data: {
+        ...(data.tags ? { tags: { create: await Promise.all([...new Set(data.tags)].map(async (name) => ({ tag: { connect: { id: (await prisma.tag.upsert({ where: { slug: slugify(name) }, create: { name, slug: slugify(name) }, update: {} })).id } } }))) } } : {}),
         slug,
         category: data.category,
         title: data.title,
         excerpt: data.excerpt,
-        body: data.body ?? null,
+        body: cleanBody(data.body),
         date: data.date,
         readTime: data.readTime,
         imgUrl: data.imgUrl || null,

@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollegeCard } from "@/components/CollegeCard";
 import { PageJsonLd } from "@/components/JsonLd";
 import { Collapsible } from "@/components/Collapsible";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 
@@ -94,9 +95,9 @@ export default async function OnlinePage() {
           <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold">
             🌐 100% Online · UGC-DEB approved
           </span>
-          <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
+          <PageH1 path="/online" className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
             Online degrees from India&apos;s top universities
-          </h1>
+          </PageH1>
           <p className="mt-4 max-w-2xl text-white/70 sm:text-lg">
             Compare UGC-DEB entitled online universities on fees, approvals, EMI and admission. Earn a
             degree equivalent to on-campus — without leaving your job. 100% free guidance.

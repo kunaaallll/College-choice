@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { CollegeDetail } from "@/lib/types";
-import { buildMetadata, pageMetadata, breadcrumbJsonLd, collegeJsonLd, faqJsonLd } from "@/lib/seo";
+import { buildMetadata, pageMetadata, breadcrumbJsonLd, collegeJsonLd, faqJsonLd, getSeoOverride } from "@/lib/seo";
 import { availableTabs, tabSections } from "@/lib/collegeTabs";
 import { PageJsonLd } from "@/components/JsonLd";
 import { ReadMore } from "@/components/ReadMore";
@@ -109,7 +109,7 @@ export default async function CollegeDetailPage({ params }: { params: Promise<{ 
         ]}
       />
 
-      <CollegeHeader c={c} tabs={tabs} />
+      <CollegeHeader c={c} tabs={tabs} h1={(await getSeoOverride(`/colleges/${c.slug}`)).h1} />
 
       {/* Anchor nav for colleges without tabbed content */}
       {!enriched && (

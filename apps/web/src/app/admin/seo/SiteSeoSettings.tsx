@@ -19,6 +19,9 @@ const SECTION_LABELS: Record<string, string> = {
   cities: "City landing pages",
   online: "Online degree pages",
   news: "News articles",
+  courses: "Course pages",
+  exams: "Exam pages",
+  pages: "Info & service pages",
 };
 
 export function SiteSeoSettings({ token }: { token: string }) {

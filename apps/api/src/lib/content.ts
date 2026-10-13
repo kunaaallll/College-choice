@@ -7,6 +7,7 @@ import type { NewsArticle, Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { revalidateWeb } from "./revalidate";
 import { invalidateInventory } from "./seo";
+import { entryPath } from "./entries";
 
 /** Prisma filter for articles visible on the public site right now. */
 export const liveNewsWhere = (now = new Date()): Prisma.NewsArticleWhereInput => ({
@@ -41,7 +42,15 @@ async function tick() {
     },
     select: { slug: true },
   });
+  const pages = await prisma.contentEntry.findMany({
+    where: { status: "PUBLISHED", OR: [{ publishAt: { gt: lastTick, lte: now } }, { unpublishAt: { gt: lastTick, lte: now } }] },
+    select: { type: true, slug: true },
+  });
   lastTick = now;
+  if (pages.length) {
+    invalidateInventory();
+    revalidateWeb({ paths: ["/", "/courses", "/exams", ...pages.map((p) => entryPath(p.type, p.slug))], tags: ["seo-settings"] });
+  }
   if (changed.length) {
     invalidateInventory();
     revalidateWeb({ paths: ["/news", "/", ...changed.map((a) => `/news/${a.slug}`)], tags: ["seo-settings"] });

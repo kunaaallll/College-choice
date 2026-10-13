@@ -46,7 +46,9 @@ export default function NewsPreview({ params }: { params: Promise<{ id: string }
         )}
         <div className="prose mt-6 max-w-none text-ink-500">
           <p className="text-lg leading-relaxed">{a.excerpt}</p>
-          {a.body && a.body !== a.excerpt && <div className="mt-4"><Markdown text={a.body} /></div>}
+          {a.body && a.body !== a.excerpt && (
+            <div className="mt-4">{a.body.trimStart().startsWith("<") ? <div className="rich-content" dangerouslySetInnerHTML={{ __html: a.body }} /> : <Markdown text={a.body} />}</div>
+          )}
         </div>
       </article>
     </>

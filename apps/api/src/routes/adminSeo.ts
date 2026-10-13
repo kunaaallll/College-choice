@@ -27,19 +27,19 @@ export const adminSeoRouter = Router();
 
 const TEXT_FIELDS = [
   "title", "description", "keyword", "canonical", "ogTitle", "ogDescription", "ogImage",
-  "twitterTitle", "twitterDescription", "customSchema",
+  "twitterTitle", "twitterDescription", "customSchema", "h1", "breadcrumbLabel",
 ] as const;
 const BOOL_FIELDS = ["noindex", "nofollow", "excludeFromSitemap", "disableSchema", "urlLocked"] as const;
 export type SeoFields = Pick<SeoMeta, (typeof TEXT_FIELDS)[number] | (typeof BOOL_FIELDS)[number]>;
 
 const EMPTY_FIELDS: SeoFields = {
   title: null, description: null, keyword: null, canonical: null, ogTitle: null, ogDescription: null,
-  ogImage: null, twitterTitle: null, twitterDescription: null, customSchema: null,
+  ogImage: null, twitterTitle: null, twitterDescription: null, customSchema: null, h1: null, breadcrumbLabel: null,
   noindex: false, nofollow: false, excludeFromSitemap: false, disableSchema: false, urlLocked: false,
 };
 
 // What a Content Editor may change on a page (seo:basic); the rest needs seo:advanced.
-const BASIC_FIELDS = ["title", "description", "keyword", "ogTitle", "ogDescription", "ogImage", "twitterTitle", "twitterDescription"] as const;
+const BASIC_FIELDS = ["title", "description", "keyword", "ogTitle", "ogDescription", "ogImage", "twitterTitle", "twitterDescription", "h1", "breadcrumbLabel"] as const;
 
 const isEmptyRow = (f: SeoFields) =>
   TEXT_FIELDS.every((k) => !f[k]) && BOOL_FIELDS.every((k) => !f[k]);
@@ -210,6 +210,8 @@ adminSeoRouter.get(
         redirects: redirectCounts.reduce((n, r) => n + r._count._all, 0),
         redirectsDisabled: redirectCounts.find((r) => !r.enabled)?._count._all ?? 0,
         notFoundOpen: open404,
+        missingAlt: (await prisma.media.count({ where: { mime: { startsWith: "image/" }, OR: [{ alt: null }, { alt: "" }] } }))
+          + (await prisma.galleryImage.count({ where: { OR: [{ alt: null }, { alt: "" }] } })),
       },
       content: {
         collegesPublished: collegeCounts.find((c) => c.published)?._count._all ?? 0,
@@ -584,12 +586,12 @@ const CSV_COLUMNS: [string, keyof SeoFields][] = [
   ["title", "title"], ["description", "description"], ["keyword", "keyword"], ["canonical", "canonical"],
   ["noindex", "noindex"], ["nofollow", "nofollow"], ["og_title", "ogTitle"], ["og_description", "ogDescription"],
   ["og_image", "ogImage"], ["twitter_title", "twitterTitle"], ["twitter_description", "twitterDescription"],
-  ["exclude_from_sitemap", "excludeFromSitemap"],
+  ["exclude_from_sitemap", "excludeFromSitemap"], ["h1", "h1"], ["breadcrumb_label", "breadcrumbLabel"],
 ];
 // Same limits as seoFieldsSchema.
 const MAX_LEN: Partial<Record<keyof SeoFields, number>> = {
   title: 200, description: 500, keyword: 120, canonical: 500, ogTitle: 200, ogDescription: 500,
-  ogImage: 500, twitterTitle: 200, twitterDescription: 500,
+  ogImage: 500, twitterTitle: 200, twitterDescription: 500, h1: 200, breadcrumbLabel: 80,
 };
 
 /** GET /api/admin/seo/export?…filters — SEO overrides as CSV (blank = page uses its default). */

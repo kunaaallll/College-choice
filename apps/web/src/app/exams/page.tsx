@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageJsonLd } from "@/components/JsonLd";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 
@@ -23,7 +25,7 @@ export default async function ExamsPage() {
       <PageJsonLd path="/exams" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Exams", path: "/exams" }]} />
       <header className="mt-4 max-w-3xl">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Entrance Exams 2026</h1>
+        <PageH1 path="/exams" className="text-3xl font-extrabold sm:text-4xl">Entrance Exams 2026</PageH1>
         <p className="mt-3 text-ink-500">Dates, eligibility and accepted colleges for every major exam.</p>
       </header>
 
@@ -31,7 +33,9 @@ export default async function ExamsPage() {
         {exams.map((ex) => (
           <article key={ex.slug} className="card p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-ink-900">{ex.name}</h2>
+              <h2 className="text-lg font-bold text-ink-900">
+                {ex.pageSlug ? <Link href={`/exams/${ex.pageSlug}`} className="hover:text-brand-600">{ex.name}</Link> : ex.name}
+              </h2>
               <span className="chip">{ex.level}</span>
             </div>
             <p className="mt-1 text-sm text-ink-400">{ex.fullName}</p>
@@ -49,6 +53,7 @@ export default async function ExamsPage() {
                 <dd className="font-semibold text-ink-900">{ex.stream}</dd>
               </div>
             </dl>
+            {ex.pageSlug && <Link href={`/exams/${ex.pageSlug}`} className="mt-4 inline-block text-sm font-semibold text-brand-600 hover:underline">Dates, syllabus &amp; colleges →</Link>}
           </article>
         ))}
       </div>

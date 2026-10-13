@@ -8,7 +8,7 @@ import { fmtDate, ISSUE_LABELS, Notice, TYPE_LABELS } from "./ui";
 interface Dashboard {
   totals: {
     pages: number; byType: Record<string, number>; overrides: number; noindex: number; excludedFromSitemap: number;
-    redirects: number; redirectsDisabled: number; notFoundOpen: number;
+    redirects: number; redirectsDisabled: number; notFoundOpen: number; missingAlt: number;
   };
   content: { collegesPublished: number; collegesDraft: number; news: number };
   health: Record<string, number>;
@@ -77,6 +77,7 @@ export function SeoDashboard({ token, onFilter, onOpen, onTab }: {
         {stat("Noindex pages", d.totals.noindex, () => onFilter({ index: "noindex" }), d.totals.noindex ? "text-warn" : "text-ink-900")}
         {stat("Active redirects", d.totals.redirects - d.totals.redirectsDisabled, () => onTab("redirects"))}
         {stat("Open 404s", d.totals.notFoundOpen, () => onTab("404s"), d.totals.notFoundOpen ? "text-danger" : "text-success")}
+        {stat("Images missing alt text", d.totals.missingAlt, undefined, d.totals.missingAlt ? "text-warn" : "text-success")}
       </div>
 
       <section className="card p-4">

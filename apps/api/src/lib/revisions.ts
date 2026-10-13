@@ -7,7 +7,7 @@ import type { Request } from "express";
 import type { NewsArticle, Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 
-export type RevisionEntity = "news" | "college" | "seo";
+export type RevisionEntity = "news" | "college" | "seo" | "entry";
 
 const MAX_PER_ENTITY = 50; // keep the newest N per item
 

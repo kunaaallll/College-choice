@@ -9,7 +9,7 @@ interface Rev { id: number; summary: string | null; userEmail: string | null; cr
 
 /** Version history for one item with view & restore. */
 export function RevisionHistory({ entityType, entityId, onRestored, onClose }: {
-  entityType: "news" | "college" | "seo";
+  entityType: "news" | "college" | "seo" | "entry";
   entityId: string | number;
   onRestored?: () => void;
   onClose: () => void;
@@ -50,7 +50,7 @@ export function RevisionHistory({ entityType, entityId, onRestored, onClose }: {
         <button className={btnGhost} onClick={onClose}>Close</button>
       </div>
       <p className="mt-1 text-[12px] text-ink-400">
-        A version is saved on every change (newest first, last 50 kept). {entityType === "news" ? "Restoring brings back the text and image; the URL and publishing status stay as they are." : entityType === "college" ? "Restoring brings back the tabs, highlights, courses and FAQs; published/unpublished stays as it is." : ""}
+        A version is saved on every change (newest first, last 50 kept). {entityType === "news" || entityType === "entry" ? "Restoring brings back the text and image; the URL and publishing status stay as they are." : entityType === "college" ? "Restoring brings back the tabs, highlights, courses and FAQs; published/unpublished stays as it is." : ""}
       </p>
       {msg && <div className="mt-2"><Notice tone={msg.tone}>{msg.text}</Notice></div>}
       {!items && <p className="mt-3 text-[13px] text-ink-400">Loading…</p>}

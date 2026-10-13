@@ -27,6 +27,8 @@ model Stream {
   examName      String? // headline exam label, e.g. "JEE Main"
   collegeCount  Int       @default(0)
   colleges      College[]
+  categories    Category[] // specialisations under this stream
+  entries       ContentEntry[]
 
   @@index([slug])
 }
@@ -55,6 +57,7 @@ model Exam {
   mode     String // Online | Offline
   stream   String // headline stream label
   colleges CollegeExam[]
+  entry    ContentEntry? // editorial exam page (/exams/<slug>)
 
   @@index([slug])
 }
@@ -240,6 +243,7 @@ model GalleryImage {
   collegeId Int
   college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   url       String
+  alt       String? // image SEO; falls back to the college name
   sort      Int     @default(0)
 
   @@index([collegeId])
@@ -303,10 +307,119 @@ model NewsArticle {
   authorId    Int?
   updatedById Int?
   updatedAt   DateTime  @default(now()) @updatedAt
+  tags        NewsTag[]
 
   @@index([slug])
   @@index([category])
   @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Editorial content types: course pages, exam pages, info/service pages
+// ─────────────────────────────────────────────────────────────
+
+enum EntryType {
+  COURSE // /courses/<slug>
+  EXAM // /exams/<slug> (linked to an Exam)
+  PAGE // /<slug>  (services, counselling, policies…)
+}
+
+model ContentEntry {
+  id         Int           @id @default(autoincrement())
+  type       EntryType
+  slug       String
+  title      String // the page H1
+  summary    String? // intro under the H1; meta description fallback
+  body       String?       @db.Text // sanitised HTML from the rich text editor
+  data       Json? // type-specific fields (see api/src/lib/entries.ts)
+  faqs       Json? // [{ question, answer }]
+  heroImage  String?
+  heroAlt    String?
+  streamId   Int?
+  stream     Stream?       @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  categoryId Int?
+  category   Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  examId     Int?          @unique
+  exam       Exam?         @relation(fields: [examId], references: [id], onDelete: SetNull)
+  related    Json? // manual internal links: { colleges: id[], entries: id[], news: id[] }
+  tags       EntryTag[]
+
+  // ── Workflow (same rules as NewsArticle) ──
+  status      ContentStatus @default(DRAFT)
+  publishAt   DateTime?
+  unpublishAt DateTime?
+  pendingData Json?
+  reviewNote  String?
+  authorId    Int?
+  updatedById Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+
+  @@unique([type, slug])
+  @@index([type, status])
+}
+
+// Category tree (with optional stream → specialisations) and free-form tags.
+model Category {
+  id          Int            @id @default(autoincrement())
+  name        String
+  slug        String         @unique
+  description String?
+  parentId    Int?
+  parent      Category?      @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]     @relation("CategoryTree")
+  streamId    Int?
+  stream      Stream?        @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  sort        Int            @default(0)
+  entries     ContentEntry[]
+}
+
+model Tag {
+  id      Int        @id @default(autoincrement())
+  name    String     @unique
+  slug    String     @unique
+  entries EntryTag[]
+  news    NewsTag[]
+}
+
+model EntryTag {
+  entryId Int
+  tagId   Int
+  entry   ContentEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  tag     Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([entryId, tagId])
+}
+
+model NewsTag {
+  newsId Int
+  tagId  Int
+  news   NewsArticle @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  tag    Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([newsId, tagId])
+}
+
+// Media library: uploaded files with image-SEO fields and generated WebP sizes.
+model Media {
+  id          Int      @id @default(autoincrement())
+  url         String   @unique
+  filename    String // original file name
+  mime        String
+  size        Int
+  width       Int?
+  height      Int?
+  alt         String?
+  title       String?
+  caption     String?
+  description String?
+  folder      String   @default("")
+  variants    Json? // { "480": url, "960": url, "1600": url } (WebP)
+  createdById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([folder])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -407,6 +520,8 @@ model SeoMeta {
   disableSchema      Boolean  @default(false) // turn off the page's automatic JSON-LD
   customSchema       String?  @db.Text // extra JSON-LD (validated JSON object/array)
   urlLocked          Boolean  @default(false) // block slug changes on critical pages
+  h1                 String? // visible page heading override
+  breadcrumbLabel    String? // label for this page in breadcrumb trails
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

@@ -4,6 +4,7 @@
  */
 import { prisma } from "../prisma";
 import { liveNewsWhere } from "./content";
+import { entryPath, liveEntryWhere } from "./entries";
 
 /** Public site origin, e.g. "https://collegechoice.in" (used to recognise our own absolute URLs). */
 export const SITE_URL = (process.env.SITE_URL || (process.env.CORS_ORIGIN || "").split(",")[0] || "http://localhost:3000")
@@ -54,7 +55,7 @@ export const LIMITS = { titleMin: 30, titleMax: 60, descMin: 70, descMax: 160 } 
 // Page inventory — every indexable URL the site renders
 // ─────────────────────────────────────────────────────────────
 
-export type PageType = "static" | "college" | "stream" | "city" | "online" | "news";
+export type PageType = "static" | "college" | "stream" | "city" | "online" | "news" | "course" | "exam" | "page";
 
 export interface InventoryPage {
   path: string;
@@ -96,7 +97,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
   if (inventoryCache && Date.now() - inventoryCache.at < INVENTORY_TTL) return inventoryCache.pages;
   const year = String(new Date().getFullYear());
 
-  const [colleges, streams, cities, news] = await Promise.all([
+  const [colleges, streams, cities, news, entries] = await Promise.all([
     prisma.college.findMany({
       where: { published: true },
       select: {
@@ -108,6 +109,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
     prisma.stream.findMany({ select: { name: true, slug: true } }),
     prisma.city.findMany({ select: { name: true, slug: true, state: true } }),
     prisma.newsArticle.findMany({ where: liveNewsWhere(), select: { slug: true, title: true, excerpt: true, imgUrl: true, publishedAt: true } }),
+    prisma.contentEntry.findMany({ where: liveEntryWhere(), select: { type: true, slug: true, title: true, summary: true, heroImage: true, updatedAt: true, stream: { select: { name: true } } } }),
   ]);
 
   const pages: InventoryPage[] = [
@@ -141,6 +143,11 @@ export async function getInventory(): Promise<InventoryPage[]> {
       path: `/news/${n.slug}`, type: "news", name: n.title, defaultTitle: n.title, defaultDescription: n.excerpt,
       image: n.imgUrl, updatedAt: n.publishedAt, tokens: { name: n.title, year },
     })),
+    ...entries.map((e): InventoryPage => ({
+      path: entryPath(e.type, e.slug), type: e.type === "COURSE" ? "course" : e.type === "EXAM" ? "exam" : "page",
+      name: e.title, defaultTitle: null, defaultDescription: e.summary, image: e.heroImage, updatedAt: e.updatedAt,
+      tokens: { name: e.title, stream: e.stream?.name ?? "", year },
+    })),
   ];
 
   inventoryCache = { at: Date.now(), pages };
@@ -154,7 +161,10 @@ export function pathType(path: string): PageType | "other" {
   if (/^\/stream\/[^/]+$/.test(path)) return "stream";
   if (/^\/colleges-in\/[^/]+$/.test(path)) return "city";
   if (/^\/online\/[^/]+$/.test(path)) return "online";
+  if (/^\/courses\/[^/]+$/.test(path)) return "course";
+  if (/^\/exams\/[^/]+$/.test(path)) return "exam";
   if (STATIC_PAGES.some(([p]) => p === path)) return "static";
+  if (/^\/[^/]+$/.test(path)) return "page";
   return "other";
 }
 
@@ -205,7 +215,7 @@ export function pageIssues(page: Pick<InventoryPage, "type" | "defaultTitle" | "
 // Site settings
 // ─────────────────────────────────────────────────────────────
 
-export const SITEMAP_SECTIONS = ["static", "colleges", "streams", "cities", "online", "news"] as const;
+export const SITEMAP_SECTIONS = ["static", "colleges", "streams", "cities", "online", "news", "courses", "exams", "pages"] as const;
 export type SitemapSection = (typeof SITEMAP_SECTIONS)[number];
 
 export interface SeoSettings {

@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { adminJson, adminRequest, adminUpload } from "./adminApi";
+import { MediaPickerModal } from "./MediaLibrary";
 import { RevisionHistory } from "./RevisionHistory";
+import { ContentChecks, RichTextEditor } from "./RichTextEditor";
 import { useSession } from "./session";
 import { btnDanger, btnGhost, btnPrimary, CharCount, fmtDate, inputCls, LIMITS, Notice, SerpPreview } from "./seo/ui";
 
@@ -32,9 +34,10 @@ export interface AdminArticle {
   updatedByName: string | null;
   updatedAt: string;
   isLive?: boolean;
+  tags: string[];
 }
 
-type Draft = { slug: string; category: string; title: string; excerpt: string; body: string; date: string; readTime: string; imgUrl: string };
+type Draft = { slug: string; category: string; title: string; excerpt: string; body: string; date: string; readTime: string; imgUrl: string; tags: string[] };
 
 export const STATUS: Record<DisplayStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-line text-ink-600" },
@@ -49,7 +52,7 @@ export const StatusBadge = ({ s }: { s: DisplayStatus }) => <span className={`ro
 const FILTERS: [string, string][] = [["all", "All"], ["draft", "Drafts"], ["review", "Awaiting review"], ["scheduled", "Scheduled"], ["published", "Live"], ["off", "Unpublished / expired"]];
 
 const today = () => new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-const emptyDraft = (): Draft => ({ slug: "", category: "Admissions", title: "", excerpt: "", body: "", date: today(), readTime: "3 min read", imgUrl: "" });
+const emptyDraft = (): Draft => ({ slug: "", category: "Admissions", title: "", excerpt: "", body: "", date: today(), readTime: "3 min read", imgUrl: "", tags: [] });
 
 /** ISO → value for <input type="datetime-local"> in the viewer's timezone. */
 const toLocalInput = (iso: string | null) => {
@@ -160,6 +163,8 @@ function ArticleEditor({ articleId, onBack }: { articleId: number | null; onBack
   const [unpublishAt, setUnpublishAt] = useState("");
   const [note, setNote] = useState("");
   const [history, setHistory] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [tagInput, setTagInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const publisher = can("content:publish");
 
@@ -167,7 +172,7 @@ function ArticleEditor({ articleId, onBack }: { articleId: number | null; onBack
     const a = await adminJson<AdminArticle>(`/api/admin/news/${id}`, token);
     setArticle(a);
     // Show pending edits (if any) on top of the live version.
-    const base: Draft = { slug: a.slug, category: a.category, title: a.title, excerpt: a.excerpt, body: a.body ?? "", date: a.date, readTime: a.readTime, imgUrl: a.imgUrl ?? "" };
+    const base: Draft = { slug: a.slug, category: a.category, title: a.title, excerpt: a.excerpt, body: a.body ?? "", date: a.date, readTime: a.readTime, imgUrl: a.imgUrl ?? "", tags: a.tags ?? [] };
     setD({ ...base, ...Object.fromEntries(Object.entries(a.pendingData ?? {}).map(([k, v]) => [k, v ?? ""])) } as Draft);
     setPublishAt(toLocalInput(a.publishAt));
     setUnpublishAt(toLocalInput(a.unpublishAt));
@@ -191,7 +196,7 @@ function ArticleEditor({ articleId, onBack }: { articleId: number | null; onBack
   };
 
   const payload = () => ({
-    category: d.category, title: d.title, excerpt: d.excerpt, body: d.body, date: d.date, readTime: d.readTime, imgUrl: d.imgUrl,
+    category: d.category, title: d.title, excerpt: d.excerpt, body: d.body, date: d.date, readTime: d.readTime, imgUrl: d.imgUrl, tags: d.tags,
     ...(d.slug.trim() ? { slug: d.slug.trim() } : {}),
   });
 
@@ -277,6 +282,7 @@ function ArticleEditor({ articleId, onBack }: { articleId: number | null; onBack
       </div>
 
       {history && article && <RevisionHistory entityType="news" entityId={article.id} onClose={() => setHistory(false)} onRestored={() => load(article.id)} />}
+      {picking && <MediaPickerModal onPick={(m) => set({ imgUrl: m.variants?.["1600"] ?? m.url })} onClose={() => setPicking(false)} />}
 
       <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="space-y-3">
@@ -290,13 +296,14 @@ function ArticleEditor({ articleId, onBack }: { articleId: number | null; onBack
             <textarea value={d.excerpt} onChange={(e) => set({ excerpt: e.target.value })} rows={3} placeholder="Short summary…" className={inputCls} />
             <CharCount value={d.excerpt} min={LIMITS.descMin} max={LIMITS.descMax} />
           </label>
-          <label className="block">
-            <span className="mb-1 block text-[13px] font-semibold text-ink-700">Body <span className="font-normal text-ink-400">(markdown: ## headings, - lists, **bold**, [links](/colleges/…))</span></span>
-            <textarea value={d.body} onChange={(e) => set({ body: e.target.value })} rows={14} placeholder="Full article…" className={`${inputCls} font-mono text-[13px]`} />
-          </label>
+          <div>
+            <span className="mb-1 block text-[13px] font-semibold text-ink-700">Body <span className="font-normal text-ink-400">(H2 for sections, link to related colleges and courses)</span></span>
+            <RichTextEditor key={article?.id ?? "new"} value={d.body} onChange={(html) => set({ body: html })} placeholder="Article text" />
+          </div>
           <div>
             <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-ink-400">SEO review — Google preview</p>
             <SerpPreview title={seoTitle} description={d.excerpt} url={url} />
+            <div className="mt-2"><ContentChecks html={d.body} title={d.title} /></div>
             <p className="mt-1 text-[12px] text-ink-400">Fine-tune the SEO title, description, social image and schema after publishing in SEO → Pages.</p>
           </div>
         </div>
@@ -328,10 +335,24 @@ function ArticleEditor({ articleId, onBack }: { articleId: number | null; onBack
                   : <span className="flex h-full items-center justify-center text-xs text-ink-400">No image</span>}
               </div>
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files)} />
-              <div className="mt-2 flex gap-2">
-                <button className={btnGhost} onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? "Uploading…" : "⬆ Upload image"}</button>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button className={btnGhost} onClick={() => setPicking(true)}>Choose from library</button>
+                <button className={btnGhost} onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? "Uploading…" : "⬆ Upload"}</button>
                 {d.imgUrl && <button className={btnDanger} onClick={() => set({ imgUrl: "" })}>Remove</button>}
               </div>
+            </div>
+            <div className="text-[13px]">
+              <span className="mb-1 block font-semibold text-ink-700">Tags</span>
+              <div className="flex flex-wrap gap-1.5">
+                {d.tags.map((t) => <span key={t} className="chip">{t} <button aria-label={`Remove ${t}`} className="ml-1 text-ink-400 hover:text-danger" onClick={() => set({ tags: d.tags.filter((x) => x !== t) })}>×</button></span>)}
+              </div>
+              <input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && tagInput.trim()) { e.preventDefault(); if (!d.tags.includes(tagInput.trim())) set({ tags: [...d.tags, tagInput.trim()] }); setTagInput(""); } }}
+                placeholder="Add a tag and press Enter"
+                className={`${inputCls} mt-1.5`}
+              />
             </div>
           </div>
 

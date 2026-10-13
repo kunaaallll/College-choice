@@ -25,6 +25,8 @@ interface SeoFields {
   disableSchema: boolean;
   customSchema: string | null;
   urlLocked: boolean;
+  h1: string | null;
+  breadcrumbLabel: string | null;
 }
 
 interface PageInfo {
@@ -58,7 +60,7 @@ interface LiveCheck {
 const EMPTY: SeoFields = {
   title: null, description: null, keyword: null, canonical: null, noindex: false, nofollow: false,
   ogTitle: null, ogDescription: null, ogImage: null, twitterTitle: null, twitterDescription: null,
-  excludeFromSitemap: false, disableSchema: false, customSchema: null, urlLocked: false,
+  excludeFromSitemap: false, disableSchema: false, customSchema: null, urlLocked: false, h1: null, breadcrumbLabel: null,
 };
 
 async function inspectLive(path: string): Promise<LiveCheck> {
@@ -221,6 +223,14 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
               <textarea value={f.description ?? ""} onChange={(e) => set({ description: e.target.value })} rows={3} placeholder={live?.description || info.defaults.description || "Automatic"} className={inputCls} />
               <CharCount value={shownDesc} min={LIMITS.descMin} max={LIMITS.descMax} />
             </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Page H1" hint="— the visible heading">
+                <input value={f.h1 ?? ""} onChange={(e) => set({ h1: e.target.value })} placeholder={live?.h1s[0] || "Automatic"} className={inputCls} />
+              </Field>
+              <Field label="Breadcrumb label" hint="— in breadcrumb trails">
+                <input value={f.breadcrumbLabel ?? ""} onChange={(e) => set({ breadcrumbLabel: e.target.value })} placeholder={info.name} className={inputCls} />
+              </Field>
+            </div>
             <Field label="Primary keyword" hint="— for your checks below; not added to the page">
               <input value={f.keyword ?? ""} onChange={(e) => set({ keyword: e.target.value })} placeholder="e.g. iit bombay fees" className={inputCls} />
             </Field>
@@ -229,7 +239,7 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
                 {[
                   ["In title", kwIn(shownTitle)],
                   ["In description", kwIn(shownDesc)],
-                  ["In H1", !!live?.h1s.some((h) => kwIn(h))],
+                  ["In H1", kwIn(f.h1 ?? "") || !!live?.h1s.some((h) => kwIn(h))],
                   ["In URL", kwIn(info.path.replace(/-/g, " ")) || kwIn(info.path)],
                 ].map(([label, ok]) => (
                   <li key={String(label)} className={ok ? "text-success" : "text-warn"}>{ok ? "✓" : "✗"} Keyword {String(label).toLowerCase()}</li>

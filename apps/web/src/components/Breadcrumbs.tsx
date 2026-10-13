@@ -1,23 +1,26 @@
 import Link from "next/link";
 import { JsonLd } from "./JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, getSeoOverride } from "@/lib/seo";
 
-// Visible breadcrumb trail + matching BreadcrumbList JSON-LD.
-export function Breadcrumbs({ items }: { items: { name: string; path: string }[] }) {
+// Visible breadcrumb trail + matching BreadcrumbList JSON-LD. Each crumb's label
+// can be overridden per URL in the admin SEO panel ("Breadcrumb label").
+export async function Breadcrumbs({ items }: { items: { name: string; path: string }[] }) {
+  const overrides = await Promise.all(items.map((it) => getSeoOverride(it.path)));
+  const crumbs = items.map((it, i) => ({ ...it, name: overrides[i].breadcrumbLabel || it.name }));
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd(items)} />
+      <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <nav aria-label="Breadcrumb" className="text-[13px] text-ink-400">
         <ol className="flex flex-wrap items-center gap-1.5">
-          {items.map((it, i) => (
+          {crumbs.map((it, i) => (
             <li key={it.path} className="flex items-center gap-1.5">
               {i > 0 && <span aria-hidden>/</span>}
-              {i < items.length - 1 ? (
+              {i < crumbs.length - 1 ? (
                 <Link href={it.path} className="hover:text-brand-600">
                   {it.name}
                 </Link>
               ) : (
-                <span className="text-ink-500">{it.name}</span>
+                <span className="text-ink-500" aria-current="page">{it.name}</span>
               )}
             </li>
           ))}

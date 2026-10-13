@@ -8,6 +8,7 @@ import { CityGrid } from "@/components/CityGrid";
 import { CollegeCard } from "@/components/CollegeCard";
 import { PageJsonLd } from "@/components/JsonLd";
 import { pageMetadata, SITE } from "@/lib/seo";
+import { PageH1 } from "@/components/ContentBlocks";
 
 // Render per-request so fresh DB data shows immediately. The API call goes over
 // the internal Docker network (see lib/api.ts), so this stays fast.
@@ -128,9 +129,9 @@ export default async function HomePage() {
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
             ★ India&apos;s most trusted college discovery platform
           </span>
-          <h1 className="mx-auto mt-5 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
+          <PageH1 path="/" className="mx-auto mt-5 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
             Find the right college, <span className="text-brand-400">make the right call.</span>
-          </h1>
+          </PageH1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/70 sm:text-lg">
             Compare 13,000+ colleges on fees, placements, cutoffs and reviews — all in one place, free.
           </p>

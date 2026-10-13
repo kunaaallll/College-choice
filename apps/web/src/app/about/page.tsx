@@ -3,6 +3,7 @@ import Link from "next/link";
 import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageJsonLd } from "@/components/JsonLd";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata({
@@ -41,7 +42,7 @@ export default function AboutPage() {
       {/* Mission */}
       <section className="mt-6 max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-wide text-brand-600">About College Choice</p>
-        <h1 className="mt-2 text-3xl font-extrabold sm:text-5xl">We make college decisions simpler</h1>
+        <PageH1 path="/about" className="mt-2 text-3xl font-extrabold sm:text-5xl">We make college decisions simpler</PageH1>
         <p className="mt-4 text-lg text-ink-500">
           Choosing a college is one of the most important — and most confusing — decisions a student
           makes. College Choice exists to fix that. We bring together verified information on

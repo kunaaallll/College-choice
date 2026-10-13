@@ -7,7 +7,7 @@ export async function GET() {
   const settings = await sitemapSettings();
   const files: { name: string; lastModified?: string }[] = [];
 
-  for (const name of ["pages", "streams", "cities", "news"]) {
+  for (const name of ["pages", "streams", "cities", "news", "courses", "exams", "info"]) {
     const entries = (await fileEntries(name, settings)) ?? [];
     if (entries.length) files.push({ name, lastModified: newest(entries) });
   }

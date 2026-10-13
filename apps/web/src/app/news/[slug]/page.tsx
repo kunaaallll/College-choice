@@ -7,6 +7,7 @@ import { buildMetadata, pageMetadata, canonical, SITE } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageJsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
+import { RelatedLinks, RichContent } from "@/components/ContentBlocks";
 
 export const revalidate = 1800;
 export const dynamicParams = true;
@@ -46,6 +47,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const a = await getArticle(slug);
   if (!a) notFound();
+  // Internal linking: the latest articles from the same category.
+  const related = (await api.news(a.category).catch(() => ({ items: [] }))).items.filter((n) => n.slug !== a.slug).slice(0, 4);
 
   return (
     <article className="container-site max-w-3xl py-8">
@@ -80,8 +83,14 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       )}
       <div className="prose mt-6 max-w-none text-ink-500">
         <p className="text-lg leading-relaxed">{a.excerpt}</p>
-        {a.body && a.body !== a.excerpt && <div className="mt-4"><Markdown text={a.body} /></div>}
+        {a.body && a.body !== a.excerpt && (
+          <div className="mt-4">{a.body.trimStart().startsWith("<") ? <RichContent html={a.body} /> : <Markdown text={a.body} />}</div>
+        )}
       </div>
+      {a.tags && a.tags.length > 0 && (
+        <p className="mt-8 flex flex-wrap gap-2 text-sm">{a.tags.map(({ tag }) => <span key={tag.slug} className="chip">#{tag.name}</span>)}</p>
+      )}
+      <RelatedLinks title="Related articles" items={related.map((n) => ({ href: `/news/${n.slug}`, label: n.title, sub: n.excerpt }))} />
     </article>
   );
 }

@@ -9,6 +9,7 @@ export const newsRouter = Router();
 const PUBLIC_FIELDS = {
   id: true, slug: true, category: true, title: true, excerpt: true, body: true,
   date: true, publishedAt: true, readTime: true, imgUrl: true, updatedAt: true,
+  tags: { select: { tag: { select: { name: true, slug: true } } } },
 } as const;
 
 newsRouter.get(

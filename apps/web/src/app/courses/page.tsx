@@ -5,6 +5,7 @@ import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageJsonLd } from "@/components/JsonLd";
 import { PosterAd } from "@/components/PosterAd";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 
@@ -21,7 +22,10 @@ export async function generateMetadata(): Promise<Metadata> {
 const HIDDEN_STREAMS = new Set(["design"]);
 
 export default async function CoursesPage() {
-  const { items } = await api.streams().catch(() => ({ items: [] }));
+  const [{ items }, { items: courses }] = await Promise.all([
+    api.streams().catch(() => ({ items: [] })),
+    api.entries("course").catch(() => ({ items: [] })),
+  ]);
   const streams = items.filter((s) => !HIDDEN_STREAMS.has(s.slug));
 
   return (
@@ -33,12 +37,31 @@ export default async function CoursesPage() {
         <PosterAd />
         <div className="min-w-0 flex-1">
           <header className="max-w-3xl">
-            <h1 className="text-3xl font-extrabold sm:text-4xl">Courses &amp; Streams</h1>
+            <PageH1 path="/courses" className="text-3xl font-extrabold sm:text-4xl">Courses &amp; Streams</PageH1>
             <p className="mt-3 text-ink-500">
               Pick a stream to explore degrees, eligibility, fees and career paths, then dive into the top
               colleges for it.
             </p>
           </header>
+
+          {courses.length > 0 && (
+            <section className="mt-8">
+              <h2 className="text-xl font-extrabold">Popular courses</h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {courses.map((c) => (
+                  <Link key={c.id} href={c.path} className="card p-5 hover:border-brand-400">
+                    <h3 className="font-bold text-ink-900">{c.title}</h3>
+                    {c.summary && <p className="mt-2 line-clamp-2 text-sm text-ink-500">{c.summary}</p>}
+                    <p className="mt-3 flex flex-wrap gap-2 text-xs">
+                      {typeof c.data?.level === "string" && c.data.level && <span className="chip">{c.data.level}</span>}
+                      {typeof c.data?.duration === "string" && c.data.duration && <span className="chip">{c.data.duration}</span>}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+              <h2 className="mt-10 text-xl font-extrabold">Streams</h2>
+            </section>
+          )}
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {streams.map((s) => (

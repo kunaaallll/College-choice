@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { pageMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageJsonLd } from "@/components/JsonLd";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 1800;
 
@@ -25,7 +26,7 @@ export default async function NewsPage() {
       <PageJsonLd path="/news" />
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "News", path: "/news" }]} />
       <header className="mt-4 max-w-3xl">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">News &amp; Articles</h1>
+        <PageH1 path="/news" className="text-3xl font-extrabold sm:text-4xl">News &amp; Articles</PageH1>
         <p className="mt-3 text-ink-500">Admission alerts, exam updates and expert guides.</p>
       </header>
 

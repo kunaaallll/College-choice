@@ -4,19 +4,19 @@ import { SITE } from "./seo";
 
 /**
  * XML sitemaps: /sitemap.xml is an index of per-type files under /sitemaps/
- * (pages, streams, cities, news, colleges-1…N). Sections can be switched off and
+ * (pages, streams, cities, news, courses, exams, info, colleges-1…N). Sections can be switched off and
  * individual pages excluded from the admin SEO panel (noindex, "exclude from
  * sitemap" or a canonical pointing elsewhere).
  */
 
 export const COLLEGES_PER_FILE = 5000; // Google allows 50k URLs per file; smaller files regenerate faster.
 
-type Section = "static" | "colleges" | "streams" | "cities" | "online" | "news";
+type Section = "static" | "colleges" | "streams" | "cities" | "online" | "news" | "courses" | "exams" | "pages";
 export interface SitemapSettings { sitemap: Record<Section, boolean>; excludedPaths: string[] }
 
 export interface SitemapEntry { path: string; lastModified?: string; changeFrequency?: string; priority?: number }
 
-const ALL_ON: Record<Section, boolean> = { static: true, colleges: true, streams: true, cities: true, online: true, news: true };
+const ALL_ON: Record<Section, boolean> = { static: true, colleges: true, streams: true, cities: true, online: true, news: true, courses: true, exams: true, pages: true };
 
 export async function sitemapSettings(): Promise<SitemapSettings> {
   try {
@@ -75,6 +75,14 @@ export async function fileEntries(file: string, s: SitemapSettings): Promise<Sit
     if (!s.sitemap.news) return [];
     const { items } = await settle(api.news(), { items: [] });
     return items.map((n) => ({ path: `/news/${n.slug}`, lastModified: n.publishedAt, changeFrequency: "monthly", priority: 0.6 }));
+  }
+  // CMS content pages: courses, exam pages and info/service pages ("info.xml").
+  const entryKind = file === "courses" ? "course" : file === "exams" ? "exam" : file === "info" ? "page" : null;
+  if (entryKind) {
+    const section: Section = file === "info" ? "pages" : (file as Section);
+    if (!s.sitemap[section]) return [];
+    const { items } = await settle(api.entries(entryKind), { items: [] });
+    return items.map((e) => ({ path: e.path, lastModified: e.updatedAt, changeFrequency: "weekly", priority: entryKind === "page" ? 0.5 : 0.7 }));
   }
   const m = /^colleges-(\d+)$/.exec(file);
   if (m) {

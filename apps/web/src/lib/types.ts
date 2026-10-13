@@ -139,6 +139,36 @@ export interface Exam {
   date: string;
   mode: string;
   stream: string;
+  pageSlug?: string | null; // published exam page at /exams/<pageSlug>
+}
+
+export type EntryKind = "course" | "exam" | "page";
+export interface EntryCard {
+  id: number;
+  type: "COURSE" | "EXAM" | "PAGE";
+  slug: string;
+  path: string;
+  title: string;
+  summary: string | null;
+  heroImage: string | null;
+  heroAlt: string | null;
+  data: Record<string, unknown> | null;
+  stream: StreamRef | null;
+  category: { name: string; slug: string } | null;
+  updatedAt: string;
+}
+export interface EntryDetail extends EntryCard {
+  body: string | null;
+  faqs: { question: string; answer: string }[] | null;
+  exam: Exam | null;
+  tags: { name: string; slug: string }[];
+  publishAt: string | null;
+  createdAt: string;
+  relatedColleges: CollegeCard[];
+  relatedEntries: { id: number; type: string; slug: string; title: string; summary: string | null; path: string }[];
+  relatedNews: { id: number; slug: string; title: string; excerpt: string; imgUrl: string | null; date: string }[];
+  examColleges: CollegeCard[];
+  offeringColleges: CollegeCard[];
 }
 export interface NewsArticle {
   id: number;
@@ -151,6 +181,7 @@ export interface NewsArticle {
   readTime: string;
   imgUrl: string | null;
   publishedAt?: string;
+  tags?: { tag: { name: string; slug: string } }[];
 }
 
 export interface Paginated<T> {

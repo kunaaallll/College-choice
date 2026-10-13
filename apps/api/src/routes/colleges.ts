@@ -7,7 +7,7 @@ import { listQuerySchema } from "../lib/validation";
 export const collegesRouter = Router();
 
 // Compact shape for cards / listing.
-const cardSelect = {
+export const cardSelect = {
   id: true,
   name: true,
   slug: true,
@@ -28,7 +28,7 @@ const cardSelect = {
   approvals: true,
   stream: { select: { name: true, slug: true } },
   city: { select: { name: true, slug: true } },
-  gallery: { select: { id: true, url: true }, orderBy: { sort: "asc" }, take: 4 },
+  gallery: { select: { id: true, url: true, alt: true }, orderBy: { sort: "asc" }, take: 4 },
 } satisfies Prisma.CollegeSelect;
 
 const ORDER: Record<string, Prisma.CollegeOrderByWithRelationInput[]> = {

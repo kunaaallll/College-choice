@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { SiteProviders } from "@/components/SiteProviders";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE, orgJsonLd, websiteJsonLd } from "@/lib/seo";
+import { API } from "@/lib/api";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -15,7 +16,20 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+// Tracking & verification codes — editable in CMS → Settings → Tracking.
+const TRACKING_FALLBACK = { gaId: "G-LRB253XV05", gscVerification: "zeku_T4D2PL-QMBs2bcgge_fKN_DdHzAymV91OdcRE4" };
+
+async function getTracking(): Promise<typeof TRACKING_FALLBACK> {
+  try {
+    const res = await fetch(`${API}/api/site`, { next: { revalidate: 3600, tags: ["site-settings"] }, signal: AbortSignal.timeout(4000) });
+    if (res.ok) return { ...TRACKING_FALLBACK, ...((await res.json()) as Partial<typeof TRACKING_FALLBACK>) };
+  } catch {
+    // API unreachable → keep the last known codes.
+  }
+  return TRACKING_FALLBACK;
+}
+
+const baseMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
@@ -44,24 +58,31 @@ export const metadata: Metadata = {
     url: SITE.url,
   },
   twitter: { card: "summary_large_image", site: SITE.twitter },
-  // Google Search Console ownership — renders <meta name="google-site-verification"> in <head>
-  verification: { google: "zeku_T4D2PL-QMBs2bcgge_fKN_DdHzAymV91OdcRE4" },
 };
 
-const GA_ID = "G-LRB253XV05";
+export async function generateMetadata(): Promise<Metadata> {
+  const { gscVerification } = await getTracking();
+  // Google Search Console ownership — renders <meta name="google-site-verification"> in <head>
+  return { ...baseMetadata, ...(gscVerification ? { verification: { google: gscVerification } } : {}) };
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { gaId } = await getTracking();
   return (
     <html lang="en" className={jakarta.variable}>
       <body>
         {/* Google Analytics (gtag.js) — loaded on every page via the root layout */}
-        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || [];
+        {gaId && (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`} strategy="afterInteractive" />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${GA_ID}');`}
-        </Script>
+gtag('config', ${JSON.stringify(gaId)});`}
+            </Script>
+          </>
+        )}
         <JsonLd data={[orgJsonLd(), websiteJsonLd()]} />
         <SiteProviders>
           <Navbar />

@@ -11,6 +11,7 @@ import type { PredictorFamily } from "@/components/site-context";
 import { StateSelect } from "@/components/StateSelect";
 import { Collapsible } from "@/components/Collapsible";
 import { streamContent } from "@/lib/streamContent";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -149,7 +150,7 @@ export default async function StreamLandingPage({ params }: { params: Promise<{ 
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Best {name} Colleges in India 2026</h1>
+        <PageH1 path={`/stream/${stream}`} className="text-3xl font-extrabold sm:text-4xl">Best {name} Colleges in India 2026</PageH1>
         <p className="mt-3 text-ink-500">
           {meta?.description || `Explore top ${name.toLowerCase()} colleges in India.`}{" "}
           Compare {listed.length}+ institutions on fees, placements, cutoffs and reviews

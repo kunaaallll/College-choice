@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Filters } from "@/components/Filters";
 import { CollegeCard } from "@/components/CollegeCard";
 import { Pagination } from "@/components/Pagination";
+import { PageH1 } from "@/components/ContentBlocks";
 
 export const revalidate = 3600;
 
@@ -81,7 +82,7 @@ export default async function CollegesPage({ searchParams }: { searchParams: Sea
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Colleges", path: "/colleges" }]} />
 
       <header className="mt-4">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">Explore Colleges in India</h1>
+        <PageH1 path="/colleges" className="text-3xl font-extrabold sm:text-4xl">Explore Colleges in India</PageH1>
         <p className="mt-2 text-ink-500">{data.total} colleges match your filters</p>
       </header>
 
