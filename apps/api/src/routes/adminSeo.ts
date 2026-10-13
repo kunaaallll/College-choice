@@ -1,10 +1,11 @@
 /**
- * Admin SEO panel API (mounted at /api/admin/seo behind the admin token):
+ * Admin SEO panel API (mounted at /api/admin/seo behind CMS sign-in; each route
+ * also checks a role permission — see lib/adminAuth.ts):
  * dashboard, per-page SEO overrides, bulk edits/templates/find-replace, CSV
  * import/export, slug changes, redirects, 404 log and robots/sitemap settings.
  */
 import { Router } from "express";
-import type { Prisma, Redirect, SeoMeta } from "@prisma/client";
+import { Prisma, type Redirect, type SeoMeta } from "@prisma/client";
 import { parse as parseCsv } from "csv-parse/sync";
 import { prisma } from "../prisma";
 import { asyncHandler, HttpError } from "../middleware/error";
@@ -18,6 +19,9 @@ import {
   csvImportSchema, redirectSchema, seoBulkSchema, seoListQuerySchema, seoPageSchema, seoReplaceSchema,
   seoSettingsSchema, seoTemplateSchema, slugChangeSchema, type SeoListQuery,
 } from "../lib/validation";
+import { displayStatus, liveNewsWhere } from "../lib/content";
+import { can, requirePermission } from "../lib/adminAuth";
+import { baseline, snapshot } from "../lib/revisions";
 
 export const adminSeoRouter = Router();
 
@@ -26,7 +30,7 @@ const TEXT_FIELDS = [
   "twitterTitle", "twitterDescription", "customSchema",
 ] as const;
 const BOOL_FIELDS = ["noindex", "nofollow", "excludeFromSitemap", "disableSchema", "urlLocked"] as const;
-type SeoFields = Pick<SeoMeta, (typeof TEXT_FIELDS)[number] | (typeof BOOL_FIELDS)[number]>;
+export type SeoFields = Pick<SeoMeta, (typeof TEXT_FIELDS)[number] | (typeof BOOL_FIELDS)[number]>;
 
 const EMPTY_FIELDS: SeoFields = {
   title: null, description: null, keyword: null, canonical: null, ogTitle: null, ogDescription: null,
@@ -34,14 +38,17 @@ const EMPTY_FIELDS: SeoFields = {
   noindex: false, nofollow: false, excludeFromSitemap: false, disableSchema: false, urlLocked: false,
 };
 
+// What a Content Editor may change on a page (seo:basic); the rest needs seo:advanced.
+const BASIC_FIELDS = ["title", "description", "keyword", "ogTitle", "ogDescription", "ogImage", "twitterTitle", "twitterDescription"] as const;
+
 const isEmptyRow = (f: SeoFields) =>
   TEXT_FIELDS.every((k) => !f[k]) && BOOL_FIELDS.every((k) => !f[k]);
 
-const pickFields = (row: SeoMeta | null): SeoFields =>
+export const pickFields = (row: SeoMeta | null): SeoFields =>
   row ? (Object.fromEntries([...TEXT_FIELDS, ...BOOL_FIELDS].map((k) => [k, row[k]])) as SeoFields) : { ...EMPTY_FIELDS };
 
 /** Upsert one override row; an all-empty row is deleted instead (page falls back to defaults). */
-function writeSeo(path: string, fields: SeoFields) {
+export function writeSeo(path: string, fields: SeoFields) {
   if (isEmptyRow(fields)) return prisma.seoMeta.deleteMany({ where: { path } });
   return prisma.seoMeta.upsert({ where: { path }, create: { path, ...fields }, update: fields });
 }
@@ -144,6 +151,7 @@ async function filterPages(q: Partial<SeoListQuery>): Promise<{ items: ListedPag
 /** GET /api/admin/seo/pages — filtered, paginated page list with SEO status. */
 adminSeoRouter.get(
   "/pages",
+  requirePermission("seo:basic"),
   asyncHandler(async (req, res) => {
     const q = seoListQuerySchema.parse(req.query);
     const { items } = await filterPages(q);
@@ -164,6 +172,7 @@ adminSeoRouter.get(
 /** GET /api/admin/seo/dashboard — content snapshot, SEO health and recent changes. */
 adminSeoRouter.get(
   "/dashboard",
+  requirePermission("seo:basic"),
   asyncHandler(async (_req, res) => {
     const [{ items }, collegeCounts, newsCount, redirectCounts, open404, recentSeo, recentColleges, recentRedirects, top404] =
       await Promise.all([
@@ -177,6 +186,12 @@ adminSeoRouter.get(
         prisma.redirect.findMany({ orderBy: { createdAt: "desc" }, take: 8, select: { fromPath: true, toPath: true, statusCode: true, createdAt: true } }),
         prisma.notFoundLog.findMany({ where: { resolved: false }, orderBy: { hits: "desc" }, take: 8, select: { id: true, path: true, hits: true, lastSeen: true } }),
       ]);
+    const articles = await prisma.newsArticle.findMany({
+      where: { OR: [{ status: { in: ["DRAFT", "IN_REVIEW"] } }, { status: "PUBLISHED", publishAt: { gt: new Date() } }, { pendingData: { not: Prisma.DbNull } }] },
+      select: { id: true, title: true, status: true, publishAt: true, unpublishAt: true, pendingData: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    });
+    const scheduled = articles.filter((a) => displayStatus(a) === "scheduled");
 
     const byType: Record<string, number> = {};
     const health: Record<string, number> = {};
@@ -206,6 +221,13 @@ adminSeoRouter.get(
       recentContent: recentColleges.map((c) => ({ name: c.name, path: `/colleges/${c.slug}`, updatedAt: c.updatedAt })),
       recentRedirects,
       top404,
+      workflow: {
+        drafts: articles.filter((a) => a.status === "DRAFT").length,
+        inReview: articles.filter((a) => a.status === "IN_REVIEW").length,
+        pendingChanges: articles.filter((a) => a.pendingData).length,
+        scheduled: scheduled.map((a) => ({ id: a.id, title: a.title, publishAt: a.publishAt })),
+        awaitingReview: articles.filter((a) => a.status === "IN_REVIEW" || a.pendingData).slice(0, 8).map((a) => ({ id: a.id, title: a.title, updatedAt: a.updatedAt, pending: !!a.pendingData })),
+      },
     });
   }),
 );
@@ -272,6 +294,7 @@ async function checkFields(path: string, input: SeoFields): Promise<Checked> {
 /** GET /api/admin/seo/page?path= — override, defaults and related redirects for one URL. */
 adminSeoRouter.get(
   "/page",
+  requirePermission("seo:basic"),
   asyncHandler(async (req, res) => {
     const path = requirePath(req.query.path);
     const [inventory, override, redirectedAway, incoming] = await Promise.all([
@@ -302,12 +325,19 @@ adminSeoRouter.get(
 /** PUT /api/admin/seo/page — save the override for one URL (empty → reset to defaults). */
 adminSeoRouter.put(
   "/page",
+  requirePermission("seo:basic"),
   asyncHandler(async (req, res) => {
     const { path: rawPath, ...input } = seoPageSchema.parse(req.body);
     const path = requirePath(rawPath);
-    const { fields, errors, warnings } = await checkFields(path, input);
+    const existing = await prisma.seoMeta.findUnique({ where: { path } });
+    const merged: SeoFields = can(req.admin, "seo:advanced")
+      ? input
+      : { ...pickFields(existing), ...Object.fromEntries(BASIC_FIELDS.map((k) => [k, input[k]])) };
+    const { fields, errors, warnings } = await checkFields(path, merged);
     if (errors.length) return res.status(400).json({ error: errors[0], errors, warnings });
+    await baseline("seo", path, async () => (existing ? pickFields(existing) : null));
     await writeSeo(path, fields);
+    await snapshot("seo", path, fields, "Saved SEO settings", req);
     revalidateWeb({ paths: [path], tags: ["seo-settings"] });
     const row = await prisma.seoMeta.findUnique({ where: { path } });
     res.json({ override: row ? pickFields(row) : null, updatedAt: row?.updatedAt ?? null, warnings });
@@ -317,9 +347,13 @@ adminSeoRouter.put(
 /** DELETE /api/admin/seo/page?path= — remove all overrides for one URL. */
 adminSeoRouter.delete(
   "/page",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const path = requirePath(req.query.path);
+    const existing = await prisma.seoMeta.findUnique({ where: { path } });
+    await baseline("seo", path, async () => (existing ? pickFields(existing) : null));
     await prisma.seoMeta.deleteMany({ where: { path } });
+    await snapshot("seo", path, { ...EMPTY_FIELDS }, "Reset to defaults", req);
     revalidateWeb({ paths: [path], tags: ["seo-settings"] });
     res.json({ ok: true });
   }),
@@ -332,6 +366,7 @@ adminSeoRouter.delete(
 /** POST /api/admin/seo/bulk — apply one action to many URLs. */
 adminSeoRouter.post(
   "/bulk",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const { paths: rawPaths, filter, action, value } = seoBulkSchema.parse(req.body);
     if (!rawPaths?.length && !filter) throw new HttpError(400, "Choose pages (select rows, or apply to the current filter).");
@@ -377,6 +412,7 @@ async function targetPages(paths: string[] | undefined, filter: Partial<SeoListQ
  */
 adminSeoRouter.post(
   "/template",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const { paths, filter, field, template, onlyEmpty, dryRun } = seoTemplateSchema.parse(req.body);
     if (!paths?.length && !filter) throw new HttpError(400, "Choose pages (select rows, or apply to the current filter).");
@@ -411,6 +447,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  */
 adminSeoRouter.post(
   "/replace",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const { find, replace, fields, matchCase, includeLocked, dryRun } = seoReplaceSchema.parse(req.body);
     const re = new RegExp(escapeRe(find), matchCase ? "g" : "gi");
@@ -486,6 +523,7 @@ const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-"
  */
 adminSeoRouter.post(
   "/change-slug",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const body = slugChangeSchema.parse(req.body);
     const oldPath = requirePath(body.path);
@@ -557,6 +595,7 @@ const MAX_LEN: Partial<Record<keyof SeoFields, number>> = {
 /** GET /api/admin/seo/export?…filters — SEO overrides as CSV (blank = page uses its default). */
 adminSeoRouter.get(
   "/export",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const q = seoListQuerySchema.parse(req.query);
     const [{ items }, overrides] = await Promise.all([filterPages(q), overridesByPath()]);
@@ -587,6 +626,7 @@ function readCsv(csv: string): Record<string, string>[] {
 /** POST /api/admin/seo/import { csv, dryRun } — bulk-update overrides from a CSV (see /export for the format). */
 adminSeoRouter.post(
   "/import",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const { csv, dryRun } = csvImportSchema.parse(req.body);
     const records = readCsv(csv);
@@ -707,6 +747,7 @@ const resolve404 = (from: string) => prisma.notFoundLog.updateMany({ where: { pa
 /** GET /api/admin/seo/redirects?q=&page= */
 adminSeoRouter.get(
   "/redirects",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const q = String(req.query.q || "").trim();
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -733,6 +774,7 @@ adminSeoRouter.get(
 /** POST /api/admin/seo/redirects — create (returns warnings; errors block saving). */
 adminSeoRouter.post(
   "/redirects",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const data = redirectSchema.parse(req.body);
     const all = await prisma.redirect.findMany({ select: { id: true, fromPath: true, toPath: true, enabled: true } });
@@ -749,6 +791,7 @@ adminSeoRouter.post(
 /** PUT /api/admin/seo/redirects/:id */
 adminSeoRouter.put(
   "/redirects/:id",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     const data = redirectSchema.parse(req.body);
@@ -766,6 +809,7 @@ adminSeoRouter.put(
 /** DELETE /api/admin/seo/redirects/:id */
 adminSeoRouter.delete(
   "/redirects/:id",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     await prisma.redirect.delete({ where: { id: Number(req.params.id) } }).catch(() => { throw new HttpError(404, "Redirect not found"); });
     res.json({ ok: true });
@@ -775,6 +819,7 @@ adminSeoRouter.delete(
 /** GET /api/admin/seo/redirects/export — all redirects as CSV. */
 adminSeoRouter.get(
   "/redirects/export",
+  requirePermission("seo:advanced"),
   asyncHandler(async (_req, res) => {
     const items = await prisma.redirect.findMany({ orderBy: { fromPath: "asc" } });
     sendCsv(res, "redirects", [
@@ -787,6 +832,7 @@ adminSeoRouter.get(
 /** POST /api/admin/seo/redirects/import { csv, dryRun } — columns: from, to, code?, prefix?, enabled?, note? */
 adminSeoRouter.post(
   "/redirects/import",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const { csv, dryRun } = csvImportSchema.parse(req.body);
     const records = readCsv(csv);
@@ -857,7 +903,7 @@ async function suggestFor(path: string, inventory: InventoryPage[]): Promise<{ p
       const and = top.slice(0, n).map((w) => ({ slug: { contains: w } }));
       const hits = type === "college"
         ? await prisma.college.findMany({ where: { published: true, AND: and }, select: { slug: true, name: true }, take: 3 })
-        : await prisma.newsArticle.findMany({ where: { AND: and }, select: { slug: true, title: true }, take: 3 });
+        : await prisma.newsArticle.findMany({ where: { AND: [...and, liveNewsWhere()] }, select: { slug: true, title: true }, take: 3 });
       if (hits.length) {
         return hits.map((h) => ({
           path: `${type === "college" ? "/colleges" : "/news"}/${h.slug}`,
@@ -879,6 +925,7 @@ async function suggestFor(path: string, inventory: InventoryPage[]): Promise<{ p
 /** GET /api/admin/seo/404s?resolved=0|1&q= — logged 404 URLs with redirect suggestions. */
 adminSeoRouter.get(
   "/404s",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     const resolved = req.query.resolved === "1";
     const q = String(req.query.q || "").trim();
@@ -904,6 +951,7 @@ adminSeoRouter.get(
 /** POST /api/admin/seo/404s/:id/resolve — mark handled (e.g. the link was fixed at its source). */
 adminSeoRouter.post(
   "/404s/:id/resolve",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     await prisma.notFoundLog.update({ where: { id: Number(req.params.id) }, data: { resolved: true } }).catch(() => { throw new HttpError(404, "Entry not found"); });
     res.json({ ok: true });
@@ -913,6 +961,7 @@ adminSeoRouter.post(
 /** DELETE /api/admin/seo/404s/:id — forget one entry; DELETE /404s?resolved=1 clears all resolved. */
 adminSeoRouter.delete(
   "/404s/:id",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     await prisma.notFoundLog.delete({ where: { id: Number(req.params.id) } }).catch(() => { throw new HttpError(404, "Entry not found"); });
     res.json({ ok: true });
@@ -920,6 +969,7 @@ adminSeoRouter.delete(
 );
 adminSeoRouter.delete(
   "/404s",
+  requirePermission("seo:advanced"),
   asyncHandler(async (req, res) => {
     if (req.query.resolved !== "1") throw new HttpError(400, "Only resolved entries can be cleared in bulk.");
     const { count } = await prisma.notFoundLog.deleteMany({ where: { resolved: true } });
@@ -934,6 +984,7 @@ adminSeoRouter.delete(
 /** GET /api/admin/seo/settings */
 adminSeoRouter.get(
   "/settings",
+  requirePermission("settings:manage"),
   asyncHandler(async (_req, res) => {
     const [settings, excluded] = await Promise.all([
       getSeoSettings(),
@@ -946,6 +997,7 @@ adminSeoRouter.get(
 /** PUT /api/admin/seo/settings { robotsTxt?, sitemap? } — robotsTxt null resets to the default. */
 adminSeoRouter.put(
   "/settings",
+  requirePermission("settings:manage"),
   asyncHandler(async (req, res) => {
     const { robotsTxt, sitemap } = seoSettingsSchema.parse(req.body);
     if (robotsTxt !== undefined) {
@@ -968,6 +1020,7 @@ adminSeoRouter.put(
 /** POST /api/admin/seo/robots-check { robotsTxt } — warnings for a draft before saving. */
 adminSeoRouter.post(
   "/robots-check",
+  requirePermission("settings:manage"),
   asyncHandler(async (req, res) => {
     const txt = typeof req.body?.robotsTxt === "string" ? req.body.robotsTxt : "";
     res.json({ warnings: robotsWarnings(txt) });

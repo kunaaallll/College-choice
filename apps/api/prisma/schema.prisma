@@ -273,6 +273,15 @@ model CollegeExam {
 // Content
 // ─────────────────────────────────────────────────────────────
 
+// Editorial workflow: DRAFT → IN_REVIEW → PUBLISHED (optionally scheduled via
+// publishAt, expiring at unpublishAt) → UNPUBLISHED.
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  UNPUBLISHED
+}
+
 model NewsArticle {
   id        Int      @id @default(autoincrement())
   slug      String   @unique
@@ -281,12 +290,97 @@ model NewsArticle {
   excerpt   String
   body      String?
   date      String // display date
-  publishedAt DateTime @default(now())
+  publishedAt DateTime @default(now()) // sort/feed date
   readTime  String // "4 min read"
   imgUrl    String?
 
+  // ── Workflow ──
+  status      ContentStatus @default(PUBLISHED)
+  publishAt   DateTime? // go live at (scheduled); null = immediately
+  unpublishAt DateTime? // expire at; null = never
+  pendingData Json? // edits to a live article awaiting approval
+  reviewNote  String? // reviewer feedback ("request changes")
+  authorId    Int?
+  updatedById Int?
+  updatedAt   DateTime  @default(now()) @updatedAt
+
   @@index([slug])
   @@index([category])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// CMS users, audit trail & revisions
+// ─────────────────────────────────────────────────────────────
+
+enum AdminRole {
+  ADMIN // everything, incl. users and settings
+  SEO_MANAGER // all SEO, redirects, robots/sitemap, approves & publishes content
+  CONTENT_EDITOR // creates/edits content, basic SEO fields, submits for approval
+}
+
+model AdminUser {
+  id                 Int            @id @default(autoincrement())
+  email              String         @unique
+  name               String
+  passwordHash       String
+  role               AdminRole      @default(CONTENT_EDITOR)
+  active             Boolean        @default(true)
+  mustChangePassword Boolean        @default(false) // set for new users and admin resets
+  totpSecret         String? // base32 secret for two-factor login
+  totpEnabled        Boolean        @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now()) @updatedAt
+  sessions           AdminSession[]
+}
+
+// Opaque bearer sessions (only a hash of the token is stored), so a sign-out,
+// deactivation or password reset takes effect immediately.
+model AdminSession {
+  id         Int       @id @default(autoincrement())
+  tokenHash  String    @unique
+  userId     Int
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime  @default(now())
+  expiresAt  DateTime
+  ip         String?
+  userAgent  String?
+
+  @@index([userId])
+}
+
+// Who changed what, when. Not linked by FK so entries outlive users.
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  userEmail  String?
+  action     String // e.g. "news.publish", "seo.page.update", "auth.login"
+  entityType String?
+  entityId   String?
+  summary    String
+  details    Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([entityType, entityId])
+}
+
+// Point-in-time snapshots of editable content, for history & restore.
+model Revision {
+  id         Int      @id @default(autoincrement())
+  entityType String // "news" | "college" | "seo"
+  entityId   String // article/college id, or the page path for "seo"
+  data       Json
+  summary    String?
+  userId     Int?
+  userEmail  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────

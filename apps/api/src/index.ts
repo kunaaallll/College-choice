@@ -9,9 +9,14 @@ import { citiesRouter, examsRouter, streamsRouter } from "./routes/taxonomy";
 import { newsRouter } from "./routes/news";
 import { applicationsRouter } from "./routes/applications";
 import { authRouter } from "./routes/auth";
-import { adminRouter, requireAdmin, UPLOAD_DIR } from "./routes/admin";
+import { adminRouter, UPLOAD_DIR } from "./routes/admin";
 import { adminSeoRouter } from "./routes/adminSeo";
+import { adminAuthRouter, adminUsersRouter } from "./routes/adminAuth";
+import { auditRouter, revisionsRouter } from "./routes/revisions";
 import { seoRouter } from "./routes/seo";
+import { requireAdminUser } from "./lib/adminAuth";
+import { auditMutations } from "./lib/audit";
+import { startScheduler } from "./lib/content";
 
 const app = express();
 const PORT = Number(process.env.API_PORT || 4000);
@@ -38,7 +43,13 @@ const serveUploads = express.static(UPLOAD_DIR, { maxAge: "365d", immutable: tru
 app.use("/api/uploads", serveUploads);
 app.use("/uploads", serveUploads);
 
-app.use("/api/admin/seo", requireAdmin, adminSeoRouter);
+// CMS: every successful change is written to the audit log.
+app.use("/api/admin", auditMutations);
+app.use("/api/admin/auth", adminAuthRouter);
+app.use("/api/admin/users", adminUsersRouter);
+app.use("/api/admin/revisions", requireAdminUser, revisionsRouter);
+app.use("/api/admin/audit", requireAdminUser, auditRouter);
+app.use("/api/admin/seo", requireAdminUser, adminSeoRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/seo", seoRouter);
 app.use("/api/colleges", collegesRouter);
@@ -51,6 +62,8 @@ app.use("/api/auth", authRouter);
 
 app.use(notFound);
 app.use(errorHandler);
+
+startScheduler();
 
 app.listen(PORT, () => {
   console.log(`🚀 College Choice API listening on http://localhost:${PORT}`);

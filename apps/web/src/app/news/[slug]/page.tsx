@@ -6,6 +6,7 @@ import type { NewsArticle } from "@/lib/types";
 import { buildMetadata, pageMetadata, canonical, SITE } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PageJsonLd } from "@/components/JsonLd";
+import { Markdown } from "@/components/Markdown";
 
 export const revalidate = 1800;
 export const dynamicParams = true;
@@ -79,7 +80,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       )}
       <div className="prose mt-6 max-w-none text-ink-500">
         <p className="text-lg leading-relaxed">{a.excerpt}</p>
-        {a.body && a.body !== a.excerpt && <p className="mt-4 leading-relaxed">{a.body}</p>}
+        {a.body && a.body !== a.excerpt && <div className="mt-4"><Markdown text={a.body} /></div>}
       </div>
     </article>
   );

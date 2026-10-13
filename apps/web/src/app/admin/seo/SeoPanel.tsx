@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "../session";
 import { NotFoundAdmin } from "./NotFoundAdmin";
 import { RedirectsAdmin } from "./RedirectsAdmin";
 import { SeoDashboard } from "./SeoDashboard";
@@ -10,16 +11,17 @@ import { SiteSeoSettings } from "./SiteSeoSettings";
 
 type Tab = "dashboard" | "pages" | "redirects" | "404s" | "settings";
 
-const TABS: [Tab, string][] = [
-  ["dashboard", "Dashboard"],
-  ["pages", "Pages"],
-  ["redirects", "Redirects"],
-  ["404s", "404s"],
-  ["settings", "Robots & sitemap"],
+const TABS: [Tab, string, "seo:basic" | "seo:advanced" | "settings:manage"][] = [
+  ["dashboard", "Dashboard", "seo:basic"],
+  ["pages", "Pages", "seo:basic"],
+  ["redirects", "Redirects", "seo:advanced"],
+  ["404s", "404s", "seo:advanced"],
+  ["settings", "Robots & sitemap", "settings:manage"],
 ];
 
 /** SEO area of the admin console. */
-export function SeoPanel({ token }: { token: string }) {
+export function SeoPanel() {
+  const { token, can } = useSession();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [filter, setFilter] = useState<PageFilter>({});
   const [editing, setEditing] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function SeoPanel({ token }: { token: string }) {
   return (
     <div>
       <div className="flex flex-wrap gap-1 border-b border-line">
-        {TABS.map(([t, label]) => (
+        {TABS.filter(([, , perm]) => can(perm)).map(([t, label]) => (
           <button
             key={t}
             onClick={() => go(t)}

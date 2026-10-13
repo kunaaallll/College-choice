@@ -3,6 +3,7 @@
  * URL normalisation, the site page inventory and SEO health checks.
  */
 import { prisma } from "../prisma";
+import { liveNewsWhere } from "./content";
 
 /** Public site origin, e.g. "https://collegechoice.in" (used to recognise our own absolute URLs). */
 export const SITE_URL = (process.env.SITE_URL || (process.env.CORS_ORIGIN || "").split(",")[0] || "http://localhost:3000")
@@ -106,7 +107,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
     }),
     prisma.stream.findMany({ select: { name: true, slug: true } }),
     prisma.city.findMany({ select: { name: true, slug: true, state: true } }),
-    prisma.newsArticle.findMany({ select: { slug: true, title: true, excerpt: true, imgUrl: true, publishedAt: true } }),
+    prisma.newsArticle.findMany({ where: liveNewsWhere(), select: { slug: true, title: true, excerpt: true, imgUrl: true, publishedAt: true } }),
   ]);
 
   const pages: InventoryPage[] = [

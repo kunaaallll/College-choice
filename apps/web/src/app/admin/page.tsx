@@ -1,14 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { API } from "./adminApi";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { adminJson, adminRequest, adminUpload, SESSION_KEY, UNAUTHORIZED_EVENT } from "./adminApi";
+import { AccountPanel } from "./AccountPanel";
+import { AuditLogPanel } from "./AuditLogPanel";
 import { CollegeContentEditor } from "./CollegeContentEditor";
 import { NewsAdmin } from "./NewsAdmin";
+import { RevisionHistory } from "./RevisionHistory";
 import { SeoPanel } from "./seo/SeoPanel";
+import { SessionContext, useSession, type AdminSession, type AdminUser, type Permission } from "./session";
+import { ChangePassword, SignIn } from "./SignIn";
+import { UsersAdmin } from "./UsersAdmin";
 
-// Self-contained admin console. Gated by the shared ADMIN_TOKEN (kept in
-// localStorage after first entry). Three areas: college content (photos + detail
-// tabs/highlights/courses/FAQs), news/blog and SEO. No public nav link.
+// CMS console. Each person signs in with their own account; what they see and can
+// do depends on their role (Admin / SEO Manager / Content Editor). Areas: college
+// content, news & blog (with review workflow), SEO, users and the audit log.
+// No public nav link; the session token is kept in localStorage.
 
 interface GalleryImage { id: number; url: string; sort: number }
 interface AdminCollege {
@@ -18,145 +25,180 @@ interface AdminCollege {
   imgUrl: string | null;
   sampleDegreeUrl: string | null;
   mode: string;
+  published: boolean;
   city?: { name: string; state: string | null } | null;
   stream?: { name: string } | null;
   gallery: GalleryImage[];
 }
 
-type Panel = "colleges" | "news" | "seo";
+type Panel = "colleges" | "news" | "seo" | "users" | "audit" | "account";
+
+const PANELS: [Panel, string, Permission | null][] = [
+  ["colleges", "Colleges", "content:edit"],
+  ["news", "News & blog", "content:edit"],
+  ["seo", "SEO", "seo:basic"],
+  ["users", "Users", "users:manage"],
+  ["audit", "Audit log", "audit:view"],
+];
+
+const readToken = () => { try { return localStorage.getItem(SESSION_KEY); } catch { return null; } };
+const storeToken = (t: string | null) => {
+  try {
+    if (t) localStorage.setItem(SESSION_KEY, t); else localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem("cc_admin_token"); // the old shared-token login
+  } catch { /* storage blocked */ }
+};
 
 export default function AdminPage() {
-  const [token, setToken] = useState("");
-  const [authed, setAuthed] = useState(false);
-  const [panel, setPanel] = useState<Panel>("colleges");
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  // Resume a saved session.
+  useEffect(() => {
+    const t = readToken();
+    if (!t) { setChecking(false); return; }
+    adminRequest<{ user: AdminUser }>("/api/admin/auth/me", t).then(({ ok, data }) => {
+      if (ok) { setToken(t); setUser(data.user); } else storeToken(null);
+      setChecking(false);
+    });
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (token) await adminRequest("/api/admin/auth/logout", token, { method: "POST" }).catch(() => {});
+    storeToken(null); setToken(null); setUser(null);
+  }, [token]);
+
+  // Any 401 (session expired, user deactivated, password reset) → back to sign-in.
+  useEffect(() => {
+    const onUnauthorized = () => { storeToken(null); setToken(null); setUser(null); };
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, []);
+
+  const session = useMemo<AdminSession | null>(
+    () => (token && user ? { token, user, can: (p) => user.permissions.includes(p), setUser } : null),
+    [token, user],
+  );
+
+  if (checking) return <p className="container-site py-16 text-center text-ink-500">Loading…</p>;
+  if (!session) return <SignIn onSignedIn={(t, u) => { storeToken(t); setToken(t); setUser(u); }} />;
+  if (session.user.mustChangePassword) return <ChangePassword forced token={session.token} onDone={setUser} />;
+
+  return (
+    <SessionContext.Provider value={session}>
+      <Console onSignOut={signOut} />
+    </SessionContext.Provider>
+  );
+}
+
+function Console({ onSignOut }: { onSignOut: () => void }) {
+  const { user, can } = useSession();
+  const visible = PANELS.filter(([, , perm]) => !perm || can(perm));
+  const [panel, setPanel] = useState<Panel>(visible[0]?.[0] ?? "account");
+
+  return (
+    <div className="container-site py-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-1 rounded-xl border border-line p-1">
+          {visible.map(([p, label]) => (
+            <button
+              key={p}
+              onClick={() => setPanel(p)}
+              className={`rounded-lg px-4 py-1.5 text-sm font-bold transition ${panel === p ? "bg-brand-600 text-white" : "text-ink-600 hover:bg-line/50"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setPanel("account")} className={`rounded-xl border px-3 py-1.5 text-left text-[12px] leading-tight hover:border-brand-400 ${panel === "account" ? "border-brand-500" : "border-line"}`}>
+            <span className="block font-bold text-ink-900">{user.name}</span>
+            <span className="text-ink-400">{user.roleLabel}{!user.totpEnabled && " · 2FA off"}</span>
+          </button>
+          <button onClick={onSignOut} className="rounded-xl border border-line px-3.5 py-2 text-sm font-semibold text-ink-600 hover:border-brand-400">Sign out</button>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        {panel === "colleges" && <CollegesPanel />}
+        {panel === "news" && <NewsAdmin />}
+        {panel === "seo" && <SeoPanel />}
+        {panel === "users" && <UsersAdmin />}
+        {panel === "audit" && <AuditLogPanel />}
+        {panel === "account" && <AccountPanel />}
+      </div>
+    </div>
+  );
+}
+
+function CollegesPanel() {
+  const { token } = useSession();
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<AdminCollege[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = typeof window !== "undefined" ? localStorage.getItem("cc_admin_token") : null;
-    if (saved) { setToken(saved); setAuthed(true); }
-  }, []);
-
-  const load = useCallback(async (q: string, tok: string) => {
+  const load = useCallback(async (q: string) => {
     setLoading(true); setError(null);
     try {
-      const res = await fetch(`${API}/api/admin/colleges?search=${encodeURIComponent(q)}`, {
-        headers: { Authorization: `Bearer ${tok}` },
-      });
-      if (res.status === 401) { setError("Invalid admin token."); setAuthed(false); localStorage.removeItem("cc_admin_token"); return; }
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-      const data = await res.json();
+      const data = await adminJson<{ items: AdminCollege[] }>(`/api/admin/colleges?search=${encodeURIComponent(q)}`, token);
       setItems(data.items ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
-  useEffect(() => { if (authed && token) load(search, token); /* eslint-disable-next-line */ }, [authed]);
-
-  const signIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token.trim()) return;
-    localStorage.setItem("cc_admin_token", token.trim());
-    setAuthed(true);
-  };
-
-  if (!authed) {
-    return (
-      <div className="container-site flex min-h-[70vh] items-center justify-center py-10">
-        <form onSubmit={signIn} className="card w-full max-w-sm p-6">
-          <h1 className="text-xl font-extrabold">College Choice — Admin</h1>
-          <p className="mt-1 text-sm text-ink-500">Enter the admin token to manage college content, news and SEO.</p>
-          <input
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Admin token"
-            className="mt-4 w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
-          />
-          <button type="submit" className="btn-primary mt-4 w-full">Sign in</button>
-          {error && <p className="mt-3 text-sm text-danger">{error}</p>}
-        </form>
-      </div>
-    );
-  }
+  useEffect(() => { load(""); }, [load]);
 
   return (
-    <div className="container-site py-8">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex gap-1 rounded-xl border border-line p-1">
-          {(["colleges", "news", "seo"] as Panel[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPanel(p)}
-              className={`rounded-lg px-4 py-1.5 text-sm font-bold capitalize transition ${panel === p ? "bg-brand-600 text-white" : "text-ink-600 hover:bg-line/50"}`}
-            >
-              {p === "colleges" ? "Colleges" : p === "news" ? "News & blog" : "SEO"}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => { localStorage.removeItem("cc_admin_token"); setAuthed(false); setToken(""); }}
-          className="rounded-xl border border-line px-3.5 py-2 text-sm font-semibold text-ink-600 hover:border-brand-400"
-        >
-          Sign out
-        </button>
+    <div>
+      <div>
+        <h1 className="text-2xl font-extrabold">College content</h1>
+        <p className="mt-1 text-sm text-ink-500">Upload photos and manage each college&apos;s detail tabs, highlights, courses and FAQs. Changes appear on the site within seconds, and every change is kept in the version history.</p>
       </div>
 
-      {panel === "seo" ? (
-        <div className="mt-6"><SeoPanel token={token} /></div>
-      ) : panel === "news" ? (
-        <div className="mt-6"><NewsAdmin token={token} /></div>
+      <form onSubmit={(e) => { e.preventDefault(); load(search); }} className="mt-5 flex gap-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search a college by name…"
+          className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
+        />
+        <button type="submit" className="btn-primary px-5">Search</button>
+      </form>
+
+      {error && <p className="mt-4 text-sm text-danger">{error}</p>}
+      {loading ? (
+        <p className="mt-8 text-ink-500">Loading…</p>
       ) : (
-        <div className="mt-6">
-          <div>
-            <h1 className="text-2xl font-extrabold">College content</h1>
-            <p className="mt-1 text-sm text-ink-500">Upload photos and manage each college&apos;s detail tabs, highlights, courses and FAQs. Content changes appear on the site after the page cache refreshes (up to ~1 hour).</p>
-          </div>
-
-          <form onSubmit={(e) => { e.preventDefault(); load(search, token); }} className="mt-5 flex gap-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search a college by name…"
-              className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
-            />
-            <button type="submit" className="btn-primary px-5">Search</button>
-          </form>
-
-          {error && <p className="mt-4 text-sm text-danger">{error}</p>}
-          {loading ? (
-            <p className="mt-8 text-ink-500">Loading…</p>
-          ) : (
-            <div className="mt-6 space-y-4">
-              {items.map((c) => (
-                <CollegeRow key={c.id} college={c} token={token} onChanged={() => load(search, token)} />
-              ))}
-              {items.length === 0 && <p className="text-ink-500">No colleges found. Try a search.</p>}
-            </div>
-          )}
+        <div className="mt-6 space-y-4">
+          {items.map((c) => (
+            <CollegeRow key={c.id} college={c} onChanged={() => load(search)} />
+          ))}
+          {items.length === 0 && <p className="text-ink-500">No colleges found. Try a search.</p>}
         </div>
       )}
     </div>
   );
 }
 
-function CollegeRow({ college, token, onChanged }: { college: AdminCollege; token: string; onChanged: () => void }) {
+function CollegeRow({ college, onChanged }: { college: AdminCollege; onChanged: () => void }) {
+  const { token, can } = useSession();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [showContent, setShowContent] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [contentKey, setContentKey] = useState(0);
   const galleryRef = useRef<HTMLInputElement>(null);
   const degreeRef = useRef<HTMLInputElement>(null);
 
-  const post = async (url: string, fd: FormData, ok: string, resetRef?: React.RefObject<HTMLInputElement | null>) => {
+  const post = async (path: string, fd: FormData, ok: string, resetRef?: React.RefObject<HTMLInputElement | null>) => {
     setBusy(true); setMsg(null);
     try {
-      const res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Error ${res.status}`);
+      await adminUpload(path, token, fd);
       setMsg(ok);
       onChanged();
     } catch (e) {
@@ -171,37 +213,66 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
     if (!files?.length) return;
     const fd = new FormData();
     Array.from(files).slice(0, 8).forEach((f) => fd.append("images", f));
-    return post(`${API}/api/admin/colleges/${college.id}/gallery`, fd, "Photos uploaded ✓", galleryRef);
+    return post(`/api/admin/colleges/${college.id}/gallery`, fd, "Photos uploaded ✓", galleryRef);
   };
 
   const uploadSampleDegree = (files: FileList | null) => {
     if (!files?.length) return;
     const fd = new FormData();
     fd.append("image", files[0]);
-    return post(`${API}/api/admin/colleges/${college.id}/sample-degree`, fd, "Sample degree uploaded ✓", degreeRef);
+    return post(`/api/admin/colleges/${college.id}/sample-degree`, fd, "Sample degree uploaded ✓", degreeRef);
   };
 
   const remove = async (id: number) => {
     setBusy(true);
     try {
-      await fetch(`${API}/api/admin/gallery/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      await adminJson(`/api/admin/gallery/${id}`, token, { method: "DELETE" });
       onChanged();
     } finally {
       setBusy(false);
     }
   };
 
+  const togglePublished = async () => {
+    const next = !college.published;
+    if (!confirm(next ? `Publish ${college.name}? It will appear on the site and in the sitemap.` : `Unpublish ${college.name}? Its page will return 404 and it leaves listings and the sitemap.`)) return;
+    setBusy(true);
+    try {
+      await adminJson(`/api/admin/colleges/${college.id}/publish`, token, { method: "POST", body: { published: next } });
+      setMsg(next ? "Published ✓" : "Unpublished");
+      onChanged();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <div className="card p-4">
+    <div className={`card p-4 ${college.published ? "" : "border-dashed"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-bold text-ink-900">{college.name}</h3>
+          <h3 className="font-bold text-ink-900">
+            {college.name}
+            {!college.published && <span className="ml-2 rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-bold text-danger">Unpublished</span>}
+          </h3>
           <p className="text-xs text-ink-400">
             {college.stream?.name}{college.city ? ` · ${college.city.name}${college.city.state ? ", " + college.city.state : ""}` : ""} · {college.gallery.length} photo(s)
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {msg && <span className="text-xs font-semibold text-ink-500">{msg}</span>}
+          {can("content:publish") && (
+            <button onClick={togglePublished} disabled={busy} className="rounded-lg border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-600 hover:border-brand-400 disabled:opacity-60">
+              {college.published ? "Unpublish" : "Publish"}
+            </button>
+          )}
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className={`rounded-lg border px-3 py-1.5 text-[12px] font-semibold ${showHistory ? "border-brand-500 bg-brand-50 text-brand-700" : "border-line text-ink-600 hover:border-brand-400"}`}
+          >
+            History
+          </button>
           <button
             onClick={() => setShowContent((v) => !v)}
             className={`rounded-lg border px-3.5 py-1.5 text-[12px] font-semibold ${showContent ? "border-brand-500 bg-brand-50 text-brand-700" : "border-line text-ink-600 hover:border-brand-400"}`}
@@ -210,7 +281,7 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
           </button>
           <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadGallery(e.target.files)} />
           <button onClick={() => galleryRef.current?.click()} disabled={busy} className="btn-primary px-3.5 py-1.5 text-[12px] disabled:opacity-60">
-            {busy ? "Uploading…" : "⬆ Upload photos"}
+            {busy ? "Working…" : "⬆ Upload photos"}
           </button>
         </div>
       </div>
@@ -262,7 +333,10 @@ function CollegeRow({ college, token, onChanged }: { college: AdminCollege; toke
         </div>
       )}
 
-      {showContent && <CollegeContentEditor collegeId={college.id} token={token} />}
+      {showHistory && (
+        <RevisionHistory entityType="college" entityId={college.id} onClose={() => setShowHistory(false)} onRestored={() => setContentKey((k) => k + 1)} />
+      )}
+      {showContent && <CollegeContentEditor key={contentKey} collegeId={college.id} token={token} />}
     </div>
   );
 }

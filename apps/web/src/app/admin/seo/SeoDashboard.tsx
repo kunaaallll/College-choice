@@ -16,6 +16,13 @@ interface Dashboard {
   recentContent: { name: string; path: string; updatedAt: string }[];
   recentRedirects: { fromPath: string; toPath: string; statusCode: number; createdAt: string }[];
   top404: { id: number; path: string; hits: number; lastSeen: string }[];
+  workflow: {
+    drafts: number;
+    inReview: number;
+    pendingChanges: number;
+    scheduled: { id: number; title: string; publishAt: string }[];
+    awaitingReview: { id: number; title: string; updatedAt: string; pending: boolean }[];
+  };
 }
 
 // Health rows in priority order: [issue, explanation].
@@ -72,6 +79,31 @@ export function SeoDashboard({ token, onFilter, onOpen, onTab }: {
         {stat("Open 404s", d.totals.notFoundOpen, () => onTab("404s"), d.totals.notFoundOpen ? "text-danger" : "text-success")}
       </div>
 
+      <section className="card p-4">
+        <h3 className="font-bold">Content workflow <span className="text-[12px] font-normal text-ink-400">(News &amp; blog)</span></h3>
+        <div className="mt-3 grid gap-4 md:grid-cols-3">
+          <div className="space-y-1 text-[13px]">
+            <p><b className="text-lg">{d.workflow.drafts}</b> <span className="text-ink-500">draft(s)</span></p>
+            <p><b className="text-lg text-brand-700">{d.workflow.inReview}</b> <span className="text-ink-500">awaiting review</span></p>
+            <p><b className="text-lg text-warn">{d.workflow.pendingChanges}</b> <span className="text-ink-500">live article(s) with pending changes</span></p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-wide text-ink-400">Needs review</p>
+            <ul className="mt-1 space-y-1 text-[13px]">
+              {d.workflow.awaitingReview.map((a) => <li key={a.id} className="truncate">{a.title} <span className="text-[11px] text-ink-400">{a.pending ? "· pending edit" : ""} · {fmtDate(a.updatedAt)}</span></li>)}
+              {!d.workflow.awaitingReview.length && <li className="text-ink-400">Nothing waiting.</li>}
+            </ul>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-wide text-ink-400">Scheduled</p>
+            <ul className="mt-1 space-y-1 text-[13px]">
+              {d.workflow.scheduled.map((a) => <li key={a.id} className="truncate">{a.title} <span className="text-[11px] text-ink-400">· {fmtDate(a.publishAt)}</span></li>)}
+              {!d.workflow.scheduled.length && <li className="text-ink-400">Nothing scheduled.</li>}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-4">
           <h3 className="font-bold">SEO health</h3>
@@ -118,7 +150,6 @@ export function SeoDashboard({ token, onFilter, onOpen, onTab }: {
         <RecentList title="Recently updated colleges" items={d.recentContent.map((r) => ({ key: r.path, label: r.name, at: r.updatedAt, onClick: () => onOpen(r.path) }))} />
         <RecentList title="Recently changed URLs (redirects)" items={d.recentRedirects.map((r) => ({ key: r.fromPath, label: `${r.fromPath} → ${r.toPath}`, at: r.createdAt, onClick: () => onTab("redirects") }))} />
       </div>
-      <p className="text-[12px] text-ink-400">Scheduled publishing and the approval workflow arrive with user roles in the next phase.</p>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { adminRequest } from "../adminApi";
+import { RevisionHistory } from "../RevisionHistory";
+import { useSession } from "../session";
 import {
   btnDanger, btnGhost, btnPrimary, CharCount, Field, fmtDate, inputCls, LIMITS, Notice, SerpPreview,
   SocialPreview, Toggle, TYPE_LABELS,
@@ -100,6 +102,9 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
   const [changed, setChanged] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [newSlug, setNewSlug] = useState("");
+  const [history, setHistory] = useState(false);
+  // Content Editors get the search & social fields; the rest needs an SEO Manager.
+  const advanced = useSession().can("seo:advanced");
 
   const set = (patch: Partial<SeoFields>) => { setF((s) => ({ ...s, ...patch })); setDirty(true); setSaved(null); };
 
@@ -185,7 +190,8 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
           </p>
         </div>
         <div className="flex gap-2">
-          {info.override && <button className={btnDanger} onClick={reset} disabled={busy}>Reset to defaults</button>}
+          <button className={btnGhost} onClick={() => setHistory((v) => !v)}>History</button>
+          {advanced && info.override && <button className={btnDanger} onClick={reset} disabled={busy}>Reset to defaults</button>}
           <button className="btn-primary px-5 py-2 text-sm disabled:opacity-60" onClick={save} disabled={busy || !dirty}>{busy ? "Saving…" : "Save SEO"}</button>
         </div>
       </div>
@@ -198,7 +204,10 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
         {error && <Notice tone="error">{error}</Notice>}
         {warnings.map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
         {saved && <Notice tone="ok">{saved}</Notice>}
+        {!advanced && <Notice tone="info">You can edit the search and social fields. Indexing, canonical, schema and URL settings are managed by SEO Managers.</Notice>}
       </div>
+
+      {history && <RevisionHistory entityType="seo" entityId={info.path} onClose={() => setHistory(false)} onRestored={() => load(info.path)} />}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
@@ -229,7 +238,7 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
             )}
           </section>
 
-          <section className="card space-y-3 p-4">
+          {advanced && <section className="card space-y-3 p-4">
             <h3 className="font-bold">Indexing &amp; canonical</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <Toggle checked={f.noindex} onChange={(v) => set({ noindex: v })} label="Noindex" hint="Hide this page from search results" />
@@ -240,7 +249,7 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
               <input value={f.canonical ?? ""} onChange={(e) => set({ canonical: e.target.value })} placeholder={info.url} className={inputCls} />
             </Field>
             <p className="text-[12px] text-ink-400">Rendered canonical: <span className="font-mono text-ink-600">{f.canonical || info.url}</span></p>
-          </section>
+          </section>}
 
           <section className="card space-y-3 p-4">
             <h3 className="font-bold">Social sharing</h3>
@@ -256,7 +265,7 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
             </div>
           </section>
 
-          <section className="card space-y-3 p-4">
+          {advanced && <section className="card space-y-3 p-4">
             <h3 className="font-bold">Structured data (schema)</h3>
             <Toggle checked={f.disableSchema} onChange={(v) => set({ disableSchema: v })} label="Turn off this page's automatic schema" hint="College / FAQ / Article / ItemList JSON-LD. Breadcrumb and site-wide Organization schema stay on." />
             <Field label="Custom JSON-LD" hint="— added to the page; must be valid JSON">
@@ -271,9 +280,9 @@ export function SeoPageEditor({ token, path, onBack }: { token: string; path: st
             <p className="text-[12px] text-ink-400">
               Test the result with Google&apos;s <a className="text-brand-700 hover:underline" href={`https://search.google.com/test/rich-results?url=${encodeURIComponent(info.url)}`} target="_blank" rel="noreferrer">Rich Results Test ↗</a>.
             </p>
-          </section>
+          </section>}
 
-          {info.slugEditable && (
+          {advanced && info.slugEditable && (
             <section className="card space-y-3 p-4">
               <h3 className="font-bold">URL</h3>
               <Toggle checked={f.urlLocked} onChange={(v) => set({ urlLocked: v })} label="Lock this URL" hint="Prevents accidental slug changes on important pages (save to apply)" />

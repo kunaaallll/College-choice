@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminDownload, adminRequest } from "../adminApi";
+import { useSession } from "../session";
 import {
   btnGhost, btnPrimary, fmtDate, inputBase, inputCls, ISSUE_LABELS, LIMITS, Notice, Pager, readFileText, TYPE_LABELS,
 } from "./ui";
@@ -58,6 +59,7 @@ export function SeoPages({ token, initialFilter, onOpen }: { token: string; init
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [tool, setTool] = useState<"" | "bulk" | "template" | "replace" | "import">("");
   const [openPath, setOpenPath] = useState("");
+  const advanced = useSession().can("seo:advanced");
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -130,13 +132,13 @@ export function SeoPages({ token, initialFilter, onOpen }: { token: string; init
       {/* Tools */}
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         <span className="text-ink-500">{data ? `${data.total.toLocaleString("en-IN")} pages` : ""}{selected.size ? ` · ${selected.size} selected` : ""}</span>
-        <span className="mx-1 h-4 w-px bg-line" />
-        {(["bulk", "template", "replace", "import"] as const).map((t) => (
+        {advanced && <span className="mx-1 h-4 w-px bg-line" />}
+        {advanced && (["bulk", "template", "replace", "import"] as const).map((t) => (
           <button key={t} className={`${btnGhost} ${tool === t ? "border-brand-500 bg-brand-50 text-brand-700" : ""}`} onClick={() => setTool(tool === t ? "" : t)}>
             {{ bulk: "Bulk edit", template: "Title/description template", replace: "Find & replace", import: "Import CSV" }[t]}
           </button>
         ))}
-        <button className={btnGhost} onClick={exportCsv}>Export CSV</button>
+        {advanced && <button className={btnGhost} onClick={exportCsv}>Export CSV</button>}
         {selected.size > 0 && <button className="text-[12px] font-semibold text-ink-500 hover:underline" onClick={() => setSelected(new Set())}>Clear selection</button>}
       </div>
 
@@ -151,7 +153,7 @@ export function SeoPages({ token, initialFilter, onOpen }: { token: string; init
         <table className="w-full min-w-[860px] text-left text-[13px]">
           <thead className="bg-line/40 text-[12px] uppercase tracking-wide text-ink-500">
             <tr>
-              <th className="w-8 px-3 py-2"><input type="checkbox" checked={allOnPage} onChange={toggleAll} aria-label="Select all on this page" /></th>
+              <th className="w-8 px-3 py-2">{advanced && <input type="checkbox" checked={allOnPage} onChange={toggleAll} aria-label="Select all on this page" />}</th>
               <th className="px-3 py-2">Page</th>
               <th className="px-3 py-2">SEO title</th>
               <th className="px-3 py-2">Description</th>
@@ -164,7 +166,7 @@ export function SeoPages({ token, initialFilter, onOpen }: { token: string; init
             {data?.items.map((p) => (
               <tr key={p.path} className="cursor-pointer border-t border-line hover:bg-brand-50/40" onClick={() => onOpen(p.path)}>
                 <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                  <input type="checkbox" checked={selected.has(p.path)} onChange={() => toggle(p.path)} aria-label={`Select ${p.name}`} />
+                  {advanced && <input type="checkbox" checked={selected.has(p.path)} onChange={() => toggle(p.path)} aria-label={`Select ${p.name}`} />}
                 </td>
                 <td className="max-w-[240px] px-3 py-2">
                   <p className="truncate font-semibold text-ink-900">{p.name}</p>
