@@ -5,6 +5,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { CollegeCard } from "./CollegeCard";
 import { CtaBlocks, FaqList, PageH1, RelatedLinks, RichContent, type CtaBlock } from "./ContentBlocks";
 import { PageJsonLd } from "./JsonLd";
+import { EnquiryButton } from "./EnquiryButton";
 
 const COURSE_FACTS: [string, string][] = [
   ["level", "Level"], ["duration", "Duration"], ["mode", "Mode"], ["fees", "Fees"], ["eligibility", "Eligibility"], ["admission", "Admission"], ["careers", "Careers"],
@@ -81,9 +82,21 @@ export function EntryView({ e, crumbs }: { e: EntryDetail; crumbs: { name: strin
           <CtaBlocks blocks={Array.isArray(data.blocks) ? (data.blocks as CtaBlock[]) : []} />
           <FaqList faqs={faqs} />
         </div>
-        {(facts.length > 0 || website) && (
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <dl className="card space-y-3 p-5 text-sm">
+        {(facts.length > 0 || website || e.type !== "PAGE") && (
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            {e.type !== "PAGE" && (
+              <div className="card p-5">
+                <p className="font-bold text-ink-900">{e.type === "COURSE" ? "Want this course?" : `Preparing for ${e.exam?.name ?? "this exam"}?`}</p>
+                <p className="mt-1 text-sm text-ink-500">Get a free shortlist of colleges for your rank and budget from our counsellors.</p>
+                <EnquiryButton
+                  label="Get free counselling"
+                  heading={e.type === "COURSE" ? `Admission help for ${e.title}` : `Colleges for your ${e.exam?.name ?? e.title} score`}
+                  options={e.type === "COURSE" ? { source: "course", course: String(data.collegeMatch || e.title) } : { source: "exam", exam: e.exam?.name ?? e.title }}
+                  className="btn-primary mt-3 w-full"
+                />
+              </div>
+            )}
+            {(facts.length > 0 || website) && <dl className="card space-y-3 p-5 text-sm">
               {facts.map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-ink-400">{label}</dt>
@@ -93,7 +106,7 @@ export function EntryView({ e, crumbs }: { e: EntryDetail; crumbs: { name: strin
               {website && (
                 <a href={website} target="_blank" rel="noopener noreferrer" className="block font-semibold text-brand-600 hover:underline">Official website ↗</a>
               )}
-            </dl>
+            </dl>}
           </aside>
         )}
       </div>

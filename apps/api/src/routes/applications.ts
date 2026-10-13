@@ -3,10 +3,11 @@ import { prisma } from "../prisma";
 import { asyncHandler } from "../middleware/error";
 import { applicationSchema } from "../lib/validation";
 import { sendLeadToSheet } from "../lib/sheet";
+import { createLead } from "../lib/leads";
 
 export const applicationsRouter = Router();
 
-/** POST /api/applications — apply-modal lead capture. */
+/** POST /api/applications — lead capture from the apply / enquiry / predictor / counselling forms. */
 applicationsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
@@ -22,19 +23,7 @@ applicationsRouter.post(
       collegeName = college?.name ?? collegeName;
     }
 
-    const application = await prisma.application.create({
-      data: {
-        fullName: data.fullName,
-        mobile: data.mobile,
-        email: data.email,
-        city: data.city ?? null,
-        courseInterested: data.courseInterested ?? null,
-        notes: data.notes ?? null,
-        collegeName,
-        collegeId: data.collegeId ?? null,
-      },
-      select: { id: true, createdAt: true },
-    });
+    const application = await createLead({ ...data, collegeName });
 
     // Mirror the lead to the Google Sheet (fire-and-forget; never blocks the response).
     sendLeadToSheet({

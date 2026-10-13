@@ -3,6 +3,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { postJSON } from "@/lib/api";
+import { getAttribution } from "@/lib/attribution";
 import { useSite } from "./site-context";
 
 export function LoginModal() {
@@ -22,7 +23,7 @@ export function LoginModal() {
       const path = isLogin ? "/api/auth/login" : "/api/auth/register";
       const body = isLogin
         ? { email: form.email, password: form.password }
-        : { name: form.name, email: form.email, password: form.password || "password123", phone: form.phone };
+        : { name: form.name, email: form.email, password: form.password || "password123", phone: form.phone, ...getAttribution() };
       const res = await postJSON<{ token: string }>(path, body);
       try {
         localStorage.setItem("ca:token", res.token);

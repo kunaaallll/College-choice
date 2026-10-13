@@ -590,7 +590,7 @@ function CtaEditor({ blocks, onChange }: { blocks: Cta[]; onChange: (b: Cta[]) =
           <input value={b.heading} onChange={(e) => upd(i, { heading: e.target.value })} placeholder="Heading, e.g. Talk to a counsellor" className={`${inputCls} sm:col-span-2`} />
           <textarea value={b.text} onChange={(e) => upd(i, { text: e.target.value })} rows={2} placeholder="Short text" className={`${inputCls} sm:col-span-2`} />
           <input value={b.buttonLabel} onChange={(e) => upd(i, { buttonLabel: e.target.value })} placeholder="Button label" className={inputCls} />
-          <input value={b.buttonUrl} onChange={(e) => upd(i, { buttonUrl: e.target.value })} placeholder="/colleges or https://…" className={inputCls} />
+          <input value={b.buttonUrl} onChange={(e) => upd(i, { buttonUrl: e.target.value })} placeholder="/colleges, https://… or #counselling (opens the enquiry form)" className={inputCls} />
           <button className="text-left text-[12px] text-danger hover:underline" onClick={() => onChange(blocks.filter((_, j) => j !== i))}>Remove</button>
         </div>
       ))}

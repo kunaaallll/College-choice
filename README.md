@@ -57,6 +57,37 @@ See [ARCHITECTURE.md §6](ARCHITECTURE.md#6-deployment--replacing-the-hostinger-
 on a **Hostinger VPS**, `docker compose up -d --build` and front it with Nginx (sample in
 `nginx/`). Hostinger *shared* hosting can't run Node — use a VPS or deploy web→Vercel, api→Render.
 
+## CMS (`/admin`)
+
+**Areas:** Content (colleges, courses, exams, news, pages), Leads, SEO, Media, Categories, Settings.
+
+**First run:** after deploying, open `/admin`. It shows "Set up the CMS". Enter the server's
+`ADMIN_TOKEN` once to create the first Admin, then add the team under Settings → Users & roles.
+
+**Roles:**
+
+| Role | Can do |
+|---|---|
+| Admin | Everything, including users, backups and deleting leads |
+| SEO Manager | All SEO tools; publishes content; reads lead reports |
+| Content Editor | Edits content and basic SEO; submits work for approval |
+| Counsellor | Works leads: statuses, follow-ups, notes and export |
+
+**Recovery** (locked out):
+
+    docker compose -f docker-compose.prod.yml exec api node dist/src/cli/adminUser.js you@example.com "Your Name"
+
+This prints a temporary Admin password and turns off two-factor sign-in for that account.
+
+**Optional lead alerts** (API env, see `docker-compose.prod.yml`):
+
+- `SMTP_URL`, `MAIL_FROM` and `LEAD_NOTIFY_EMAILS`: an email for each new lead, plus a 9 am follow-up digest.
+- `LEAD_WEBHOOK_URL`: JSON POST per lead, for WhatsApp/SMS/CRM tools such as Zapier, Make or Interakt.
+
+Without these, new leads still show as a badge in the CMS.
+
+**Database:** updates are applied automatically on API start (`prisma migrate deploy`).
+
 ## Project status
 
 Scaffold + core experience: home, colleges listing (filters/sort/search), college detail, and the

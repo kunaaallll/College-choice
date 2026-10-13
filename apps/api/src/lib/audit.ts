@@ -134,6 +134,12 @@ const ROUTES: [string, string, string, Describer][] = [
   ["DELETE", "/api/admin/taxonomy/tags/:id", "taxonomy.tag", (r) => ({ summary: `Deleted tag #${r.params.id}` })],
   ["PUT", "/api/admin/site", "settings.tracking", () => ({ summary: "Updated tracking / verification codes" })],
   ["POST", "/api/admin/import/colleges", "college.import", () => ({ summary: "Imported college data from CSV" })],
+  // Leads
+  ["PATCH", "/api/admin/leads/:id(\\d+)", "lead.update", (r) => ({ summary: `Updated lead #${r.params.id}${r.body?.status ? ` → ${r.body.status}` : ""}${r.body?.assignedToId !== undefined ? " (assignment)" : ""}${r.body?.followUpAt !== undefined ? " (follow-up)" : ""}`, entityType: "lead", entityId: r.params.id })],
+  ["POST", "/api/admin/leads/:id(\\d+)/notes", "lead.note", (r) => ({ summary: `Logged ${r.body?.type ?? "note"} on lead #${r.params.id}`, entityType: "lead", entityId: r.params.id })],
+  ["POST", "/api/admin/leads/bulk", "lead.bulk", (r) => ({ summary: `Bulk ${r.body?.action} on ${r.body?.ids?.length ?? 0} lead(s)${r.body?.value !== undefined ? ` → ${r.body.value}` : ""}` })],
+  ["POST", "/api/admin/leads/seen-all", "lead.seen_all", () => ({ summary: "Marked all new leads as seen" })],
+  ["DELETE", "/api/admin/leads/:id(\\d+)", "lead.delete", (r) => ({ summary: `Deleted lead #${r.params.id}`, entityType: "lead", entityId: r.params.id })],
   // Revisions
   ["POST", "/api/admin/revisions/:id/restore", "revision.restore", (r) => ({ summary: `Restored revision #${r.params.id}` })],
   // Users & account

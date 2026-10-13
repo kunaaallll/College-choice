@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { asyncHandler, HttpError } from "../middleware/error";
 import { loginSchema, registerSchema } from "../lib/validation";
 import { AuthedRequest, requireAuth, signToken } from "../lib/auth";
+import { createLead } from "../lib/leads";
 
 export const authRouter = Router();
 
@@ -27,6 +28,12 @@ authRouter.post(
       data: { name: data.name, email: data.email, phone: data.phone ?? null, passwordHash },
     });
     const token = signToken({ userId: user.id, email: user.email });
+    // Every sign-up is a lead for the counselling team.
+    const { pagePath, landingPage, referrer, utmSource, utmMedium, utmCampaign } = data;
+    void createLead({
+      fullName: data.name, email: data.email, mobile: data.phone ?? "", userId: user.id, source: "register",
+      pagePath, landingPage, referrer, utmSource, utmMedium, utmCampaign,
+    }).catch((e) => console.warn("[leads] sign-up lead not saved:", e instanceof Error ? e.message : e));
     res.status(201).json({ token, user: publicUser(user) });
   }),
 );

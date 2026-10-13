@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { postJSON } from "@/lib/api";
+import { getAttribution } from "@/lib/attribution";
 import { useSite, type PredictorFamily } from "./site-context";
 
 const FIELDS = [
@@ -70,7 +71,7 @@ function FieldIcon({ name }: { name: string }) {
 }
 
 export function ApplyModal() {
-  const { applyOpen, applyCollege, applyFamily, closeApply, openLogin } = useSite();
+  const { applyOpen, applyCollege, applyFamily, applyOptions, closeApply, openLogin } = useSite();
   const [form, setForm] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -80,7 +81,10 @@ export function ApplyModal() {
   if (!applyOpen) return null;
 
   const fam = applyFamily ? FAMILY_META[applyFamily] : null;
-  const courseValue = form.courseInterested || fam?.courseValue || "";
+  const courseValue = form.courseInterested || fam?.courseValue || applyOptions.course || "";
+  // A course passed in by a course page CTA may not be one of the dropdown options.
+  const courseOptions = courseValue && !COURSE_OPTIONS.includes(courseValue) ? [courseValue, ...COURSE_OPTIONS] : COURSE_OPTIONS;
+  const source = applyOptions.source ?? (fam ? "predictor" : applyCollege?.id ? "apply" : "enquiry");
 
   const requestOtp = () => {
     if (!form.mobile || form.mobile.trim().length < 7) {
@@ -110,9 +114,14 @@ export function ApplyModal() {
         email: form.email,
         city: form.city,
         courseInterested: courseValue || undefined,
+        examInterested: applyOptions.exam,
+        state: form.state || undefined,
         notes: notesParts.length ? notesParts.join(" | ") : undefined,
-        collegeName: applyCollege?.name,
+        // A course/exam/counselling CTA isn't a college — don't record it as one.
+        collegeName: applyCollege?.id || source === "apply" ? applyCollege?.name : undefined,
         collegeId: applyCollege?.id,
+        source,
+        ...getAttribution(),
       });
       setDone(true);
     } catch (err) {
@@ -213,6 +222,20 @@ export function ApplyModal() {
                   </label>
                 ))}
               </div>
+
+              {!fam && (
+                <label className="block">
+                  <span className="mb-1 block text-[13px] font-semibold text-ink-700">State <span className="font-normal text-ink-400">(optional)</span></span>
+                  <select
+                    value={form.state || ""}
+                    onChange={(e) => setForm((s) => ({ ...s, state: e.target.value }))}
+                    className="w-full cursor-pointer rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                  >
+                    <option value="">Select your state</option>
+                    {STATE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </label>
+              )}
 
               {/* Mobile verification — soft gate; not wired to a real SMS provider yet */}
               <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto]">
@@ -331,7 +354,7 @@ export function ApplyModal() {
                     className="w-full cursor-pointer bg-transparent py-2.5 text-sm outline-none disabled:cursor-not-allowed disabled:text-ink-500"
                   >
                     {!fam && <option value="">Select a course…</option>}
-                    {COURSE_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {courseOptions.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </span>
               </label>

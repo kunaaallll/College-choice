@@ -8,6 +8,7 @@ import { prisma } from "../prisma";
 import { revalidateWeb } from "./revalidate";
 import { invalidateInventory } from "./seo";
 import { entryPath } from "./entries";
+import { sendFollowUpDigest } from "./leads";
 
 /** Prisma filter for articles visible on the public site right now. */
 export const liveNewsWhere = (now = new Date()): Prisma.NewsArticleWhereInput => ({
@@ -67,6 +68,17 @@ export async function revalidateCollege(collegeId: number) {
   if (c) revalidateWeb({ paths: [`/colleges/${c.slug}`, ...COLLEGE_TABS.map((t) => `/colleges/${c.slug}/${t}`)] });
 }
 
+// Lead follow-up digest: once a day after 9:00 IST (if email notifications are set up).
+let lastDigestDay = "";
+async function maybeDigest() {
+  const ist = new Date(Date.now() + 5.5 * 3_600_000);
+  const day = ist.toISOString().slice(0, 10);
+  if (ist.getUTCHours() < 9 || day === lastDigestDay) return;
+  lastDigestDay = day;
+  await sendFollowUpDigest();
+}
+
 export function startScheduler() {
   setInterval(() => { tick().catch((e) => console.error("[scheduler]", e)); }, 60_000).unref();
+  setInterval(() => { maybeDigest().catch((e) => console.error("[scheduler] digest", e)); }, 10 * 60_000).unref();
 }

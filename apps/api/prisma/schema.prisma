@@ -430,6 +430,7 @@ enum AdminRole {
   ADMIN // everything, incl. users and settings
   SEO_MANAGER // all SEO, redirects, robots/sitemap, approves & publishes content
   CONTENT_EDITOR // creates/edits content, basic SEO fields, submits for approval
+  COUNSELLOR // works the leads: follow-ups, statuses, notes
 }
 
 model AdminUser {
@@ -446,6 +447,7 @@ model AdminUser {
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @default(now()) @updatedAt
   sessions           AdminSession[]
+  assignedLeads      Application[]  @relation("LeadAssignee")
 }
 
 // Opaque bearer sessions (only a hash of the token is stored), so a sign-out,
@@ -579,20 +581,26 @@ model User {
   applications Application[]
 }
 
+// Lead pipeline: New → Contacted → Qualified → Converted, or Lost.
 enum ApplicationStatus {
   NEW
   CONTACTED
+  QUALIFIED
   CONVERTED
-  CLOSED
+  LOST
 }
 
+// A lead: every apply / enquiry / predictor / counselling form and sign-up.
 model Application {
   id              Int               @id @default(autoincrement())
   fullName        String
   mobile          String
+  mobileKey       String? // last 10 digits, for duplicate checks and search
   email           String
   city            String?
+  state           String?
   courseInterested String?
+  examInterested  String?
   notes           String? // predictor-form context: marks/rank, category, state, gender etc.
   collegeName     String? // free-text snapshot at submit time
   collegeId       Int?
@@ -601,7 +609,48 @@ model Application {
   user            User?             @relation(fields: [userId], references: [id])
   status          ApplicationStatus @default(NEW)
   createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
+
+  // ── Where the lead came from ──
+  source      String  @default("apply") // apply | enquiry | predictor | counselling | course | exam | register | contact
+  pagePath    String? // page the form was submitted on
+  landingPage String? // first page of that visit
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  channel     String  @default("direct") // organic | paid | social | referral | email | direct
+
+  // ── Follow-up ──
+  followUpAt    DateTime?
+  assignedToId  Int?
+  assignedTo    AdminUser?     @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  duplicateOfId Int? // earlier lead with the same mobile/email
+  seenAt        DateTime? // null until someone on the team opens it (drives the "new leads" badge)
+  activities    LeadActivity[]
 
   @@index([collegeId])
   @@index([status])
+  @@index([createdAt])
+  @@index([followUpAt])
+  @@index([mobileKey])
+  @@index([email])
+  @@index([assignedToId])
+  @@index([channel])
+}
+
+// Timeline of everything that happened to a lead.
+model LeadActivity {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          String // created | status | note | followup | assign | duplicate | contact
+  text          String?
+  fromStatus    String?
+  toStatus      String?
+  userId        Int?
+  userEmail     String?
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, createdAt])
 }

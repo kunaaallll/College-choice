@@ -16,23 +16,36 @@ export const listQuerySchema = z.object({
 });
 export type ListQuery = z.infer<typeof listQuerySchema>;
 
+// Where a lead came from (sent by the site's forms; all optional).
+export const attributionSchema = z.object({
+  pagePath: z.string().trim().max(300).optional(),
+  landingPage: z.string().trim().max(300).optional(),
+  referrer: z.string().trim().max(500).optional(),
+  utmSource: z.string().trim().max(100).optional(),
+  utmMedium: z.string().trim().max(100).optional(),
+  utmCampaign: z.string().trim().max(150).optional(),
+});
+
 export const applicationSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   mobile: z.string().trim().min(7).max(20),
   email: z.string().trim().email(),
   city: z.string().trim().max(120).optional(),
+  state: z.string().trim().max(80).optional(),
   courseInterested: z.string().trim().max(120).optional(),
+  examInterested: z.string().trim().max(120).optional(),
   notes: z.string().trim().max(500).optional(),
   collegeName: z.string().trim().max(200).optional(),
   collegeId: z.coerce.number().int().positive().optional(),
-});
+  source: z.enum(["apply", "enquiry", "predictor", "counselling", "course", "exam", "contact"]).default("apply"),
+}).merge(attributionSchema);
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email(),
   password: z.string().min(8).max(100),
   phone: z.string().trim().max(20).optional(),
-});
+}).merge(attributionSchema);
 
 export const loginSchema = z.object({
   email: z.string().trim().email(),

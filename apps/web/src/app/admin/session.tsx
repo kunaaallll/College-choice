@@ -3,13 +3,14 @@
 import { createContext, useContext } from "react";
 
 export type Permission =
-  | "users:manage" | "audit:view" | "settings:manage" | "seo:basic" | "seo:advanced" | "content:edit" | "content:publish";
+  | "users:manage" | "audit:view" | "settings:manage" | "seo:basic" | "seo:advanced" | "content:edit" | "content:publish"
+  | "leads:manage" | "leads:reports";
 
 export interface AdminUser {
   id: number;
   email: string;
   name: string;
-  role: "ADMIN" | "SEO_MANAGER" | "CONTENT_EDITOR";
+  role: "ADMIN" | "SEO_MANAGER" | "CONTENT_EDITOR" | "COUNSELLOR";
   roleLabel: string;
   permissions: Permission[];
   mustChangePassword: boolean;

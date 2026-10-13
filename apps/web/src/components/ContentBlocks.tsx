@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EnquiryButton } from "./EnquiryButton";
 import { getSeoOverride } from "@/lib/seo";
 
 /** The page H1 — overridable per URL in the admin SEO panel. */
@@ -43,11 +44,14 @@ export function CtaBlocks({ blocks }: { blocks: CtaBlock[] }) {
         <div key={b.heading} className="rounded-2xl bg-brand-600 p-6 text-white">
           <h2 className="text-xl font-extrabold">{b.heading}</h2>
           {b.text && <p className="mt-2 text-white/85">{b.text}</p>}
-          {b.buttonLabel && b.buttonUrl && (
+          {/* A button URL of "#apply" or "#counselling" opens the lead form instead of a link. */}
+          {b.buttonLabel && b.buttonUrl && (b.buttonUrl.startsWith("#apply") || b.buttonUrl.startsWith("#counsel") ? (
+            <EnquiryButton label={b.buttonLabel} heading={b.heading} options={{ source: "counselling" }} className="mt-4 inline-block rounded-xl bg-white px-4 py-2 text-sm font-bold text-brand-700 hover:bg-brand-50" />
+          ) : (
             <Link href={b.buttonUrl} className="mt-4 inline-block rounded-xl bg-white px-4 py-2 text-sm font-bold text-brand-700 hover:bg-brand-50">
               {b.buttonLabel}
             </Link>
-          )}
+          ))}
         </div>
       ))}
     </div>

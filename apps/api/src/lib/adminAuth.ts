@@ -15,18 +15,22 @@ export type Permission =
   | "seo:basic" // SEO title/description/keyword/social on a page
   | "seo:advanced" // indexing, canonical, schema, URLs, redirects, bulk tools, imports
   | "content:edit" // create/edit colleges content and articles, upload media
-  | "content:publish"; // approve, publish, schedule, unpublish, restore
+  | "content:publish" // approve, publish, schedule, unpublish, restore
+  | "leads:manage" // work leads: view contact details, statuses, follow-ups, notes, export
+  | "leads:reports"; // lead counts by page/channel/college (no personal details)
 
 export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
-  ADMIN: ["users:manage", "audit:view", "settings:manage", "seo:basic", "seo:advanced", "content:edit", "content:publish"],
-  SEO_MANAGER: ["audit:view", "settings:manage", "seo:basic", "seo:advanced", "content:edit", "content:publish"],
+  ADMIN: ["users:manage", "audit:view", "settings:manage", "seo:basic", "seo:advanced", "content:edit", "content:publish", "leads:manage", "leads:reports"],
+  SEO_MANAGER: ["audit:view", "settings:manage", "seo:basic", "seo:advanced", "content:edit", "content:publish", "leads:reports"],
   CONTENT_EDITOR: ["seo:basic", "content:edit"],
+  COUNSELLOR: ["leads:manage", "leads:reports"],
 };
 
 export const ROLE_LABELS: Record<AdminRole, string> = {
   ADMIN: "Admin",
   SEO_MANAGER: "SEO Manager",
   CONTENT_EDITOR: "Content Editor",
+  COUNSELLOR: "Counsellor",
 };
 
 export interface AdminPrincipal {

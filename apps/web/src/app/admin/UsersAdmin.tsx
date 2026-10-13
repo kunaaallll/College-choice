@@ -5,7 +5,7 @@ import { adminRequest } from "./adminApi";
 import { useSession } from "./session";
 import { btnDanger, btnGhost, btnPrimary, fmtDate, inputCls, Notice } from "./seo/ui";
 
-type Role = "ADMIN" | "SEO_MANAGER" | "CONTENT_EDITOR";
+type Role = "ADMIN" | "SEO_MANAGER" | "CONTENT_EDITOR" | "COUNSELLOR";
 interface User {
   id: number; email: string; name: string; role: Role; active: boolean; totpEnabled: boolean;
   mustChangePassword: boolean; lastLoginAt: string | null; createdAt: string;
@@ -15,6 +15,7 @@ const ROLES: [Role, string, string][] = [
   ["ADMIN", "Admin", "Everything: users, settings, SEO, content and publishing."],
   ["SEO_MANAGER", "SEO Manager", "All SEO tools, redirects, robots & sitemap; reviews, approves and publishes content."],
   ["CONTENT_EDITOR", "Content Editor", "Creates and edits content and basic SEO fields; submits articles for approval."],
+  ["COUNSELLOR", "Counsellor", "Works the leads: contact details, statuses, follow-ups, notes and lead reports. No content access."],
 ];
 const roleLabel = (r: Role) => ROLES.find(([k]) => k === r)?.[1] ?? r;
 
@@ -72,7 +73,7 @@ export function UsersAdmin() {
         <button className="btn-primary px-4 py-2 text-sm" onClick={() => setAdding((v) => !v)}>{adding ? "Cancel" : "+ Add user"}</button>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {ROLES.map(([k, label, desc]) => (
           <div key={k} className="rounded-xl border border-line p-3 text-[12px]"><p className="font-bold text-ink-900">{label}</p><p className="mt-0.5 text-ink-500">{desc}</p></div>
         ))}

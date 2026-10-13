@@ -5,6 +5,7 @@ import { adminJson, adminRequest, adminUpload, SESSION_KEY, UNAUTHORIZED_EVENT }
 import { AccountPanel } from "./AccountPanel";
 import { CollegeContentEditor } from "./CollegeContentEditor";
 import { EntriesAdmin } from "./EntriesAdmin";
+import { LeadsAdmin } from "./LeadsAdmin";
 import { MediaLibrary } from "./MediaLibrary";
 import { NewsAdmin } from "./NewsAdmin";
 import { RevisionHistory } from "./RevisionHistory";
@@ -34,10 +35,11 @@ interface AdminCollege {
   gallery: GalleryImage[];
 }
 
-type Panel = "content" | "seo" | "media" | "categories" | "settings" | "account";
+type Panel = "content" | "leads" | "seo" | "media" | "categories" | "settings" | "account";
 
 const PANELS: [Panel, string, (can: (p: Permission) => boolean) => boolean][] = [
   ["content", "Content", (can) => can("content:edit")],
+  ["leads", "Leads", (can) => can("leads:manage") || can("leads:reports")],
   ["seo", "SEO", (can) => can("seo:basic")],
   ["media", "Media", (can) => can("content:edit")],
   ["categories", "Categories", (can) => can("content:edit")],
@@ -99,9 +101,19 @@ export default function AdminPage() {
 }
 
 function Console({ onSignOut }: { onSignOut: () => void }) {
-  const { user, can } = useSession();
+  const { user, can, token } = useSession();
   const visible = PANELS.filter(([, , allowed]) => allowed(can));
   const [panel, setPanel] = useState<Panel>(visible[0]?.[0] ?? "account");
+  const [newLeads, setNewLeads] = useState(0);
+
+  // New-lead badge: refreshed every minute while the CMS is open.
+  useEffect(() => {
+    if (!can("leads:manage")) return;
+    const check = () => adminRequest<{ unseen: number }>("/api/admin/leads/summary", token).then(({ ok, data }) => ok && setNewLeads(data.unseen)).catch(() => {});
+    check();
+    const t = setInterval(check, 60_000);
+    return () => clearInterval(t);
+  }, [can, token, panel]);
 
   return (
     <div className="container-site py-8">
@@ -114,6 +126,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
               className={`rounded-lg px-4 py-1.5 text-sm font-bold transition ${panel === p ? "bg-brand-600 text-white" : "text-ink-600 hover:bg-line/50"}`}
             >
               {label}
+              {p === "leads" && newLeads > 0 && <span className="ml-1.5 rounded-full bg-danger px-1.5 text-[11px] text-white" aria-label={`${newLeads} new leads`}>{newLeads}</span>}
             </button>
           ))}
         </div>
@@ -128,6 +141,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
 
       <div className="mt-6">
         {panel === "content" && <ContentPanel />}
+        {panel === "leads" && <LeadsAdmin />}
         {panel === "seo" && <SeoPanel />}
         {panel === "media" && <MediaLibrary />}
         {panel === "categories" && <TaxonomyAdmin />}

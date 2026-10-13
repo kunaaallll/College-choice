@@ -4,6 +4,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 type LoginMode = "login" | "signup";
 export type PredictorFamily = "btech" | "neet-bds" | "neet-mbbs";
+export type LeadSource = "apply" | "enquiry" | "predictor" | "counselling" | "course" | "exam" | "contact";
+/** Extra context for a lead form opened from a specific CTA. */
+export interface ApplyOptions { source?: LeadSource; course?: string; exam?: string }
 
 interface SiteState {
   // compare
@@ -15,7 +18,8 @@ interface SiteState {
   applyOpen: boolean;
   applyCollege: { name: string; id?: number } | null;
   applyFamily: PredictorFamily | null;
-  openApply: (name: string, id?: number, family?: PredictorFamily) => void;
+  applyOptions: ApplyOptions;
+  openApply: (name: string, id?: number, family?: PredictorFamily, options?: ApplyOptions) => void;
   closeApply: () => void;
   // login modal
   loginOpen: boolean;
@@ -35,6 +39,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyCollege, setApplyCollege] = useState<{ name: string; id?: number } | null>(null);
   const [applyFamily, setApplyFamily] = useState<PredictorFamily | null>(null);
+  const [applyOptions, setApplyOptions] = useState<ApplyOptions>({});
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginMode, setLoginMode] = useState<LoginMode>("login");
 
@@ -67,9 +72,10 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const inCompare = useCallback((slug: string) => compare.includes(slug), [compare]);
   const clearCompare = useCallback(() => setCompare([]), []);
 
-  const openApply = useCallback((name: string, id?: number, family?: PredictorFamily) => {
+  const openApply = useCallback((name: string, id?: number, family?: PredictorFamily, options?: ApplyOptions) => {
     setApplyCollege({ name, id });
     setApplyFamily(family ?? null);
+    setApplyOptions(options ?? {});
     setApplyOpen(true);
   }, []);
   const closeApply = useCallback(() => setApplyOpen(false), []);
@@ -89,6 +95,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       applyOpen,
       applyCollege,
       applyFamily,
+      applyOptions,
       openApply,
       closeApply,
       loginOpen,
@@ -97,7 +104,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       closeLogin,
       setLoginMode,
     }),
-    [compare, toggleCompare, inCompare, clearCompare, applyOpen, applyCollege, applyFamily, openApply, closeApply, loginOpen, loginMode, openLogin, closeLogin],
+    [compare, toggleCompare, inCompare, clearCompare, applyOpen, applyCollege, applyFamily, applyOptions, openApply, closeApply, loginOpen, loginMode, openLogin, closeLogin],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

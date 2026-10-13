@@ -21,7 +21,7 @@ import { generateSecret, otpauthUrl, verifyTotp } from "../lib/totp";
 const JWT_SECRET = process.env.JWT_SECRET || "dev_insecure_secret_change_me";
 const email = z.string().trim().toLowerCase().email().max(200);
 const password = z.string().min(MIN_PASSWORD, `Use at least ${MIN_PASSWORD} characters.`).max(200);
-const role = z.enum(["ADMIN", "SEO_MANAGER", "CONTENT_EDITOR"]);
+const role = z.enum(["ADMIN", "SEO_MANAGER", "CONTENT_EDITOR", "COUNSELLOR"]);
 
 // Constant-time-ish comparison for the setup token.
 const sameSecret = (a: string, b: string) => {
@@ -196,7 +196,7 @@ adminAuthRouter.post(
 export const adminUsersRouter = Router();
 adminUsersRouter.use(requireAdminUser, requirePermission("users:manage"));
 
-const listUser = (u: { id: number; email: string; name: string; role: "ADMIN" | "SEO_MANAGER" | "CONTENT_EDITOR"; active: boolean; totpEnabled: boolean; mustChangePassword: boolean; lastLoginAt: Date | null; createdAt: Date }) => ({
+const listUser = (u: { id: number; email: string; name: string; role: "ADMIN" | "SEO_MANAGER" | "CONTENT_EDITOR" | "COUNSELLOR"; active: boolean; totpEnabled: boolean; mustChangePassword: boolean; lastLoginAt: Date | null; createdAt: Date }) => ({
   id: u.id, email: u.email, name: u.name, role: u.role, active: u.active, totpEnabled: u.totpEnabled,
   mustChangePassword: u.mustChangePassword, lastLoginAt: u.lastLoginAt, createdAt: u.createdAt,
 });
